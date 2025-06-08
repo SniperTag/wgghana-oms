@@ -20,7 +20,7 @@
             <div class="bbg-image bg-primary">
 
                 <div class="row mx-0 bg-dark bg-opacity-50">
-                    
+
                     <!-- Left Panel - Branding -->
                     <div
                         class="hero-static col-md-6 col-xl-8 d-none d-md-flex align-items-center justify-content-center">
@@ -29,8 +29,8 @@
                             <h3 class="fw-semibold">Office Management System</h3>
 
                             <div class="mt-4">
-                                
-                                
+
+
                                 @include('components.modals.staff-login')
                             </div>
                         </div>
@@ -61,7 +61,7 @@
         <div>
             <x-input-label for="email" :value="__('Email')" />
             <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+            {{--  <x-input-error :messages="$errors->get('email')" class="mt-2" />  --}}
         </div>
 
         <!-- Password -->
@@ -73,7 +73,7 @@
                             name="password"
                             required autocomplete="current-password" />
 
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
+            {{--  <x-input-error :messages="$errors->get('password')" class="mt-2" />  --}}
         </div>
 
         <!-- Remember Me -->
@@ -97,7 +97,7 @@
         </div>
     </form>
                             <!-- END Sign In Form -->
-                            
+
                         </div>
                     </div>
                 </div>
@@ -121,8 +121,8 @@
         "positionClass": "toast-bottom-right",
     }
     </script>
-    
-    
+
+
 </body>
 
 </html>

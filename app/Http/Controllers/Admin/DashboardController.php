@@ -35,7 +35,10 @@ class DashboardController extends Controller
 
         $approved = Leave::where('status', 'Approved')->count();
         $rejected = Leave::where('status', 'Rejected')->count();
-        return view('admin.dashboard', compact('userCount', 'user', 'roles', 'departmentCount', 'attendanceCount', 'leaveCount', 'supervisorPending', 'hrPending', 'approved', 'rejected'));
+        if (Auth::check()){
+            $unreadCount = Auth::user()->unreadNotifications->count();
+        }
+        return view('admin.dashboard', compact('userCount', 'user', 'roles', 'departmentCount', 'attendanceCount', 'leaveCount', 'supervisorPending', 'hrPending', 'approved', 'rejected','unreadCount'));
     }
 
     public function createattendance()

@@ -8,12 +8,15 @@ use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use App\Models\Department;
 use Illuminate\Support\Facades\Log;
+use Auth;
 class UserAccessController extends Controller
 {
     public function index()
     {
-        $users = User::with('permissions')->get();
+        $users = Auth::user()->getAllUsersWithPermissions();
+        // Fetch all roles with their permissions
         $roles = Role::with('permissions')->get();
+        
         $departments = Department::all();
         $permissions = Permission::all();
 
@@ -36,7 +39,7 @@ class UserAccessController extends Controller
     ]);
 
     toastr()->success('Permission granted successfully.');
-    
+
     return redirect()->back(); // Redirect to previous page with success
 }
 

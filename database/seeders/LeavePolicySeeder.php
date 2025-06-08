@@ -4,8 +4,9 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\LeavePolicy;
-use Spatie\Permission\Models\Role;
+use App\Models\LeaveType;
 use App\Models\Department;
+use Spatie\Permission\Models\Role;
 
 class LeavePolicySeeder extends Seeder
 {
@@ -14,52 +15,70 @@ class LeavePolicySeeder extends Seeder
      */
     public function run(): void
     {
-        // Define the leave policies to be seeded
+        // Get all leave types from DB
+        $leaveTypes = LeaveType::all();
+        $currentYear = now()->year;
+
+        // Define the base leave policies by role/department
         $policies = [
             [
-                'name' => 'admin Policy',
+                'name' => 'Admin Policy',
                 'role' => 'admin',
-                'department' => 'management', // Make sure this department name exists in your DB
-                'total_days' => 28
+                'department' => 'management',
+                'annual_days' => 28
             ],
             [
-                'name' => 'manager Policy',
+                'name' => 'Manager Policy',
                 'role' => 'manager',
-                'department' => 'client Service',
-                'total_days' => 24
+                'department' => 'client service',
+                'annual_days' => 24
             ],
             [
-                'name' => 'hr Policy',
+                'name' => 'HR Policy',
                 'role' => 'hr',
-                'department' => 'Human Resources',
-                'total_days' => 26
+                'department' => 'human resources',
+                'annual_days' => 26
             ],
             [
-                'name' => 'staff Policy',
+                'name' => 'Staff Policy',
                 'role' => 'staff',
-                'department' => 'General',
-                'total_days' => 22
+                'department' => 'general',
+                'annual_days' => 22
             ],
         ];
 
-        // Loop through each policy and seed it
         foreach ($policies as $data) {
-            $role = Role::where('name', $data['role'])->first();
-            $dept = Department::where('name', $data['department'])->first();
+            $role = Role::where('name', strtolower($data['role']))->first();
+            $dept = Department::whereRaw('LOWER(name) = ?', [strtolower($data['department'])])->first();
 
-            // Only create the policy if both role and department exist
             if ($role && $dept) {
-                LeavePolicy::create([
-                    'name' => $data['name'],
-                    'total_days' => $data['total_days'],
-                    'role_id' => $role->id,
-                    'department_id' => $dept->id,
-                ]);
+                foreach ($leaveTypes as $leaveType) {
+                    // Determine default days based on leave type
+                    $totalDays = match (strtolower($leaveType->name)) {
+                        'annual leave' => $data['annual_days'],
+                        'sick leave' => 10,
+                        'maternity leave' => 90,
+                        'paternity leave' => 5,
+                        default => 15,
+                    };
 
-                // Optional: Output to console/log for verification
-                echo "Seeded leave policy: {$data['name']} (Role: {$data['role']}, Department: {$data['department']})\n";
+                    LeavePolicy::updateOrCreate(
+                        [
+                            'role_id' => $role->id,
+                            'department_id' => $dept->id,
+                            'leave_type_id' => $leaveType->id,
+                            'year' => $currentYear,
+                        ],
+                        [
+                            'name' => "{$data['name']} - {$leaveType->name}",
+                            'total_days' => $totalDays,
+                        ]
+                    );
+
+                    echo "Seeded: {$data['name']} | {$leaveType->name} | {$totalDays} days\n";
+                }
             } else {
-                echo "Skipping: Missing role or department for {$data['name']}\n";
+                echo "❌ Skipped: Role or department not found for '{$data['name']}'\n";
             }
         }
     }

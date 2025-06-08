@@ -47,7 +47,7 @@
                         </a>
                     </div>
                     <div class="col-6 col-xl-3">
-                        <a class="block block-rounded block-bordered block-link-shadow" href="{{ route('admin.users.index') }}">
+                        <a class="block block-rounded block-bordered block-link-shadow" href="{{ route('admin.users_index') }}">
                             <div
                                 class="block-content block-content-full d-sm-flex justify-content-between align-items-center">
                                 <div class="d-none d-sm-block">

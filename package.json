@@ -18,6 +18,8 @@
         "vite": "^6.2.4"
     },
     "dependencies": {
-        "datatables.net-dt": "^2.3.0"
+        "datatables.net-dt": "^2.3.0",
+        "laravel-echo": "^2.1.4",
+        "pusher-js": "^8.4.0"
     }
 }

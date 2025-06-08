@@ -94,22 +94,22 @@
                             </a>
                             <ul class="nav-main-submenu">
                                 <li class="nav-main-item">
-                                    <a class="nav-main-link {{ request()->routeIs('admin.create') ? 'active' : '' }}"
-                                        href="{{ route('admin.users.create') }}">
+                                    <a class="nav-main-link "
+                                        href="{{ route('admin.create_users') }}">
                                         <span class="nav-main-link-name">Create Staff</span>
                                     </a>
                                 </li>
 
 
                                 <li class="nav-main-item">
-                                    <a class="nav-main-link {{ request()->routeIs('invite.user') ? 'active' : '' }}"
-                                        href="{{ route('admin.invite.user') }}">
+                                    <a class="nav-main-link {{ request()->routeIs('admin.invite_user') ? 'active' : '' }}"
+                                        href="{{ route('admin.invite_user') }}">
                                         <span class="nav-main-link-name">Invite Staff</span>
                                     </a>
                                 </li>
                                 <li class="nav-main-item">
-                                    <a class="nav-main-link {{ request()->routeIs('admin.users.index') ? 'active' : '' }}"
-                                        href="{{ route('admin.users.index') }}">
+                                    <a class="nav-main-link {{ request()->routeIs('admin.users_index') ? 'active' : '' }}"
+                                        href="{{ route('admin.users_index') }}">
                                         <span class="nav-main-link-name">View All Staffs</span>
                                     </a>
                                 </li>
@@ -180,7 +180,7 @@
                                     </a>
                                 </li>
 
-                                 <li class="nav-main-item">
+                                <li class="nav-main-item">
                                     <a class="nav-main-link" href="{{ route('leaves.index') }}">
                                         <span class="nav-main-link-name">View Pending Leaves</span>
                                     </a>
@@ -191,11 +191,14 @@
                                         <span class="nav-main-link-name">Create Leave</span>
                                     </a>
                                 </li>  --}}
-                                <li class="nav-main-item">
-                                    <a class="nav-main-link" href="{{ route('leave_balances.create', $user->id) }}">
-                                        <span class="nav-main-link-name">Create Leave Balance</span>
-                                    </a>
-                                </li>
+                                
+                                    <li class="nav-main-item">
+                                        <a class="nav-main-link" href="{{ route('leave_balances.create') }}">
+                                            <span class="nav-main-link-name">Create Leave Balance for
+                                               
+                                        </a>
+                                    </li>
+                               
                             </ul>
                         </li>
 

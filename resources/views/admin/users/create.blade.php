@@ -1,11 +1,3 @@
-{{--  <x-layouts.app :title="__('Dashboard')">
-
-
-</x-layouts.app>  --}}
-
-
-
-
 <!doctype html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
 
@@ -26,15 +18,6 @@
 
         @include('layouts.partials.sidebar')
 
-        {{-- Side bar dashboard End --}}
-
-        {{-- Side bar dashboard start --}}
-
-        {{-- Side bar dashboard End --}}
-
-
-
-        {{-- Header Section --}}
         @include('layouts.header')
 
         <!-- Main Container -->
@@ -121,7 +104,7 @@
                                             @csrf
                                             <div class="row">
                                                 <!-- Left Column -->
-                                                <div class="col-md-4">
+                                                <div class="col-md-6">
                                                     <div class="mb-3">
                                                         <label>Name</label>
                                                         <input type="text" name="name" class="form-control"
@@ -130,7 +113,7 @@
 
 
 
-                                                    <div class="mb-3">
+                                                    {{--  <div class="mb-3">
                                                         <label>Password</label>
                                                         <input type="password" name="password" class="form-control"
                                                             required placeholder="Enter Password">
@@ -140,11 +123,8 @@
                                                         <input type="password" name="password_confirmation"
                                                             class="form-control" required
                                                             placeholder="Confirm Password">
-                                                    </div>
-                                                </div>
+                                                    </div>  --}}
 
-                                                <!-- Right Column -->
-                                                <div class="col-md-4">
                                                     <div class="mb-3">
                                                         <label>Email</label>
                                                         <input type="email" name="email" class="form-control"
@@ -171,7 +151,7 @@
                                                 </div>
 
                                                 <!-- Full Width for Roles -->
-                                                <div class="col-md-4">
+                                                <div class="col-md-6">
                                                     <div class="mb-3">
                                                         <label for="roles">Assign Role(s)</label>
                                                         <select name="roles[]" id="roles"
@@ -182,12 +162,31 @@
                                                             @endforeach
                                                         </select>
                                                     </div>
-                                                </div>
+                                                    <div class="mb-3">
+                                                        <label for="leave_type">Leave Type</label>
+                                                        <select name="leave_type_id" id="leave_type"
+                                                            class="form-control" required>
+                                                            <option value="">-- Select Leave Type --</option>
+                                                            @foreach ($leaveTypes as $type)
+                                                                <option value="{{ $type->id }}">{{ $type->name }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label for="leave_days">Leave Days Allocated</label>
+                                                        <input type="number" name="leave_days" id="leave_days"
+                                                            class="form-control" placeholder="e.g. 15" min="0">
+                                                    </div>
 
                                                 <!-- Submit Button -->
-                                                <div class="col-md-12">
-                                                    <button type="submit" class="btn btn-primary">Create User</button>
+                                                <div class="mt-5">
+                                                    <button type="submit" class="btn btn-primary w-full">Create
+                                                        User</button>
                                                 </div>
+                                                </div>
+
                                             </div>
                                         </form>
 

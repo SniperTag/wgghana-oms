@@ -76,6 +76,7 @@ class RolePermissionSeeder extends Seeder
             'name' => 'admin',
             'phone' => '1234567890',
             'password' => bcrypt('password'),
+            'password_changed' => true, // Assuming the admin has changed their password
             'staff_id' => 'WG-0001-2025',
             'clockin_pin' => bcrypt('1234'),
             'is_active' => true,

@@ -6,7 +6,7 @@
                 class="bg-white dark:bg-gray-800 w-full max-w-3xl p-6 rounded shadow-lg overflow-y-auto max-h-[90vh]">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-xl font-bold">Edit User - {{ $user->name }}</h2>
-                    <button @click="editUser = null" class="text-gray-500 hover:text-red-600 text-lg">&times;</button>
+                    <button @click="editUser = null" class="text-gray-500 hover:text-red-600 text-lg ">&times;</button>
                 </div>
 
                 <!-- Edit Form -->
@@ -54,8 +54,9 @@
                     </div>
                    
                     <div class="mt-4 flex justify-end">
+                        {{--  a
                         + Create Leave Balance
-                    </a>
+                    </a>  --}}
                         <button type="submit" class="btn btn-primary">Update User</button>
                     </div>
                 </form>

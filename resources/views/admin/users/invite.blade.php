@@ -111,21 +111,21 @@
                                 @if(session('success'))
                                     <div class="alert alert-success">{{ session('success') }}</div>
                                 @endif
-                    
-                                <form action="{{ route('invite.store') }}" method="POST">
+
+                                <form action="{{ route('admin.invite_store') }}" method="POST">
                                     @csrf
-                    
+
                                     <div class="mb-3">
                                         <label for="email" class="form-label">User Email</label>
                                         <input type="email" name="email" id="email"
                                                class="form-control @error('email') is-invalid @enderror"
                                                placeholder="Enter user's email" required>
-                    
+
                                         @error('email')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
-                    
+
                                     <button type="submit" class="btn btn-primary">Send Invite</button>
                                     <a href="{{ route('dashboard') }}" class="btn btn-secondary">Cancel</a>
                                 </form>

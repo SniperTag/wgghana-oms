@@ -13,6 +13,7 @@ use App\Http\Controllers\User\LeaveController;
 use App\Http\Controllers\User\SupervisorController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\LeaveBalanceController;
+use App\Http\Controllers\Auth\PasswordController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -26,10 +27,13 @@ Route::get('admin/attendance/verify/{staff_id}', [AttendanceController::class, '
 
 
 // Authenticated Profile Routes
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('password/change', [PasswordController::class, 'showChangeForm'])->name('password.change.form');
+    Route::put('password/change', [PasswordController::class, 'update'])->name('password.update');
 });
 
 
@@ -58,16 +62,16 @@ Route::prefix('admin')->middleware(['auth', 'role:admin|hr'])->group(function ()
     // Dashboard
 
     // User Management
-    Route::get('/users', [UserController::class, 'indexUser'])->name('admin.users.index');
-    Route::get('/users/create', [UserController::class, 'createUser'])->name('admin.users.create');
+    Route::get('/users', [UserController::class, 'indexUser'])->name('admin.users_index');
+    Route::get('/users/create', [UserController::class, 'createUser'])->name('admin.create_users');
     Route::post('/users/store', [UserController::class, 'storeUser'])->name('admin.store');
-    Route::get('/users/edit/{user}', [UserController::class, 'editUser'])->name('admin.users.edit');
+    Route::get('/users/edit/{user}', [UserController::class, 'editUser'])->name('admin.users_edit');
     Route::put('/users/{id}', [UserController::class, 'updateUser'])->name('admin.update');
-    Route::delete('/users/destroy/{user}', [UserController::class, 'destroyUser'])->name('admin.destroy');
+    Route::delete('/users/destroy/{user}', [UserController::class, 'destroyUser'])->name('admin.destroy_user');
 
     // User Invitation
-    Route::get('/users/invite', [UserController::class, 'invite'])->name('admin.invite.user');
-    Route::post('/users/invite', [UserController::class, 'inviteStore'])->name('admin.invite.store');
+    Route::get('/users/invite', [UserController::class, 'invite'])->name('admin.invite_user');
+    Route::post('/users/invite', [UserController::class, 'inviteStore'])->name('admin.invite_store');
 
     // Registration via Invite
     Route::get('/register/{token}', [UserController::class, 'showRegistrationForm'])->name('admin.users.register.form');
@@ -119,11 +123,12 @@ Route::prefix('admin')->middleware(['auth', 'role:admin|hr'])->group(function ()
     Route::delete('access/{user}/revoke-permission/{permission}', [UserAccessController::class, 'revokePermission'])->name('access.revokePermission');
 
     //Leave Balance Management
-    Route::get('users/{user}/leave_balances/create', [LeaveBalanceController::class, 'create'])->name('leave_balances.create');
-    Route::post('users/{user}/leave_balances', [LeaveBalanceController::class, 'store'])->name('leave_balances.store');
+    Route::get('/{user}/leave_balances/index', [LeaveBalanceController::class, 'index'])->name('leave_balances.index');
+Route::get('/leave_balances/create', [LeaveBalanceController::class, 'create'])->name('leave_balances.create');
+Route::post('/leave_balances', [LeaveBalanceController::class, 'store'])->name('leave_balances.store');
 
-    Route::get('/admin/leave-balances/{id}/edit-modal', [LeaveBalanceController::class, 'editModal'])->name('leave_balances.edit-modal');
-    Route::put('leave_balances/{leaveBalance}', [LeaveBalanceController::class, 'update'])->name('leave_balances.update');
+    Route::get('/{id}/edit-modal', [LeaveBalanceController::class, 'editModal'])->name('leave_balances.edit-modal');
+    Route::put('/{leaveBalance}', [LeaveBalanceController::class, 'update'])->name('leave_balances.update');
 
     // Attendance (for admin view)
     Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');

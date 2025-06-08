@@ -12,7 +12,9 @@ class LeavePolicy extends Model
         'name',
         'total_days',
         'role_id',
+        'leave_type_id',
         'department_id',
+    
     ];
 
     // Casts for type enforcement

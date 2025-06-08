@@ -7,26 +7,28 @@
 
 <body>
     <div id="page-container" class="main-content-boxed">
-        <script>
-            @if (session('success'))
-                toastr.success("{{ session('success') }}");
-            @elseif (session('error'))
-                toastr.error("{{ session('error') }}");
-            @endif
-        </script>
         @if (session('success'))
-            <div class="alert alert-success">
-                {{ session('success') }}
+            <div class="container mt-3">
+                <div class="alert alert-success">
+                    {{ session('success') }}
+                </div>
             </div>
         @endif
 
+        @php
+            $errors = $errors ?? (session('errors') ?? new \Illuminate\Support\ViewErrorBag());
+        @endphp
+
         @if ($errors->any())
-            <div class="alert alert-danger">
-                @foreach ($errors->all() as $error)
-                    <p>{{ $error }}</p>
-                @endforeach
+            <div class="container mt-3">
+                <div class="alert alert-danger">
+                    @foreach ($errors->all() as $error)
+                        <p>{{ $error }}</p>
+                    @endforeach
+                </div>
             </div>
         @endif
+
 
         <!--Main Container-->
         <main id="main-container">
@@ -105,7 +107,7 @@
                             </form>
                             <!-- END Sign In Form -->
                             <button class="btn btn-primary mt-3 w-100" data-bs-toggle="modal"
-                                data-bs-target="#staffLoginModal"> <!-- Added margin and width for consistency -->
+                                data-bs-target="#staffLoginModal" aria-label=" Staff Clock In">
                                 Staff Clock In
                             </button>
 
@@ -128,107 +130,6 @@
     @include('layouts.js')
 
 
-    <script>
-        // Toastr Notification Options
-        toastr.options = {
-            "closeButton": true,
-            "progressBar": true,
-            "positionClass": "toast-bottom-right",
-            "timeOut": "5000",
-            "showDuration": "300",
-            "hideDuration": "1000",
-            "showMethod": "fadeIn",
-            "hideMethod": "fadeOut"
-        };
-
-        // Flash Session Messages
-        document.addEventListener('DOMContentLoaded', function() {
-            @if (session('success'))
-                toastr.success("{{ session('success') }}");
-            @elseif (session('error'))
-                toastr.error("{{ session('error') }}");
-            @endif
-        });
-    </script>
-
-
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log("✅ Staff verification script loaded");
-
-            const verifyBtn = document.getElementById('verifyBtn');
-            const staffIdInput = document.getElementById('staff_id');
-            const pinSection = document.getElementById('pin_section');
-            const submitBtn = document.getElementById('submitBtn');
-            const staffError = document.getElementById('staff_error');
-            const staffInfo = document.getElementById('staff_info');
-
-            // Confirm all DOM elements are present
-            if (!verifyBtn || !staffIdInput || !pinSection || !submitBtn || !staffError || !staffInfo) {
-                console.error("❌ One or more required elements not found in DOM.");
-                return;
-            }
-
-            verifyBtn.addEventListener('click', function() {
-                const staffId = staffIdInput.value.trim();
-
-                if (!staffId) {
-                    alert("⚠️ Please enter a Staff ID.");
-                    return;
-                }
-
-                console.log(`🔍 Verifying Staff ID: ${staffId}`);
-
-                fetch(`/admin/attendance/verify/${staffId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            pinSection.classList.remove('d-none');
-                            staffError.style.display = 'none';
-                            staffInfo.innerHTML = data.message.replace(/\n/g, '<br>'); // <-- this line
-                            staffInfo.style.display = 'block';
-                            submitBtn.disabled = false;
-                        } else {
-                            pinSection.classList.add('d-none');
-                            staffError.textContent = data.message;
-                            staffError.style.display = 'block';
-                            staffInfo.style.display = 'none';
-                            submitBtn.disabled = true;
-                        }
-                    })
-                    .catch(error => {
-                        console.error('❌ Error during fetch:', error);
-                        pinSection.classList.add('d-none');
-                        staffInfo.style.display = 'none';
-                        staffError.textContent = "Something went wrong. Please try again.";
-                        staffError.style.display = 'block';
-                        submitBtn.disabled = true;
-                    });
-            });
-        });
-
-// Toastr Notification Options
-         toastr.options = {
-            "closeButton": true,
-            "progressBar": true,
-            "positionClass": "toast-bottom-right",
-            "timeOut": "5000",
-            "showDuration": "300",
-            "hideDuration": "1000",
-            "showMethod": "fadeIn",
-            "hideMethod": "fadeOut"
-        };
-
-        // Flash Session Messages
-        document.addEventListener('DOMContentLoaded', function() {
-            @if (session('success'))
-                toastr.success("{{ session('success') }}");
-            @elseif (session('error'))
-                toastr.error("{{ session('error') }}");
-            @endif
-        });
-    </script>
 </body>
 
 </html>

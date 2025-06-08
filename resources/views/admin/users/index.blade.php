@@ -28,7 +28,6 @@
 
         {{-- Side bar dashboard start --}}
 
-        @include('layouts.partials.sidebar')
 
         {{-- Side bar dashboard End --}}
 
@@ -55,7 +54,7 @@
                         </div>
 
                         <div class="table-responsive">
-                            <table id="userTable" class="table table-bordered table-hover align-middle text-center">
+                            <table id="dataTable" class="table table-bordered table-hover align-middle text-center">
 
                                 <thead class="table-light">
                                     <tr>
@@ -69,17 +68,8 @@
                                         <th class="border-none">Roles</th>
                                         <th class="border-none">Actions</th>
                                     </tr>
-                                    <tr>
 
-                                        <th class="border-none"></th>
-                                        <th class="border-none">Name</th>
-                                        <th class="border-none">Staff ID</th>
-                                        <th class="border-none"></th>
-                                        <th class="border-none"></th>
-                                        <th class="border-none">Department</th>
-                                        <th class="border-none">Roles</th>
-                                        <th class="border-none"></th>
-                                    </tr>
+
                                 </thead>
                                 <tbody class="border-none text-left text-sm">
                                     @foreach ($users as $user)
@@ -89,7 +79,7 @@
                                             <td class="border-none">{{ $user->staff_id }}</td>
                                             <td class="border-none">{{ $user->email }}</td>
                                             <td class="border-none">{{ $user->phone }}</td>
-                                            <td class="border-none">{{ $user->department ? $user->department->name : 'N/A' }}</td>
+                                            <td class="border-none"> {{ optional($user->department)->name ?? 'N/A' }}</td>
 
                                             <td class="border-none">{{ implode(', ', $user->getRoleNames()->toArray()) }}</td>
                                             <td class="border-none">
@@ -103,12 +93,12 @@
                                                     <ul class="dropdown-menu"
                                                         aria-labelledby="actionMenu{{ $user->id }}">
                                                         <li>
-                                                            <button class="dropdown-item" @click.prevent="editUser = {{ $user->id }}">Edit</button>
+                                                            <button class="dropdown-item" @click.prevent="editUser = {{ $user->id }}"><i class="fas fa-edit"></i></button>
 
 
                                                         </li>
                                                         <li>
-                                                            <form action="{{ route('admin.destroy', $user->id) }}"
+                                                            <form action="{{ route('admin.destroy_user', $user->id) }}"
                                                                 method="POST"
                                                                 onsubmit="return confirm('Are you sure?')">
                                                                 @csrf
@@ -118,6 +108,8 @@
                                                             </form>
                                                         </li>
                                                     </ul>
+                                                            @include('layouts.partials.sidebar')
+
                                                 </div>
 
                                             </td>
@@ -137,9 +129,9 @@
         {{-- Main section --}}
 
         <!-- END Main Container -->
-        @include('layouts.footer')
+            @include('components.modals.edit-user')
+
     </div>
-    @include('components.modals.edit-user')
 
     <script>
         $(document).ready(function() {
@@ -158,9 +150,9 @@
     </script>
 
     <!-- Select2 Plugin -->
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    
+    {{--  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>  --}}
 
+@include('layouts.js')
     <!-- Bootstrap Bundle (Popper.js included) -->
 </body>
 

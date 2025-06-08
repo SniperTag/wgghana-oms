@@ -71,7 +71,32 @@
                         </form>
                     </div>
 
+                    @if (session('success'))
+                        <div class="alert alert-success">{{ session('success') }}</div>
+                    @endif
 
+                    @if (session('success'))
+                        <div class="alert alert-success">{{ session('success') }}</div>
+                    @endif
+                    <div class="row mb-4">
+                        <div class=" col-md-2 mb-3 flex items-start">
+                            <button class="btn btn-success mt-2" data-bs-toggle="modal"
+                                data-bs-target="#staffLoginModal"> <!-- Added margin and width for consistency -->
+                                Clock In
+                            </button>
+                        </div>
+                        <div class="col-md-2 mb-3 flex items-end">
+                            @if (session()->has('clocked_in_user_id'))
+                                <!-- Trigger Button -->
+                                <button type="button" class="btn btn-danger mt-2" data-bs-toggle="modal"
+                                    data-bs-target="#clockOutModal">
+                                    Clock Out
+                                </button>
+                            @endif
+
+                        </div>
+
+                    </div>
 
 
 
@@ -112,10 +137,13 @@
                             </tbody>
                         </table>
                     </div>
-
+                   
                     <div class="mt-4">
                         {{ $records->links() }}
                     </div>
+                    @include('components.modals.staff-login')
+
+                    @include('components.modals.clock-out')
                 </div>
 
             </div>
@@ -124,10 +152,9 @@
         {{-- Main section --}}
 
         <!-- END Main Container -->
-        @include('layouts.js')
     </div>
 
-    <script>
+    {{--  <script>
         document.addEventListener('DOMContentLoaded', function() {
             console.log("✅ Staff verification script loaded");
 
@@ -181,9 +208,12 @@
                     });
             });
         });
-    </script>
+    </script>  --}}
 
     {{--  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>  --}}
+
+            @include('layouts.js')
+
 </body>
 
 </html>

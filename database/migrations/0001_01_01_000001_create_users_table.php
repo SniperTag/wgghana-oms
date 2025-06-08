@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
-            $table->string('staff_id')->unique('id'); // e.g., WG-1234-2025
+            $table->string('staff_id')->unique(); // e.g., WG-1234-2025
             $table->string('clockin_pin')->nullable(); // hashed PIN
             $table->boolean('pin_changed')->default(false);
 
@@ -31,6 +31,10 @@ return new class extends Migration {
             $table->boolean('is_active')->default(true);
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->boolean('password_changed')->default(false);
+            $table->foreignId('supervisor_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->string('avatar')->nullable(); // Path to avatar image
+            
             $table->rememberToken();
             $table->timestamps();
         });
@@ -55,17 +59,17 @@ return new class extends Migration {
      * Reverse the migrations.
      */
     public function down(): void
-{
-    // Drop dependent tables that reference `users`
-    Schema::dropIfExists('sessions'); // This table references `users`
-    Schema::dropIfExists('password_reset_tokens'); // This doesn't reference `users`, so can be dropped directly
+    {
+        // Drop dependent tables that reference `users`
+        Schema::dropIfExists('sessions'); // This table references `users`
+        Schema::dropIfExists('password_reset_tokens'); // This doesn't reference `users`, so can be dropped directly
 
-    // Drop the `users` table last
-    Schema::dropIfExists('users');
+        // Drop the `users` table last
+        Schema::dropIfExists('users');
 
-    // Now drop other tables like documents, departments, and categories (if needed)
-    Schema::dropIfExists('documents');
-    Schema::dropIfExists('departments');
-    Schema::dropIfExists('categories');
-}
+        // Now drop other tables like documents, departments, and categories (if needed)
+        Schema::dropIfExists('documents');
+        Schema::dropIfExists('departments');
+        Schema::dropIfExists('categories');
+    }
 };

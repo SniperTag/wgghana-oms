@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Spatie\Permission\Models\Permission;
@@ -28,10 +29,10 @@ class RoleController extends Controller
     {
         $permissions = Permission::all();
         $roles = Role::all();
-
+        $user = Auth::user();
         Log::info('Role create view accessed');
 
-        return view('admin.roles.create', compact('permissions', 'roles'));
+        return view('admin.roles.create', compact('permissions', 'roles', 'user'));
     }
 
     // Store a newly created role

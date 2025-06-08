@@ -12,9 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('leave_types', function (Blueprint $table) {
+             $table->engine = 'InnoDB';
             $table->id();
-            $table->string('name');
+            $table->string('name')->unique();
             $table->integer('default_days')->default(0);
+            $table->boolean('is_excluded')->default(false);
+
             $table->timestamps();
         });
     }

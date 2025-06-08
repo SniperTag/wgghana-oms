@@ -32,6 +32,7 @@ class DatabaseSeeder extends Seeder
                 'staff_id' => 'WG-0001-2025',
                 'department_id' => 1, // Must exist in DepartmentSeeder
                 'password' => Hash::make('password'),
+                'password_changed' => true, // Assuming the admin has changed their password
                 'clockin_pin' => Hash::make('1234'),
                 'is_active' => true,
                 'is_invited' => false,

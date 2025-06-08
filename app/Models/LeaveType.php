@@ -9,6 +9,7 @@ class LeaveType extends Model
     //
     protected $fillable = [
         'name',
+        'is_excluded',
         'default_days',
     ];
       // One leave type has many leave requests

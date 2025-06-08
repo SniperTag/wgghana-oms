@@ -4,28 +4,30 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+class CreateLeavePoliciesTable extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
+    public function up()
     {
         Schema::create('leave_policies', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique(); // Unique name for the leave policy
-            $table->integer('total_days')->default(22); // Total number of leave days
-            $table->foreignId('role_id')->nullable()->constrained('roles')->nullOnDelete(); // Role associated with the policy
-            $table->foreignId('department_id')->nullable()->constrained('departments')->nullOnDelete(); // Department associated with the policy
+            $table->string('name');
+
+            $table->unsignedBigInteger('role_id');
+            $table->unsignedBigInteger('department_id');
+            $table->unsignedBigInteger('leave_type_id')->nullable(); // Must match `leave_types.id`
+
+            $table->integer('total_days');
+            $table->integer('year')->default(date('Y'));
             $table->timestamps();
+
+            $table->foreign('role_id')->references('id')->on('roles')->onDelete('cascade');
+            $table->foreign('department_id')->references('id')->on('departments')->onDelete('cascade');
+            $table->foreign('leave_type_id')->references('id')->on('leave_types')->onDelete('set null');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
+    public function down()
     {
         Schema::dropIfExists('leave_policies');
     }
-};
+}

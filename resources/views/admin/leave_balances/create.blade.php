@@ -37,6 +37,7 @@
 
                 <form action="{{ route('leave_balances.store', $user->id) }}" method="POST">
                     @csrf
+    <input type="hidden" name="user_id" value="{{ $user->id }}">
 
                     <div class="form-group">
                         <label for="leave_type_id">Leave Type</label>

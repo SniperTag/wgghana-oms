@@ -18,17 +18,26 @@ use App\Models\LeaveBalance;
 use App\Models\LeaveType;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\UserWelcomeMail;
+use Illuminate\Support\Str;
+use DB;
+use Illuminate\Support\Facades\Password;
+
 
 class UserController extends Controller
 {
+
     // Constant for the default clock-in PIN
-    const DEFAULT_CLOCKIN_PIN = '1234';
 
     // Function to display the list of users with pagination, roles, and departments
     public function indexUser()
     {
+        // $user = Auth::get();
         // Fetching users with roles and paginating the result
-        $users = User::with('roles')->paginate(10); // Implemented pagination
+        $users = User::with(['roles', 'department'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
         // Getting the total count of users
         $userCount = User::count();
         // Fetching all roles and departments
@@ -46,81 +55,68 @@ class UserController extends Controller
         $roles = Role::all();
         $userCount = User::count();
         $departments = Department::all();
+        $leaveTypes = LeaveType::where('is_excluded', false)->get();
         // Returning view with necessary data for creating a user
-        return view('admin.users.create', compact('roles', 'userCount', 'departments', 'user'));
+        return view('admin.users.create', compact('roles', 'userCount', 'departments', 'user', 'leaveTypes'));
     }
 
     // Function to store a new user based on the input from the creation form
-    public function storeUser(StoreUserRequest $request)
+
+    public function storeUser(Request $request)
     {
-        // 1. Create new user
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'department_id' => $request->department_id,
-            'supervisor_id' => $request->supervisor_id,
-            'phone' => $request->phone,
-            'is_active' => true,
-            'is_invited' => false,
-            'password' => bcrypt($request->password),
-            'staff_id' => $this->generateStaffId(),
-            'clockin_pin' => Hash::make(self::DEFAULT_CLOCKIN_PIN),
-            'pin_changed' => false,
-        ]);
+        DB::beginTransaction();
 
-        // 2. Assign role(s)
-        if ($request->roles) {
-            $user->syncRoles($request->roles);
+        try {
+            Log::info('Storing user started');
+
+            $randomPassword = Str::random(8);
+            $randomClockinPin = rand(1000, 9999);
+
+            $user = new User();
+            $user->name = $request->name;
+            $user->email = $request->email;
+            $user->phone = $request->phone;
+            $user->department_id = $request->department_id;
+            $user->supervisor_id = $request->supervisor_id;
+            $user->is_active = $request->is_active ? 1 : 0;
+            $user->staff_id = $this->generateStaffId();
+            $user->clockin_pin = Hash::make($randomClockinPin);
+            $user->pin_changed = false;
+            $user->password_changed = false;
+            $user->password = Hash::make($request->password);
+            $user->save();
+
+            // Generate password reset token and URL
+            $token = Password::createToken($user);
+            $resetUrl = route('password.reset', ['token' => $token, 'email' => $user->email]);
+            Log::info("Password reset URL generated: {$resetUrl}");
+
+            // Send welcome email with reset link and PIN
+            Mail::to($user->email)->send(new UserWelcomeMail($user, $randomPassword, $resetUrl, $randomClockinPin));
+            Log::info("Welcome email sent to: {$user->email}");
+
+            Log::info('User created: ', ['id' => $user->id]);
+
+            DB::commit();
+            toastr()->success('User created and welcome email sent!');
+            return redirect()->route('admin.users_index');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error creating user: ' . $e->getMessage());
+            toastr()->error('Failed to create user.');
+            return back()->withInput();
         }
-
-        // 3. Fetch first role (assuming single role assignment)
-        $roleName = $user->getRoleNames()->first();
-        $role = Role::where('name', $roleName)->first();
-
-        // 4. Try to find a leave policy for the role or department
-        $policy = LeavePolicy::where('role_id', $role?->id)
-            ->orWhere('department_id', $user->department_id)
-            ->first();
-
-        // 5. Assign leave balance for all leave types
-        $leaveTypes = LeaveType::all();
-        $currentYear = Carbon::now()->year;
-
-        foreach ($leaveTypes as $leaveType) {
-            // Determine default leave days (from leave policy or leave type)
-            $defaultDays = $policy?->total_days ?? $leaveType->default_days ?? 15;
-
-            // Create leave balance record
-            LeaveBalance::create([
-                'user_id' => $user->id,
-                'leave_type_id' => $leaveType->id,
-                'total_days' => $defaultDays,
-                'used_days' => 0,
-                'remaining_days' => $defaultDays,
-                'year' => $currentYear,
-            ]);
-        }
-
-        // 6. Logging
-        Log::info("User {$user->email} created with role '{$roleName}' and leave balances for all leave types.");
-
-        // 7. Notification
-        toastr()->success('User created successfully with default clock-in PIN and leave balances.');
-
-        // 8. Redirect
-        return redirect()->route('admin.users.index');
     }
 
 
     // Function to generate a unique staff ID for a new user
     public function generateStaffId()
     {
-        // Getting the latest user and incrementing their ID to generate the next ID
-        $lastUser = User::latest()->first();
+        $lastUser = User::orderBy('id', 'desc')->first();
         $nextId = $lastUser ? $lastUser->id + 1 : 1;
-        // Generating the staff ID with proper formatting
         return 'WG-' . str_pad($nextId, 4, '0', STR_PAD_LEFT) . '-' . date('Y');
     }
+
 
     // Function to get user details based on the staff ID
     public function getStaffInfo(Request $request)
@@ -214,7 +210,7 @@ class UserController extends Controller
         // Handling expired or invalid tokens
         if (!$user || $user->invite_token_expiry < now()) {
             toastr()->error('Invalid or expired token');
-            return redirect()->route('admin.users.index');
+            return redirect()->route('admin.users_index');
         }
 
         // Returning the registration view with the token
@@ -266,8 +262,9 @@ class UserController extends Controller
     {
         // Counting the number of users
         $userCount = User::count();
+        $user = Auth::user();
         // Returning the invite view with the user count
-        return view('admin.users.invite', compact('userCount'));
+        return view('admin.users.invite', compact('userCount', 'user'));
     }
 
     // Function to store the invite by sending it to the provided email

@@ -18,7 +18,7 @@ class AttendanceRecord extends Model
         'returned_time',
         'step_out_duration',
         'step_out_reason',
-        'note',
+        'notes',
         'ip_address',
         'device_info',
     ];

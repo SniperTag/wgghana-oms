@@ -71,36 +71,32 @@
                         </form>
                     </div>
 
+                    <!-- Success Message -->
                     @if (session('success'))
                         <div class="alert alert-success">{{ session('success') }}</div>
                     @endif
-
-                    @if (session('success'))
-                        <div class="alert alert-success">{{ session('success') }}</div>
-                    @endif
-                    <div class="row mb-4">
-                        <div class=" col-md-2 mb-3 flex items-start">
-                            <button class="btn btn-success mt-2" data-bs-toggle="modal"
-                                data-bs-target="#staffLoginModal"> <!-- Added margin and width for consistency -->
+                    <div class="row">
+                        <!-- Clock In Button -->
+                        <div class="col-md-2 d-flex align-items-center">
+                            <button type="button" class="btn btn-success w-100" data-bs-toggle="modal"
+                                data-bs-target="#clockInModal">
                                 Clock In
                             </button>
                         </div>
-                        <div class="col-md-2 mb-3 flex items-end">
-                            @if (session()->has('clocked_in_user_id'))
-                                <!-- Trigger Button -->
-                                <button type="button" class="btn btn-danger mt-2" data-bs-toggle="modal"
-                                    data-bs-target="#clockOutModal">
-                                    Clock Out
-                                </button>
-                            @endif
 
+                        <!-- Clock Out Button -->
+                        <div class="col-md-2 d-flex align-items-center">
+                            <button type="button" class="btn btn-danger w-100"
+                                onclick="openClockOutModal('{{ Auth::user()->staff_id }}', '{{ Auth::user()->schedule->clock_out_time ?? '17:30' }}')">
+
+                                Clock Out
+                            </button>
                         </div>
-
                     </div>
 
 
 
-                    <div class="overflow-x-auto bg-white shadow-md rounded-lg">
+                    <div class="overflow-x-auto bg-white shadow-md rounded-lg mt-5">
                         <table class="min-w-full table-auto">
                             <thead class="bg-gray-100 text-left">
                                 <tr>
@@ -127,7 +123,7 @@
                                                 <span class="text-red-600 font-semibold">{{ $record->status }}</span>
                                             @endif
                                         </td>
-                                        <td class="p-2">{{ $record->note ?? '-' }}</td>
+                                        <td class="p-2">{{ $record->notes ?? '-' }}</td>
                                     </tr>
                                 @empty
                                     <tr>
@@ -137,7 +133,7 @@
                             </tbody>
                         </table>
                     </div>
-                   
+
                     <div class="mt-4">
                         {{ $records->links() }}
                     </div>
@@ -212,7 +208,7 @@
 
     {{--  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>  --}}
 
-            @include('layouts.js')
+    @include('layouts.js')
 
 </body>
 

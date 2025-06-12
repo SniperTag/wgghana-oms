@@ -2,64 +2,44 @@
 
 namespace App\Mail;
 
+use App\Models\User;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Contracts\Queue\ShouldQueue;  // for queueing
 use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Content;
-use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
 class UserWelcomeMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
+
     public $user;
     public $password;
     public $resetUrl;
-public $staff_id;
-    public $clockin_pin;
+    public $clockinPin;
+
     /**
      * Create a new message instance.
      */
-    public function __construct($user, $password, $resetUrl, $clockin_pin)
+    public function __construct(User $user, string $password, string $resetUrl, string $clockinPin)
     {
         $this->user = $user;
         $this->password = $password;
-        $this->clockin_pin = $clockin_pin;
         $this->resetUrl = $resetUrl;
-
+        $this->clockinPin = $clockinPin;
     }
 
     /**
-     * Get the message envelope.
+     * Build the message.
      */
-    public function envelope(): Envelope
+    public function build()
     {
-        return new Envelope(
-            subject: 'Welcome to WG Office Management System',
-        );
-    }
-
-    /**
-     * Get the message content definition.
-     */
-
-     public function build()
-    {
-        return $this->subject('Welcome to ' . config('app.name'))
+        return $this->subject('Welcome to Waltergates Office System')
                     ->view('emails.user_welcome')
                     ->with([
                         'user' => $this->user,
-                        'staff_id' => $this->user->staff_id,
-                        'resetUrl' => $this->resetUrl,
                         'password' => $this->password,
-                        'clockin_pin' => $this->clockin_pin,
-
+                        'resetUrl' => $this->resetUrl,
+                        'clockinPin' => $this->clockinPin,
                     ]);
-    }
-    /** @return array<int, \Illuminate\Mail\Mailables\Attachment>
-     */
-    public function attachments(): array
-    {
-        return [];
     }
 }

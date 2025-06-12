@@ -20,8 +20,8 @@ class ForcePasswordChange
          $user = Auth::user();
 
     // Allow password change route without redirect loop
-    if ($user && !$user->password_changed && !$request->is('password/change', 'password/change/*')) {
-        return redirect()->route('password.change.form');
+    if ($user && !$user->password_changed && !$request->is('passwords/change', 'passwords/change/*')) {
+        return redirect()->route('password.change');
     }
      return $next($request);
 }

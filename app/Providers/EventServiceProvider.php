@@ -2,12 +2,23 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
+use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
+use Illuminate\Mail\Events\MessageSent;
+use App\Listeners\LogSentEmails;
 
 class EventServiceProvider extends ServiceProvider
 {
     /**
-     * Register services.
+     * The event listener mappings for the application.
+     */
+    protected $listen = [
+        MessageSent::class => [
+            LogSentEmails::class,
+        ],
+    ];
+
+    /**
+     * Register any application services.
      */
     public function register(): void
     {
@@ -15,7 +26,7 @@ class EventServiceProvider extends ServiceProvider
     }
 
     /**
-     * Bootstrap services.
+     * Bootstrap any application services.
      */
     public function boot(): void
     {

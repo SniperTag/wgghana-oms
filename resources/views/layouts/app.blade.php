@@ -17,8 +17,12 @@
 <!-- Codebase framework -->
 <link rel="stylesheet" id="css-main" href="{{ asset('build/assets/css/codebase.min.css') }}">
 
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
 
 
 @vite(['resources/css/app.css', 'resources/js/app.js'])
+@livewireStyles
 
 

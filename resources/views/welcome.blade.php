@@ -2,7 +2,7 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale() ?? 'en') }}" class="dark">
 
 <head>
-    @include('partials.head') {{-- Contains meta tags, title, stylesheets --}}
+    @include('layouts.app') {{-- Contains meta tags, title, stylesheets --}}
 </head>
 
 <body>
@@ -106,9 +106,9 @@
                                 </div>
                             </form>
                             <!-- END Sign In Form -->
-                            <button class="btn btn-primary mt-3 w-100" data-bs-toggle="modal"
-                                data-bs-target="#staffLoginModal" aria-label=" Staff Clock In">
-                                Staff Clock In
+                            <button type="button" class="btn btn-primary w-full mt-2" data-bs-toggle="modal"
+                                data-bs-target="#clockInModal">
+                                 Clock In
                             </button>
 
 

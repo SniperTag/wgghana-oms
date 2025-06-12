@@ -10,6 +10,7 @@ use App\Models\Department;
 use Spatie\Permission\Models\Role;
 use App\Models\Leave;
 use Illuminate\Support\Facades\Auth;
+use Spatie\Activitylog\Models\Activity;
 
 class DashboardController extends Controller
 {

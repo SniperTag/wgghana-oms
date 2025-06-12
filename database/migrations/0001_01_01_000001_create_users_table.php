@@ -16,6 +16,7 @@ return new class extends Migration {
             $table->string('email')->unique();
             $table->string('staff_id')->unique(); // e.g., WG-1234-2025
             $table->string('clockin_pin')->nullable(); // hashed PIN
+             $table->longText('face_image')->nullable(); // Base64 encoded face snapshot
             $table->boolean('pin_changed')->default(false);
 
             // Invite User by Token
@@ -34,7 +35,8 @@ return new class extends Migration {
             $table->boolean('password_changed')->default(false);
             $table->foreignId('supervisor_id')->nullable()->constrained('users')->onDelete('set null');
             $table->string('avatar')->nullable(); // Path to avatar image
-            
+
+
             $table->rememberToken();
             $table->timestamps();
         });

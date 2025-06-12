@@ -22,11 +22,11 @@
             toastr.info(message, 'Staff Alert');
         });
 </script>
-    
+
 @if(Auth::user()?->unreadNotifications?->count())
     @foreach (Auth::user()->unreadNotifications as $notification)
         <div class="alert alert-info mb-2">
-            {{ $notification->data['message'] }} 
+            {{ $notification->data['message'] }}
             <span class="text-muted small">{{ \Carbon\Carbon::parse($notification->data['time'])->diffForHumans() }}</span>
         </div>
     @endforeach
@@ -34,14 +34,16 @@
 
     <div id="page-container"
         class="sidebar-o sidebar-dark enable-page-overlay side-scroll page-header-fixed page-header-modern main-content-boxed">
-      
-        
-  
+
+
+
         {{-- Side bar dashboard start --}}
 
         @include('layouts.partials.sidebar')
 
-        
+
+{{--  @livewire('activity-log.index')  --}}
+
 
 
 

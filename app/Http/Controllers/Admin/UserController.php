@@ -2,33 +2,42 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
+use DB;
 use App\Models\User;
+use App\Models\LeaveType;
 use App\Models\Department;
-use Spatie\Permission\Models\Role;
+use App\Models\LeaveBalance;
+use Illuminate\Http\Request;
+use App\Services\UserService;
 use App\Services\InviteService;
-use App\Http\Requests\StoreUserRequest;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Requests\InviteStoreRequest;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Auth;
-use App\Models\LeavePolicy;
-use App\Models\LeaveBalance;
-use App\Models\LeaveType;
-use Carbon\Carbon;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\UserWelcomeMail;
-use Illuminate\Support\Str;
-use DB;
-use Illuminate\Support\Facades\Password;
+use Illuminate\Validation\ValidationException;
+
 
 
 class UserController extends Controller
 {
+    /**
+     * Generate a unique staff ID for a new user.
+     *
+     * @return string
+     */
+    protected function generateStaffId()
+    {
+        // Example: Generate a staff ID with prefix 'STAFF' and a unique number
+        do {
+            $staffId = 'WG-' . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT) . '-' . date('Y');;
+        } while (User::where('staff_id', $staffId)->exists());
 
-    // Constant for the default clock-in PIN
+        return $staffId;
+    }
+
 
     // Function to display the list of users with pagination, roles, and departments
     public function indexUser()
@@ -63,59 +72,70 @@ class UserController extends Controller
     // Function to store a new user based on the input from the creation form
 
     public function storeUser(Request $request)
-    {
-        DB::beginTransaction();
-
-        try {
-            Log::info('Storing user started');
-
-            $randomPassword = Str::random(8);
-            $randomClockinPin = rand(1000, 9999);
-
-            $user = new User();
-            $user->name = $request->name;
-            $user->email = $request->email;
-            $user->phone = $request->phone;
-            $user->department_id = $request->department_id;
-            $user->supervisor_id = $request->supervisor_id;
-            $user->is_active = $request->is_active ? 1 : 0;
-            $user->staff_id = $this->generateStaffId();
-            $user->clockin_pin = Hash::make($randomClockinPin);
-            $user->pin_changed = false;
-            $user->password_changed = false;
-            $user->password = Hash::make($request->password);
-            $user->save();
-
-            // Generate password reset token and URL
-            $token = Password::createToken($user);
-            $resetUrl = route('password.reset', ['token' => $token, 'email' => $user->email]);
-            Log::info("Password reset URL generated: {$resetUrl}");
-
-            // Send welcome email with reset link and PIN
-            Mail::to($user->email)->send(new UserWelcomeMail($user, $randomPassword, $resetUrl, $randomClockinPin));
-            Log::info("Welcome email sent to: {$user->email}");
-
-            Log::info('User created: ', ['id' => $user->id]);
-
-            DB::commit();
-            toastr()->success('User created and welcome email sent!');
-            return redirect()->route('admin.users_index');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error creating user: ' . $e->getMessage());
-            toastr()->error('Failed to create user.');
-            return back()->withInput();
+{
+    try {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'phone' => 'nullable|string|max:20|unique:users,phone',
+            'department_id' => 'required|exists:departments,id',
+            'supervisor_id' => 'nullable|exists:users,id',
+            'face_image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'is_active' => 'nullable|boolean',
+            'roles' => 'nullable|array',
+            'roles.*' => 'exists:roles,name',
+            'leave_type_id' => 'nullable|exists:leave_types,id',
+            'leave_days' => 'nullable|integer|min:0',
+        ]);
+    } catch (ValidationException $e) {
+        // Show each validation error via Toastr
+        foreach ($e->validator->errors()->all() as $message) {
+            toastr()->error($message);
         }
+
+        return back()->withErrors($e->errors())->withInput();
     }
 
+    DB::beginTransaction();
 
-    // Function to generate a unique staff ID for a new user
-    public function generateStaffId()
-    {
-        $lastUser = User::orderBy('id', 'desc')->first();
-        $nextId = $lastUser ? $lastUser->id + 1 : 1;
-        return 'WG-' . str_pad($nextId, 4, '0', STR_PAD_LEFT) . '-' . date('Y');
+    try {
+        $data = $request->only([
+            'name', 'email', 'phone', 'department_id', 'supervisor_id', 'is_active', 'roles'
+        ]);
+        $data['staff_id'] = $this->generateStaffId();
+
+        if ($request->hasFile('face_image')) {
+            $data['face_image'] = base64_encode(file_get_contents($request->file('face_image')));
+        }
+
+        if ($request->hasFile('avatar')) {
+            $data['avatar'] = $request->file('avatar')->store('avatars', 'public');
+        }
+
+        $user = UserService::createUserWithWelcomeEmail($data);
+
+        if ($request->filled('leave_type_id') && $request->filled('leave_days')) {
+            LeaveBalance::create([
+                'user_id' => $user->id,
+                'leave_type_id' => $request->leave_type_id,
+                'allocated_days' => $request->leave_days,
+                'used_days' => 0,
+            ]);
+        }
+
+        DB::commit();
+        toastr()->success('User created successfully and welcome email sent!');
+        return redirect()->back();
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Failed to create user: ' . $e->getMessage());
+        toastr()->error('User creation failed. Please try again.');
+        return back()->withInput();
     }
+}
+
+
 
 
     // Function to get user details based on the staff ID
@@ -138,20 +158,34 @@ class UserController extends Controller
         ]);
     }
 
-    // Function to show the user edit form with current user details, roles, and departments
-    public function editUser($id)
+    public function downloadIdCard($id)
     {
-        // Fetching user by ID, along with roles and departments
-        $user = User::findOrFail($id);
-        $roles = Role::all();
-        $departments = Department::all();
-        // Returning the edit view with user data
-        return view('components.modals.edit-user', [
-            'user' => $user,
-            'roles' => $roles,
-            'departments' => $departments,
-        ]);
+        $staff = User::findOrFail($id);
+
+        $pdf = Pdf::loadView('admin.users.id-card', compact('staff'))->setPaper('a7')->setWarnings(false);
+
+        return $pdf->download("IDCard-{$staff->staff_id}.pdf");
     }
+
+   public function previewStaffID($id)
+{
+    $user = User::findOrFail($id);
+    return view('admin.users.preview-staff-id', compact('user'));
+}
+
+
+    // Function to show the user edit form with current user details, roles, and departments
+   public function editUser($id)
+{
+    $user = User::with('roles', 'department')->findOrFail($id);
+
+    return view('components.modals.edit-user', [
+        'user' => $user,
+        'roles' => Role::all(),
+        'departments' => Department::all(),
+        'leaveTypes' => LeaveType::where('is_excluded', false)->get(),
+    ]);
+}
 
     // Function to update user details based on the input from the edit form
     public function updateUser(UpdateUserRequest $request, $id)
@@ -188,6 +222,19 @@ class UserController extends Controller
         // Redirecting back to the user index page
         return redirect()->route('admin.users.index');
     }
+
+    public function rules()
+{
+    return [
+        'name' => 'required|string|max:255',
+        'email' => 'required|email',
+        'phone' => 'nullable|string|max:20',
+        'department_id' => 'required|exists:departments,id',
+        'roles' => 'nullable|array',
+        'roles.*' => 'string|exists:roles,name',
+    ];
+}
+
 
     // Function to delete a user based on the provided user ID
     public function destroyUser($id)

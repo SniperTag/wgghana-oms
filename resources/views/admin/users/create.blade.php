@@ -85,120 +85,105 @@
                     <!-- END Row #1 -->
 
                     <div class="container-fluid">
-                        <div class="row justify-content-center">
-                            <div class="col-md-12">
+    <div class="row justify-content-center">
+        <div class="col-md-12">
 
-                                <div class="card">
-                                    <div class="card-header">Create User</div>
-                                    {{--  <div><a href="{{ route('leave_balances.create', $user->id) }}"
-                                            class="btn btn-sm btn-success flex justify-end">
-                                            + Create Leave Balance
-                                        </a></div>  --}}
-                                    <div class="card-body">
-                                        @if (session('success'))
-                                            <div class="alert alert-success">{{ session('success') }}</div>
-                                        @endif
+            <div class="card">
+                <div class="card-header">Create User</div>
 
+                <div class="card-body">
+                    @if (session('success'))
+                        <div class="alert alert-success">{{ session('success') }}</div>
+                    @endif
 
-                                        <form action="{{ route('admin.store') }}" method="POST">
-                                            @csrf
-                                            <div class="row">
-                                                <!-- Left Column -->
-                                                <div class="col-md-6">
-                                                    <div class="mb-3">
-                                                        <label>Name</label>
-                                                        <input type="text" name="name" class="form-control"
-                                                            required placeholder="Enter your name">
-                                                    </div>
+                    <form action="{{ route('admin.store') }}" method="POST" enctype="multipart/form-data">
+                        @csrf
 
-
-
-                                                    {{--  <div class="mb-3">
-                                                        <label>Password</label>
-                                                        <input type="password" name="password" class="form-control"
-                                                            required placeholder="Enter Password">
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label>Confirm Password</label>
-                                                        <input type="password" name="password_confirmation"
-                                                            class="form-control" required
-                                                            placeholder="Confirm Password">
-                                                    </div>  --}}
-
-                                                    <div class="mb-3">
-                                                        <label>Email</label>
-                                                        <input type="email" name="email" class="form-control"
-                                                            required placeholder="Enter Corporate Email">
-                                                    </div>
-
-                                                    <div class="mb-3">
-                                                        <label for="department_id">Department</label>
-                                                        <select name="department_id" id="department"
-                                                            class="form-control" required>
-                                                            <option value="">-- Select Department --</option>
-                                                            @foreach ($departments as $department)
-                                                                <option value="{{ $department->id }}">
-                                                                    {{ $department->name }}</option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-
-                                                    <div class="mb-3">
-                                                        <label>Phone</label>
-                                                        <input type="text" name="phone" class="form-control"
-                                                            placeholder="Enter Phone Number">
-                                                    </div>
-                                                </div>
-
-                                                <!-- Full Width for Roles -->
-                                                <div class="col-md-6">
-                                                    <div class="mb-3">
-                                                        <label for="roles">Assign Role(s)</label>
-                                                        <select name="roles[]" id="roles"
-                                                            class="form-control select2" multiple>
-                                                            @foreach ($roles as $role)
-                                                                <option value="{{ $role->name }}">{{ $role->name }}
-                                                                </option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label for="leave_type">Leave Type</label>
-                                                        <select name="leave_type_id" id="leave_type"
-                                                            class="form-control" required>
-                                                            <option value="">-- Select Leave Type --</option>
-                                                            @foreach ($leaveTypes as $type)
-                                                                <option value="{{ $type->id }}">{{ $type->name }}
-                                                                </option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-
-                                                    <div class="mb-3">
-                                                        <label for="leave_days">Leave Days Allocated</label>
-                                                        <input type="number" name="leave_days" id="leave_days"
-                                                            class="form-control" placeholder="e.g. 15" min="0">
-                                                    </div>
-
-                                                <!-- Submit Button -->
-                                                <div class="mt-5">
-                                                    <button type="submit" class="btn btn-primary w-full">Create
-                                                        User</button>
-                                                </div>
-                                                </div>
-
-                                            </div>
-                                        </form>
-
-
-
-
-                                    </div>
+                        <div class="row">
+                            <!-- Left Column: Basic Info -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="name">Full Name</label>
+                                    <input type="text" name="name" id="name" class="form-control"
+                                            required placeholder="Enter full name">
                                 </div>
 
+                                <div class="mb-3">
+                                    <label for="email">Corporate Email</label>
+                                    <input type="email" name="email" id="email" class="form-control"
+                                            required placeholder="Enter email">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="phone">Phone Number</label>
+                                    <input type="text" name="phone" id="phone" class="form-control"
+                                          placeholder="Enter phone number">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="department_id">Department</label>
+                                    <select name="department_id" id="department_id" class="form-control" required>
+                                        <option value="">-- Select Department --</option>
+                                        @foreach ($departments as $department)
+                                            <option value="{{ $department->id }}"
+                                                {{ ('department_id') == $department->id ? 'selected' : '' }}>
+                                                {{ $department->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Right Column: Roles & Leave Info -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="roles">Assign Role(s)</label>
+                                    <select name="roles[]" id="roles" class="form-control select2" multiple>
+                                        @foreach ($roles as $role)
+                                            <option value="{{ $role->name }}"
+                                                {{ (collect(('roles'))->contains($role->name)) ? 'selected' : '' }}>
+                                                {{ $role->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <hr>
+                                <h6>Leave Allocation</h6>
+
+                                <div class="mb-3">
+                                    <label for="leave_type_id">Leave Type</label>
+                                    <select name="leave_type_id" id="leave_type_id" class="form-control" required>
+                                        <option value="">-- Select Leave Type --</option>
+                                        @foreach ($leaveTypes as $type)
+                                            <option value="{{ $type->id }}"
+                                                {{ ('leave_type_id') == $type->id ? 'selected' : '' }}>
+                                                {{ $type->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="leave_days">Leave Days Allocated</label>
+                                    <input type="number" name="leave_days" id="leave_days" class="form-control"
+                                           value="{{ ('leave_days') }}" min="0" placeholder="e.g. 15">
+                                </div>
                             </div>
                         </div>
-                    </div>
+
+                        <!-- Submit Button Full Width -->
+                        <div class="mt-4 text-center">
+                            <button type="submit" class="btn btn-primary px-5">Create User</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
 
                 </div>
 

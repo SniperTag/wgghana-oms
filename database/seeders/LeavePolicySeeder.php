@@ -20,32 +20,12 @@ class LeavePolicySeeder extends Seeder
         $currentYear = now()->year;
 
         // Define the base leave policies by role/department
-        $policies = [
-            [
-                'name' => 'Admin Policy',
-                'role' => 'admin',
-                'department' => 'management',
-                'annual_days' => 28
-            ],
-            [
-                'name' => 'Manager Policy',
-                'role' => 'manager',
-                'department' => 'client service',
-                'annual_days' => 24
-            ],
-            [
-                'name' => 'HR Policy',
-                'role' => 'hr',
-                'department' => 'human resources',
-                'annual_days' => 26
-            ],
-            [
-                'name' => 'Staff Policy',
-                'role' => 'staff',
-                'department' => 'general',
-                'annual_days' => 22
-            ],
-        ];
+       $policies = [
+    ['name' => 'Admin Policy', 'role' => 'admin', 'department' => 'management', 'annual_days' => 28],
+    ['name' => 'Manager Policy', 'role' => 'manager', 'department' => 'client service', 'annual_days' => 24],
+    ['name' => 'HR Policy', 'role' => 'hr', 'department' => 'hr', 'annual_days' => 26],
+    ['name' => 'Staff Policy', 'role' => 'staff', 'department' => 'general', 'annual_days' => 22],
+];
 
         foreach ($policies as $data) {
             $role = Role::where('name', strtolower($data['role']))->first();

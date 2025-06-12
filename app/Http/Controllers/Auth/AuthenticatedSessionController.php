@@ -23,32 +23,42 @@ class AuthenticatedSessionController extends Controller
      * Handle an incoming authentication request.
      */
     public function store(LoginRequest $request): RedirectResponse
-{
-    $request->authenticate();
+    {
+        $request->authenticate();
 
-    $request->session()->regenerate();
+        $request->session()->regenerate();
 
-    $user = Auth::user();
+        $user = Auth::user();
 
-    // Role-based redirection using Spatie
-    if ($user->hasRole('admin')) {
-        return redirect()->route('dashboard');
-    } elseif ($user->hasRole('manager')) {
-        return redirect()->route('manager.dashboard');
-    } elseif ($user->hasRole('finance')) {
-        return redirect()->route('finance.dashboard');
-    } elseif ($user->hasRole('supervisor')) {
-        return redirect()->route('supervisor.dashboard');
-    } elseif ($user->hasRole('staff')) {
-        return redirect()->route('staff.dashboard');
+
+        // Redirect to face enrollment if face image not set
+        if (is_null($user->face_image)) {
+            return redirect()->route('face.enroll')->with([
+                'message' => 'Please enroll your face for attendance tracking.',
+            ]);
+        }
+
+        // Role-based redirection using Spatie
+        if ($user->hasRole('admin')) {
+            return redirect()->route('dashboard');
+        } elseif ($user->hasRole('hr')) {
+            return redirect()->route('hr.dashboard');
+        } elseif ($user->hasRole('manager')) {
+            return redirect()->route('manager.dashboard');
+        } elseif ($user->hasRole('finance')) {
+            return redirect()->route('finance.dashboard');
+        } elseif ($user->hasRole('supervisor')) {
+            return redirect()->route('supervisor.dashboard');
+        } elseif ($user->hasRole('staff')) {
+            return redirect()->route('staff.dashboard');
+        }
+
+        // Default fallback if no role matched
+        Auth::logout();
+        return redirect()->route('login')->withErrors([
+            'email' => 'Your account has no assigned role or unauthorized role.',
+        ]);
     }
-
-    // Default fallback if no role matched
-    Auth::logout();
-    return redirect()->route('login')->withErrors([
-        'email' => 'Your account has no assigned role or unauthorized role.',
-    ]);
-}
 
 
     /**

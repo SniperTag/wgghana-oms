@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'nalo' => [
+    'base_url' => env('NALO_BASE_URL'),
+    'api_key' => env('NALO_API_KEY'),
+    'sender_id' => env('NALO_SENDER_ID'),
+],
+
 ];

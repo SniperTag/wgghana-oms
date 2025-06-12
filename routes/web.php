@@ -14,6 +14,8 @@ use App\Http\Controllers\User\SupervisorController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\LeaveBalanceController;
 use App\Http\Controllers\Auth\PasswordController;
+use App\Http\Controllers\User\FaceEnrollmentController;
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -22,7 +24,7 @@ Route::get('/', function () {
 
 // ====================== PUBLIC ATTENDANCE ======================staff
 Route::post('/attendance/check-out', [AttendanceController::class, 'checkOut'])->name('staff.checkout');
-Route::post('/attendance', [AttendanceController::class, 'handleAttendance'])->name('staff.checkin');
+Route::post('/attendance', [AttendanceController::class, 'handleAttendance'])->name('attendance.handle');
 Route::get('admin/attendance/verify/{staff_id}', [AttendanceController::class, 'lookupStaff'])->name('verify.staff');
 
 
@@ -32,28 +34,55 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    Route::get('password/change', [PasswordController::class, 'showChangeForm'])->name('password.change.form');
-    Route::put('password/change', [PasswordController::class, 'update'])->name('password.update');
+ 
+    // Route::post('password/change', [PasswordController::class, 'update'])->name('password.update');
+});
+
+
+// ====================== FACE ENROLLMENT ======================
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/user/face-enrollment', [FaceEnrollmentController::class, 'show'])->name('face.enroll');
+    Route::post('/face-enrollment/save', [FaceEnrollmentController::class, 'saveFaceImage'])->name('face.enroll.save');
+    // Route::get('/livewire/face-enrollment/verify', [FaceEnrollmentController::class, 'verifyFace'])->name('face.verify');
+    // Route::post('/livewire/face-enrollment/verify', [FaceEnrollmentController::class, 'handleFaceVerification'])->name('face.verify.handle');
 });
 
 
 // ====================== USER ROUTES ======================
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth:web'])->group(function () {
+
+    // Admin Dashboard
     Route::get('admin/dashboard', [DashboardController::class, 'index'])
-        ->middleware('role:admin')->name('dashboard');
+        ->middleware('role:admin')
+        ->name('dashboard');
 
+    // HR Dashboard 
+    Route::get('hr/dashboard', [DashboardController::class, 'index'])
+        ->middleware('role:hr')
+        ->name('hr.dashboard'); // was 'hr.ashboard'
+
+    // Staff Dashboard
     Route::get('staff/staff-dashboard', [StaffController::class, 'staff'])
-        ->middleware('role:staff')->name('staff.dashboard');
+        ->middleware('role:staff')
+        ->name('staff.dashboard');
 
-    Route::get('/manager/manager-dashboard', fn() => view('manager.dasboard'))
-        ->middleware('role:manager')->name('manager.dashboard');
+    
+    Route::get('manager/manager-dashboard', fn () => view('manager.dashboard'))
+        ->middleware('role:manager')
+        ->name('manager.dashboard'); // view was 'manager.dasboard'
 
-    Route::get('/finance/finance-dashboard', fn() => view('finance.dasboard'))
-        ->middleware('role:finance')->name('finance.dashboard');
+    // Finance Dashboard 
+    Route::get('finance/finance-dashboard', fn () => view('finance.dashboard'))
+        ->middleware('role:finance')
+        ->name('finance.dashboard'); // view was 'finance.dasboard'
 
-    Route::get('/supervisor/dashboard', [SupervisorController::class, 'supervisor'])
-        ->middleware('role:supervisor')->name('supervisor.dashboard');
+    // Supervisor Dashboard
+    Route::get('supervisor/dashboard', [SupervisorController::class, 'supervisor'])
+        ->middleware('role:supervisor')
+        ->name('supervisor.dashboard');
 });
+
 
 
 
@@ -65,6 +94,10 @@ Route::prefix('admin')->middleware(['auth', 'role:admin|hr'])->group(function ()
     Route::get('/users', [UserController::class, 'indexUser'])->name('admin.users_index');
     Route::get('/users/create', [UserController::class, 'createUser'])->name('admin.create_users');
     Route::post('/users/store', [UserController::class, 'storeUser'])->name('admin.store');
+    Route::get('/users/{id}/id-card', [UserController::class, 'downloadIdCard'])->name('staff.id-card');
+Route::get('/admin/users/{id}/preview', [UserController::class, 'previewStaffID'])->name('admin.users.preview');
+
+
     Route::get('/users/edit/{user}', [UserController::class, 'editUser'])->name('admin.users_edit');
     Route::put('/users/{id}', [UserController::class, 'updateUser'])->name('admin.update');
     Route::delete('/users/destroy/{user}', [UserController::class, 'destroyUser'])->name('admin.destroy_user');

@@ -93,9 +93,7 @@
                                                     <ul class="dropdown-menu"
                                                         aria-labelledby="actionMenu{{ $user->id }}">
                                                         <li>
-                                                            <button class="dropdown-item" @click.prevent="editUser = {{ $user->id }}"><i class="fas fa-edit"></i></button>
-
-
+                                                            <button class="dropdown-item" @click.prevent="editUser = @json($user->id)"><i class="fas fa-edit"></i></button>
                                                         </li>
                                                         <li>
                                                             <form action="{{ route('admin.destroy_user', $user->id) }}"
@@ -107,6 +105,7 @@
                                                                     type="submit"><i class="fas fa-trash"></i></button>
                                                             </form>
                                                         </li>
+                                                        
                                                     </ul>
                                                             @include('layouts.partials.sidebar')
 
@@ -153,7 +152,9 @@
     {{--  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>  --}}
 
 @include('layouts.js')
-    <!-- Bootstrap Bundle (Popper.js included) -->
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+   
 </body>
 
 </html>

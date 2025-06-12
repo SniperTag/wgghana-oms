@@ -29,7 +29,7 @@ class LeaveBalanceController extends Controller
 
         return view('admin.leave_balances.index', compact('user', 'leaveBalances'));
     }
-   
+
     /**
      * Show the form for creating a new leave balance for a user.
      */
@@ -44,20 +44,22 @@ class LeaveBalanceController extends Controller
     /**
      * Store a newly created leave balance in storage.
      */
-   public function store(Request $request)
+public function store(Request $request)
 {
     try {
-        // Validate input
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
             'leave_type_id' => 'required|exists:leave_types,id',
             'total_days' => 'required|numeric|min:0',
             'used_days' => 'required|numeric|min:0',
-            'remaining_days' => 'required|numeric|min:0',
-            'year' => 'required|integer|min:2000|max:2100',
+            'year' => 'required|integer|min:' . (now()->year - 10) . '|max:' . (now()->year + 10),
         ]);
 
-        // Prevent duplicate leave balances
+        if ($validated['used_days'] > $validated['total_days']) {
+            toastr()->error('Used days cannot exceed total days.');
+            return back()->withInput();
+        }
+
         $exists = LeaveBalance::where([
             'user_id' => $validated['user_id'],
             'leave_type_id' => $validated['leave_type_id'],
@@ -69,21 +71,20 @@ class LeaveBalanceController extends Controller
             return back()->withInput();
         }
 
-        // Create leave balance
         LeaveBalance::create([
             'user_id' => $validated['user_id'],
             'leave_type_id' => $validated['leave_type_id'],
             'total_days' => $validated['total_days'],
             'used_days' => $validated['used_days'],
-            'remaining_days' => $validated['remaining_days'],
+            'remaining_days' => $validated['total_days'] - $validated['used_days'],
             'year' => $validated['year'],
         ]);
 
-        // Log success
-        Log::info('Leave balance created.', [
+        Log::info('Leave balance created', [
             'user_id' => $validated['user_id'],
             'leave_type_id' => $validated['leave_type_id'],
             'year' => $validated['year'],
+            'created_by' => Auth::id(),
         ]);
 
         toastr()->success('Leave balance created successfully.');
@@ -95,6 +96,7 @@ class LeaveBalanceController extends Controller
         return back()->withInput();
     }
 }
+
 
 
     /**

@@ -64,12 +64,12 @@
                             <div class="alert alert-success">{{ session('success') }}</div>
                         @endif
                         <div class="row mb-4">
-                            <div class=" col-md-2 mb-3 flex items-start">
-                                <button class="btn btn-success mt-2" data-bs-toggle="modal"
-                                    data-bs-target="#staffLoginModal"> <!-- Added margin and width for consistency -->
-                                     Clock In
-                                </button>
-                            </div>
+                             <div class="col-md-2 d-flex align-items-center">
+                            <button type="button" class="btn btn-success w-100" data-bs-toggle="modal"
+                                data-bs-target="#clockInModal">
+                                Clock In
+                            </button>
+                        </div>
                             <div class="col-md-2 mb-3 flex items-end">
                                 @if (session()->has('clocked_in_user_id'))
                                     <!-- Trigger Button -->

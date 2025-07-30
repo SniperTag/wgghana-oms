@@ -28,17 +28,16 @@ return [
         'key' => env('RESEND_KEY'),
     ],
 
-    'slack' => [
-        'notifications' => [
-            'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
-            'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
-        ],
-    ],
+    // 'slack' => [
+    //     'notifications' => [
+    //         'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
+    //         'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
+    //     ],
+    // ],
 
-    'nalo' => [
-    'base_url' => env('NALO_BASE_URL'),
-    'api_key' => env('NALO_API_KEY'),
-    'sender_id' => env('NALO_SENDER_ID'),
+    'bulksmsgh' => [
+    'key' => env('BULKSMSGH_KEY'),
+    'sender_id' => env('WGGHANA'),
 ],
 
 ];

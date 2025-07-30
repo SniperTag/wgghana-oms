@@ -143,7 +143,73 @@
 
     // Barcode scan failure (optional)
     function onScanFailure(error) {
-        // Can ignore or log failures
-        // console.warn(`Scan failed: ${error}`);
+
+        console.warn(`Scan failed: ${error}`);
     }
+
+    {{--  document.getElementById('clock-in-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const form = e.target;
+    const formData = new FormData(form);
+    const jsonData = {};
+    formData.forEach((value, key) => jsonData[key] = value);
+
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Processing...`;
+
+    fetch(form.action, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': jsonData._token,
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(jsonData)
+    })
+    .then(async res => {
+        let data;
+        try {
+            data = await res.json();
+        } catch {
+            toastr.error("❌ Invalid server response.");
+            throw new Error("Invalid JSON");
+        }
+        if (!res.ok) {
+            toastr.error(data.message || `❌ Server error: ${res.status}`);
+            throw new Error("Server error");
+        }
+        return data;
+    })
+    .then(data => {
+        if (data.success) {
+            toastr.success(data.message || '✅ Clocked in successfully');
+            bootstrap.Modal.getInstance(clockInModal).hide();
+
+            // Update clock button dynamically
+            const clockButton = document.getElementById('clockButton');
+            if(clockButton){
+                clockButton.innerText = '⏹️ Clock Out';
+                clockButton.dataset.action = 'check_out';
+            }
+
+            form.reset();
+            document.getElementById('snapshot-preview').classList.add('d-none');
+        } else {
+            toastr.error(data.message || '❌ Clock in failed');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        toastr.error('❌ Unexpected error occurred');
+    })
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '✅ Clock In';
+    });
+});  --}}
+
+
 </script>

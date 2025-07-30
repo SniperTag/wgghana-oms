@@ -35,172 +35,96 @@
             <div class="content mt-7">
                 <div class="row">
                     <!-- Row #1 -->
-                    <div class="col-6 col-xl-3">
-                        <a class="block block-rounded block-bordered block-link-shadow" href="javascript:void(0)">
-                            <div
-                                class="block-content block-content-full d-sm-flex justify-content-between align-items-center">
-                                <div class="d-none d-sm-block">
-                                    <i class="si si-bag fa-2x text-primary-light"></i>
-                                </div>
-                                <div class="text-end">
-                                    <div class="fs-3 fw-semibold text-primary">1500</div>
-                                    <div class="fs-sm fw-semibold text-uppercase text-muted">Total visitors</div>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-6 col-xl-3">
-                        <a class="block block-rounded block-bordered block-link-shadow" href="javascript:void(0)">
-                            <div
-                                class="block-content block-content-full d-sm-flex justify-content-between align-items-center">
-                                <div class="d-none d-sm-block">
-                                    <i class="si si-wallet fa-2x text-earth-light"></i>
-                                </div>
-                                <div class="text-end">
-                                    <div class="fs-3 fw-semibold text-earth">$780</div>
-                                    <div class="fs-sm fw-semibold text-uppercase text-muted">Attance Record</div>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-6 col-xl-3">
-                        <a class="block block-rounded block-bordered block-link-shadow" href="javascript:void(0)">
-                            <div
-                                class="block-content block-content-full d-sm-flex justify-content-between align-items-center">
-
-                                <div class="row">
-                                    {{-- Pending --}}
-                                    <div class="col-12 col-md-4">
-                                        <div class="">
-                                            <div class="fs-3 fw-semibold text-success">{{ $approvedCount }}</div>
-                                            <div class="fs-sm fw-semibold text-uppercase text-muted">Approved
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {{-- Approved --}}
-                                    <div class="col-12 col-md-4">
-                                        <div class=" ">
-                                            <div class="fs-3 fw-semibold text-warning">{{ $pendingCount }}</div>
-                                            <div class="fs-sm fw-semibold text-uppercase text-muted">Pendding
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {{-- Rejected --}}
-                                    <div class="col-12 col-md-4">
-                                        <div class=" ">
-                                            <div class="fs-3 fw-semibold text-danger">{{ $rejectedCount }}</div>
-                                            <div class="fs-sm fw-semibold text-uppercase text-muted">Rejected
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
 
 
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-6 col-xl-3">
-                        <a class="block block-rounded block-bordered block-link-shadow" href="javascript:void(0)">
-                            <div
-                                class="block-content block-content-full d-sm-flex justify-content-between align-items-center">
-                                <div class="d-none d-sm-block">
-                                    <i class="si si-users fa-2x text-pulse"></i>
-                                </div>
-                                <div class="text-end">
-                                    <div class="fs-3 fw-semibold text-pulse">{{ $totalannualLeaveCount }}</div>
-                                    <div class="fs-sm fw-semibold text-uppercase text-muted">Leave Days Left</div>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
+
+
                     <!-- END Row #1 -->
 
                     <div class="container-fluid">
                         <div class="row justify-content-center">
                             <div class="col-md-12">
-                                <div class="bg-white rounded-xl shadow-md p-6">
-                                    <h2 class="text-2xl font-semibold mb-6 text-gray-800">Leave Request Form</h2>
+                                <h1 class="text-2xl font-extrabold mb-4 font-san-serif text-uppercase">Request Leave
+                                </h1>
+                                <div class="max-w-6xl mx-auto p-4 bg-white shadow rounded">
 
-                                    {{-- Show Toastr or Validation Errors --}}
-                                    @if ($errors->any())
-                                        <div class="bg-red-100 text-red-700 p-3 rounded mb-4">
-                                            <ul class="list-disc list-inside">
-                                                @foreach ($errors->all() as $error)
-                                                    <li>{{ $error }}</li>
-                                                @endforeach
-                                            </ul>
-                                        </div>
-                                    @endif
 
-                                    <form action="{{ route('leaves.store') }}" method="POST"
-                                        enctype="multipart/form-data">
+                                    <form method="POST" action="{{ route('leaves.store') }}">
                                         @csrf
 
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            {{-- Leave Type --}}
-                                            <div>
-                                                <label for="leave_type_id"
-                                                    class="block font-medium text-sm text-gray-700">Leave Type</label>
-                                                <select name="leave_type_id" id="leave_type_id"
-                                                    class="w-full border-gray-300 rounded-md shadow-sm mt-1 focus:ring-indigo-500 focus:border-indigo-500">
-                                                    <option value="">-- Select Leave Type --</option>
-                                                    @foreach ($leaveTypes as $type)
-                                                        <option value="{{ $type->id }}"
-                                                            {{ old('leave_type_id') == $type->id ? 'selected' : '' }}>
-                                                            {{ $type->name }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
+                                        <div class="mb-4">
+                                            <label>Leave Type</label>
+                                            <select name="leave_type_id" class="form-select w-full">
+                                                @foreach ($leaveTypes as $type)
+                                                    <option value="{{ $type->id }}">{{ $type->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
 
-                                            {{-- Start Date --}}
+                                        <div class="grid grid-cols-2 gap-4">
                                             <div>
-                                                <label for="start_date"
-                                                    class="block font-medium text-sm text-gray-700">Start Date</label>
-                                                <input type="date" name="start_date" id="start_date"
-                                                    value="{{ old('start_date') }}"
-                                                    class="w-full border-gray-300 rounded-md shadow-sm mt-1 focus:ring-indigo-500 focus:border-indigo-500"
+                                                <label>Start Date</label>
+                                                <input type="date" name="start_date" class="form-input w-full"
                                                     required>
                                             </div>
-
-                                            {{-- End Date --}}
                                             <div>
-                                                <label for="end_date"
-                                                    class="block font-medium text-sm text-gray-700">End Date</label>
-                                                <input type="date" name="end_date" id="end_date"
-                                                    value="{{ old('end_date') }}"
-                                                    class="w-full border-gray-300 rounded-md shadow-sm mt-1 focus:ring-indigo-500 focus:border-indigo-500"
+                                                <label>End Date</label>
+                                                <input type="date" name="end_date" class="form-input w-full"
                                                     required>
-                                            </div>
-
-                                            {{-- Supporting Document --}}
-                                            <div>
-                                                <label for="attachment"
-                                                    class="block font-medium text-sm text-gray-700">Attach File
-                                                    (Optional)</label>
-                                                <input type="file" name="attachment" id="attachment"
-                                                    class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
                                             </div>
                                         </div>
 
-                                        {{-- Reason (Full Width) --}}
-                                        <div class="mt-2">
-                                            <label for="reason" class="block font-medium text-sm text-gray-700">Reason
-                                                for Leave</label>
-                                            <textarea name="reason" id="reason" rows="4"
-                                                class="w-full border-gray-300 rounded-md shadow-sm mt-1 focus:ring-indigo-500 focus:border-indigo-500">{{ old('reason') }}</textarea>
+                                        <div class="mt-4">
+                                            <label>Reason</label>
+                                            <textarea name="reason" rows="4" class="form-textarea w-full"></textarea>
+                                        </div>
+                                        <div id="attachment-group" class="mt-4 hidden">
+                                            <label for="attachment">Attach Medical Report</label>
+                                            <input type="file" name="attachment" id="attachment"
+                                                class="form-input w-full">
                                         </div>
 
-                                        {{-- Submit Button --}}
-                                        <div class="flex justify-end mt-2">
-                                            <button type="submit"
-                                                class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded shadow-sm">
-                                                Submit Request
-                                            </button>
+
+                                        <div class="mt-4">
+                                            <button class="bg-blue-600 text-white px-4 py-2 rounded">Submit
+                                                Request</button>
                                         </div>
                                     </form>
+                                </div>
+
+                                <div class="max-w-4xl mx-auto mt-6">
+                                    <h3 class="text-lg font-bold mb-2">Your Leave History</h3>
+
+                                    <table class="w-full border-collapse bg-white shadow rounded">
+                                        <thead>
+                                            <tr class="bg-gray-200 text-sm text-left">
+                                                <th class="p-2">Type</th>
+                                                <th class="p-2">Dates</th>
+                                                <th class="p-2">Days</th>
+                                                <th class="p-2">Status</th>
+                                                <th class="p-2">Supervisor</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach ($leaves as $leave)
+                                                <tr class="border-b">
+                                                    <td class="p-2">{{ $leave->leaveType->name }}</td>
+                                                    <td class="p-2">{{ $leave->start_date }} to
+                                                        {{ $leave->end_date }}</td>
+                                                    <td class="p-2">{{ $leave->days_requested }}</td>
+                                                    <td class="p-2">{{ ucfirst($leave->status) }}</td>
+                                                    <td class="p-2">
+                                                        @if ($leave->supervisor)
+                                                            {{ $leave->supervisor->name }}
+                                                            ({{ $leave->supervisor_status }})
+                                                        @else
+                                                            -
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
                                 </div>
 
 
@@ -216,7 +140,7 @@
         {{-- Main section --}}
 
         <!-- END Main Container -->
-        @include('layouts.footer')
+        @include('layouts.js')
     </div>
     <!-- END Page Container -->
 
@@ -235,6 +159,22 @@
             });
         });
     </script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const leaveTypeSelect = document.querySelector('[name="leave_type_id"]');
+        const attachmentGroup = document.getElementById('attachment-group');
+
+        function toggleAttachment() {
+            const selectedText = leaveTypeSelect.options[leaveTypeSelect.selectedIndex].text.toLowerCase();
+            attachmentGroup.classList.toggle('hidden', !selectedText.includes('sick'));
+        }
+
+        leaveTypeSelect.addEventListener('change', toggleAttachment);
+        toggleAttachment(); // initial check on load
+    });
+</script>
+
 
     <!-- Select2 Plugin -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>

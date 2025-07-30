@@ -63,9 +63,10 @@
                     <!-- Leave Balance Info -->
                     @if ($leaveBalance)
                         <div class="alert alert-secondary">
-                            Annual Leave: {{ $leaveBalance->used_days ?? 0 }} used /
+                            Annual Leave:
+                            {{ $leaveBalance->used_days ?? 0 }} used /
                             {{ $leaveBalance->remaining_days ?? 0 }} remaining
-                            (Total: {{ $totalAnnualLeaveCount }})
+                            (Total: {{ $totalAnnualLeave }})
                         </div>
                     @endif
 

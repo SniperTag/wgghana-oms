@@ -1,11 +1,3 @@
-{{--  <x-layouts.app :title="__('Dashboard')">
-
-
-</x-layouts.app>  --}}
-
-
-
-
 <!doctype html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
 
@@ -26,11 +18,6 @@
 
         @include('layouts.partials.sidebar')
 
-        {{-- Side bar dashboard End --}}
-
-        {{-- Side bar dashboard start --}}
-
-        {{-- Side bar dashboard End --}}
 
 
 
@@ -46,111 +33,124 @@
 
 
                     <div class="container-fluid">
-                        <h1 class="mb-4">View Attendance Records</h1>
-                        {{--
-                        <form method="GET" action="{{ route('attendance.index') }}" class="mb-4 d-flex gap-2">
-                            <input type="text" name="name" value="{{ request('name') }}" class="form-control w-25"
-                                placeholder="Search by name">
-                            <button type="submit" class="btn btn-primary">Filter</button>
-                            <a href="{{ route('attendance.index') }}" class="btn btn-outline-secondary">Reset</a>
-
-                        </form>  --}}
-
-                        @if (session('success'))
-                            <div class="alert alert-success">{{ session('success') }}</div>
-                        @endif
-
-                        @if (session('success'))
-                            <div class="alert alert-success">{{ session('success') }}</div>
-                        @endif
-                        <div class="row mb-4">
-                            <div class=" col-md-2 mb-3 flex items-start">
-                                <button class="btn btn-success mt-2" data-bs-toggle="modal"
-                                    data-bs-target="#staffLoginModal"> <!-- Added margin and width for consistency -->
-                                     Clock In
-                                </button>
-                            </div>
-                            <div class="col-md-2 mb-3 flex items-end">
-                                @if (session()->has('clocked_in_user_id'))
-                                    <!-- Trigger Button -->
-                                    <button type="button" class="btn btn-danger mt-2" data-bs-toggle="modal"
-                                        data-bs-target="#clockOutModal">
-                                         Clock Out
-                                    </button>
-                                @endif
-
-                            </div>
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h1 class="fw-bold font-san-serif font-extrabold text-3xl">MY ATTENDANCE RECORDS</h1>
 
                         </div>
 
+                        {{-- Filters Section --}}
+                        <form method="GET" action="{{ route('attendance.index') }}"
+                            class="row gy-2 gx-3 align-items-center mb-4">
+                            <div class="col-auto">
+                                <select class="form-select" name="filter">
+                                    <option value="">-- Filter By --</option>
+                                    <option value="today" {{ request('filter') == 'today' ? 'selected' : '' }}>Today
+                                    </option>
+                                    <option value="this_week" {{ request('filter') == 'this_week' ? 'selected' : '' }}>
+                                        This Week</option>
+                                    <option value="this_month"
+                                        {{ request('filter') == 'this_month' ? 'selected' : '' }}>This Month</option>
+                                </select>
+                            </div>
+
+                            <div class="col-auto">
+                                <input type="date" name="from" class="form-control" value="{{ request('from') }}"
+                                    placeholder="From Date">
+                            </div>
+
+                            <div class="col-auto">
+                                <input type="date" name="to" class="form-control" value="{{ request('to') }}"
+                                    placeholder="To Date">
+                            </div>
+
+                            <div class="col-auto">
+                                <button type="submit" class="btn btn-primary">Apply Filter</button>
+                            </div>
+
+                            <div class="col-auto">
+                                <a href="{{ route('attendance.index') }}" class="btn btn-outline-danger">Reset
+                                    Filters</a>
+                            </div>
+                        </form>
+
+                        <div class="mb-4 flex flex-wrap items-center justify-start gap-3 text-sm">
+
+                            {{-- Step Out Livewire Component --}}
+                            @livewire('step-out-manager')
+
+                            {{-- Clock In/Out Dropdown --}}
+                            <div class="dropdown">
+                                <button
+                                    class="btn btn-primary dropdown-toggle d-flex justify-content-between align-items-center"
+                                    type="button" id="clockActionDropdown" data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                    <i class="fas fa-clock me-2"></i> Clock Actions
+                                </button>
+                                <ul class="dropdown-menu shadow" aria-labelledby="clockActionDropdown">
+                                    <li>
+                                        <button class="dropdown-item text-success" data-bs-toggle="modal"
+                                            data-bs-target="#clockInModal">
+                                            <i class="fas fa-sign-in-alt me-2"></i> Clock In
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <button class="dropdown-item text-danger"
+                                            onclick="openClockOutModal({{ auth()->user()->id }})">
+                                            <i class="fas fa-sign-out-alt me-2"></i> Clock Out
+                                        </button>
+                                    </li>
+
+                                </ul>
+                            </div>
+                            {{--  @livewire('break-manager')  --}}
+                        </div>
 
 
-                        <div class="table-responsive">
-                            <table id="dataTable"
-                                class="table table-bordered table-hover align-middle text-center border-none">
-
-                                <thead class="border-none">
+                        {{-- Attendance Table --}}
+                        <div class="table-responsive shadow-sm border rounded">
+                            <table class="table table-striped table-hover align-middle text-center mb-0">
+                                <thead class="table-dark">
                                     <tr>
-                                        <th class="border-none">No</th>
-                                        <th class="border-none">Name</th>
-                                        <th class="border-none">Department</th>
-                                        <th class="border-none">Role</th>
-                                        <th class="border-none">Time-in</th>
-                                        <th class="border-none">Time-out</th>
-                                        <th class="border-none">Status</th>
-                                        <th class="border-none">Date</th>
-                                        <th class="border-none">IP Address</th>
-                                        <th class="border-none">Device</th>
+                                        <th>#</th>
+                                        <th>Name</th>
+                                        {{--  <th>Department</th>
+                                        <th>Role</th>  --}}
+                                        <th>Time-in</th>
+                                        <th>Time-out</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                        {{--  <th>IP</th>
+                                        <th>Device</th>  --}}
                                     </tr>
-                                    {{--  <tr>
-                                        <th class="border-none"></th>
-                                        <th class="border-none">Name</th>
-                                        <th class="border-none">Department</th>
-                                        <th class="border-none"></th>
-                                        <th class="border-none"></th>
-                                        <th class="border-none">Time-out</th>
-                                        <th class="border-none">Status</th>
-                                        <th class="border-none"></th>
-                                        <th class="border-none"></th>
-                                        <th class="border-none"></th>
-                                    </tr>  --}}
                                 </thead>
-                                <tbody class="border-none text-sm text-left">
+                                <tbody>
                                     @forelse ($attendanceRecords as $record)
                                         <tr>
-                                            <td class="border-none">{{ $loop->iteration }}</td>
-                                            <td class="border-none">{{ $record->user->name }}</td>
-                                            <td class="border-none">{{ $record->user->department->name ?? 'N/A' }}</td>
-                                            <td class="border-none">
-                                                {{ $record->user->getRoleNames()->first() ?? 'N/A' }}</td>
-                                            <td class="border-none">
+                                            <td>{{ $loop->iteration }}</td>
+                                            <td>{{ $record->user->name }}</td>
+                                            {{--  <td>{{ $record->user->department->name ?? 'N/A' }}</td>
+                                            <td>{{ $record->user->getRoleNames()->first() ?? 'N/A' }}</td>  --}}
+                                            <td>
                                                 @php
                                                     $status = $record->status;
-                                                    $checkInClass = '';
-
-                                                    if ($status === 'On Time') {
-                                                        $checkInClass = 'bg-success text-white';
-                                                    } elseif ($status === 'Late') {
-                                                        $checkInClass = 'bg-warning text-dark';
-                                                    } elseif ($status === 'Very Late') {
-                                                        $checkInClass = 'bg-danger text-white';
-                                                    }
+                                                    $checkInClass = match ($status) {
+                                                        'On Time' => 'badge bg-success',
+                                                        'Late' => 'badge bg-warning text-dark',
+                                                        'Very Late' => 'badge bg-danger',
+                                                        default => 'badge bg-secondary',
+                                                    };
                                                 @endphp
-
-                                                <span class="{{ $checkInClass }} px-2 py-1 rounded d-inline-block">
-                                                    {{ $record->check_in_time }}
-                                                </span>
+                                                <span class="{{ $checkInClass }}">{{ $record->check_in_time }}</span>
                                             </td>
-
-                                            <td class="border-none">{{ $record->check_out_time ?? '—' }}</td>
-                                            <td class="border-none">{{ $record->status }}</td>
-                                            <td class="border-none">{{ $record->attendance_date }}</td>
-                                            <td class="border-none">{{ $record->ip_address }}</td>
-                                            <td class="border-none">{{ $record->device_info ?? 'Unknown' }}</td>
+                                            <td>{{ $record->check_out_time ?? '—' }}</td>
+                                            <td>{{ $record->status }}</td>
+                                            <td>{{ $record->attendance_date }}</td>
+                                            {{--  <td>{{ $record->ip_address }}</td>
+                                            <td>{{ $record->device_info ?? 'Unknown' }}</td>  --}}
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="7">No attendance records found.</td>
+                                            <td colspan="10">No records found for the selected filters.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -159,8 +159,12 @@
                                 {{ $attendanceRecords->appends(request()->query())->links() }}
                             </div>
                         </div>
+
+
                     </div>
-                            @include('components.modals.staff-login')
+
+
+                    @include('components.modals.staff-login')
 
                     @include('components.modals.clock-out')
 
@@ -173,67 +177,10 @@
         {{-- Main section --}}
 
         <!-- END Main Container -->
-        {{--  @include('layouts.footer')  --}}
         @include('layouts.js')
     </div>
 
-     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log("✅ Staff verification script loaded");
 
-            const verifyBtn = document.getElementById('verifyBtn');
-            const staffIdInput = document.getElementById('staff_id');
-            const pinSection = document.getElementById('pin_section');
-            const submitBtn = document.getElementById('submitBtn');
-            const staffError = document.getElementById('staff_error');
-            const staffInfo = document.getElementById('staff_info');
-
-            // Confirm all DOM elements are present
-            if (!verifyBtn || !staffIdInput || !pinSection || !submitBtn || !staffError || !staffInfo) {
-                console.error("❌ One or more required elements not found in DOM.");
-                return;
-            }
-
-            verifyBtn.addEventListener('click', function() {
-                const staffId = staffIdInput.value.trim();
-
-                if (!staffId) {
-                    alert("⚠️ Please enter a Staff ID.");
-                    return;
-                }
-
-                console.log(`🔍 Verifying Staff ID: ${staffId}`);
-
-                fetch(`/admin/attendance/verify/${staffId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            pinSection.classList.remove('d-none');
-                            staffError.style.display = 'none';
-                            staffInfo.innerHTML = data.message.replace(/\n/g, '<br>'); // <-- this line
-                            staffInfo.style.display = 'block';
-                            submitBtn.disabled = false;
-                        } else {
-                            pinSection.classList.add('d-none');
-                            staffError.textContent = data.message;
-                            staffError.style.display = 'block';
-                            staffInfo.style.display = 'none';
-                            submitBtn.disabled = true;
-                        }
-                    })
-                    .catch(error => {
-                        console.error('❌ Error during fetch:', error);
-                        pinSection.classList.add('d-none');
-                        staffInfo.style.display = 'none';
-                        staffError.textContent = "Something went wrong. Please try again.";
-                        staffError.style.display = 'block';
-                        submitBtn.disabled = true;
-                    });
-            });
-        });
-    </script>
-
-    {{--  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>  --}}
 </body>
 
 </html>

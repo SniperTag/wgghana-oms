@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Requests\InviteStoreRequest;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Hash;
 
 
 
@@ -32,7 +33,7 @@ class UserController extends Controller
     {
         // Example: Generate a staff ID with prefix 'STAFF' and a unique number
         do {
-            $staffId = 'WG-' . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT) . '-' . date('Y');;
+            $staffId = 'WG-' . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT) . '-' . date('Y');
         } while (User::where('staff_id', $staffId)->exists());
 
         return $staffId;
@@ -65,8 +66,16 @@ class UserController extends Controller
         $userCount = User::count();
         $departments = Department::all();
         $leaveTypes = LeaveType::where('is_excluded', false)->get();
+        $femaleCount = User::where('gender','female')->count();
+        $maleCount = User::where('gender', 'male')->count();
+        $staffCount = User::where('user_type', 'staff')->count();
+        $nationalServiceCount = User::where('user_type', 'national_service')->count();
         // Returning view with necessary data for creating a user
-        return view('admin.users.create', compact('roles', 'userCount', 'departments', 'user', 'leaveTypes'));
+        return view('admin.users.create', compact('roles', 
+        'userCount', 'departments',
+         'user', 'leaveTypes',
+        'femaleCount','maleCount',
+    'staffCount', 'nationalServiceCount'));
     }
 
     // Function to store a new user based on the input from the creation form
@@ -77,6 +86,8 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
+            'gender'=> 'required|in:male,female,other',
+             'user_type' => 'required|in:employee,national_service',
             'phone' => 'nullable|string|max:20|unique:users,phone',
             'department_id' => 'required|exists:departments,id',
             'supervisor_id' => 'nullable|exists:users,id',
@@ -101,13 +112,15 @@ class UserController extends Controller
 
     try {
         $data = $request->only([
-            'name', 'email', 'phone', 'department_id', 'supervisor_id', 'is_active', 'roles'
+            'name', 'email','gender','user_type', 'phone', 'department_id', 'supervisor_id', 'is_active', 'roles'
         ]);
         $data['staff_id'] = $this->generateStaffId();
 
         if ($request->hasFile('face_image')) {
-            $data['face_image'] = base64_encode(file_get_contents($request->file('face_image')));
-        }
+    $fileName = 'face_' . uniqid() . '.' . $request->file('face_image')->getClientOriginalExtension();
+    $request->file('face_image')->move(public_path('face_images'), $fileName);
+    $data['face_image'] = 'face_images/' . $fileName;
+}
 
         if ($request->hasFile('avatar')) {
             $data['avatar'] = $request->file('avatar')->store('avatars', 'public');
@@ -237,97 +250,128 @@ class UserController extends Controller
 
 
     // Function to delete a user based on the provided user ID
-    public function destroyUser($id)
-    {
-        // Finding and deleting the user
-        $user = User::findOrFail($id);
-        $user->delete();
-        // Showing success message
-        toastr()->success('User deleted successfully');
-        // Redirecting to the user index page
-        return redirect()->route('admin.users.index');
+  public function destroyUser($id)
+{
+    $user = User::findOrFail($id);
+    $user->delete();
+
+    toastr()->success('User deleted successfully');
+    return redirect()->route('admin.users.index');
+}
+
+// Show registration form for invited user using invite token
+public function showRegistrationForm($token)
+{
+    // Use the correct column name for token expiration - your code uses both invite_token_expiry and invite_expires_at - be consistent!
+    $user = User::where('invite_token', $token)->first();
+
+    if (!$user || $user->invite_expires_at < now()) {
+        toastr()->error('Invalid or expired invite token');
+        return redirect()->route('login'); // Better to redirect to login or home, not admin.users_index
     }
 
-    // Function to show the registration form for a user based on the invite token
-    public function showRegistrationForm($token)
-    {
-        // Finding the user with the invite token
-        $user = User::where('invite_token', $token)->first();
+    return view('user.invite-register', compact('token', 'user'));
+}
 
-        // Handling expired or invalid tokens
-        if (!$user || $user->invite_token_expiry < now()) {
-            toastr()->error('Invalid or expired token');
-            return redirect()->route('admin.users_index');
-        }
+// Register the invited user with form data
+public function register(Request $request)
+{
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'password' => 'required|string|min:6|confirmed',
+        'token' => 'required|string',
+    ]);
 
-        // Returning the registration view with the token
-        return view('auth.register', compact('token'));
+    $user = User::where('invite_token', $request->token)->first();
+
+    if (!$user || $user->invite_expires_at < now()) {
+        toastr()->error('Invalid or expired invite token');
+        return redirect()->route('login');
     }
 
-    // Function to register the user based on the provided data from the registration form
-    public function register(Request $request)
-    {
-        // Validating registration inputs
-        $request->validate([
-            'name' => 'required',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|min:6|confirmed',
-        ]);
+    // Update invited user with name, password, activate, clear invite token
+    $user->update([
+        'name' => $request->name,
+        'password' => bcrypt($request->password),
+        'is_active' => true,
+        'is_invited' => false,
+        'invite_token' => null,
+        'invite_expires_at' => null,
+        'invite_token_used_at' => now(),
+    ]);
 
-        // Finding the user with the provided invite token
-        $user = User::where('invite_token', $request->token)->first();
+    // Optionally log the user in immediately
+    Auth::login($user);
 
-        // Handling expired or invalid tokens
-        if (!$user || $user->invite_token_expiry < now()) {
-            return redirect()->route('admin.users.index')->with('error', 'Invalid or expired token');
-        }
+    Log::info("User registered: {$user->email}");
 
-        // Updating the user with the registration details
-        $user->update([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => bcrypt($request->password),
-            'is_invited' => true,
-            'invite_token' => null,
-            'invite_token_expiry' => null,
-            'invite_token_used' => now(),
-            'department_id' => $request->id,
-            'supervisor_id' => $request->supervisor_id,
+    return redirect()->route('pin.change.form'); // or wherever next step is
+}
 
-        ]);
+// Show invite user form to admin with roles to assign
+public function invite()
+{
+    $roles = Role::all();
+    $userCount = User::count();
+    $user = Auth::user();
 
-        // Logging the registration event
-        Log::info("User registered: {$user->email}");
+    return view('admin.users.invite', compact('userCount', 'user', 'roles'));
+}
 
-        // Redirecting to the PIN change form
-        return redirect()->route('pin.change.form');
-    }
+// Store the invite, create user, assign roles, send invite email
+public function inviteStore(InviteStoreRequest $request)
+{
+    $request->validate([
+        'email' => 'required|email|unique:users,email',
+        'roles' => 'required|array',
+        'roles.*' => 'exists:roles,name',
+    ]);
 
+    try {
+        // Create invited user with email and roles
+        $user = InviteService::createInvitedUser($request->email, $request->roles);
 
-    // Function to show the invite form to send an invite to a new user
-    public function invite()
-    {
-        // Counting the number of users
-        $userCount = User::count();
-        $user = Auth::user();
-        // Returning the invite view with the user count
-        return view('admin.users.invite', compact('userCount', 'user'));
-    }
+        // Send invite email with token etc.
+        InviteService::sendInvite($user);
 
-    // Function to store the invite by sending it to the provided email
-    public function inviteStore(InviteStoreRequest $request)
-    {
-        // Sending the invite email
-        InviteService::sendInvite($request->email);
-
-        // Logging the invite sending event
-        Log::info("Invitation sent to: {$request->email}");
-        // Showing success message
+        Log::info("Invitation sent to: {$user->email}");
         toastr()->success('Invite sent successfully');
-        // Redirecting to the admin dashboard
-        return redirect()->route('admin.dashboard');
+        return redirect()->back();
+    } catch (\Exception $e) {
+        Log::error("Failed to send invite: " . $e->getMessage());
+        toastr()->error('Failed to send invite. ' . $e->getMessage());
+        return back()->withInput();
     }
+}
+ public function processRegistration(Request $request)
+    {
+        $request->validate([
+            'token' => 'required|exists:users,invite_token',
+            'name' => 'required|string|max:255',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
 
+        $user = User::where('invite_token', $request->token)
+                    ->where('invite_expires_at', '>', now())
+                    ->where('is_invited', true)
+                    ->first();
+
+        if (!$user) {
+            return back()->withErrors(['token' => 'Invalid or expired invite token.']);
+        }
+
+        $user->name = $request->name;
+        $user->password = Hash::make($request->password);
+        $user->is_active = true;
+        $user->is_invited = false;
+        $user->invite_token = null;
+        $user->invite_expires_at = null;
+        $user->save();
+
+        Log::info("User {$user->email} completed invite registration.");
+
+        return redirect()->route('login')->with('success', 'Registration complete! You can now log in.');
+    }
     // Function to get the user's performance metrics, such as completed and overdue tasks
     public function getUserPerformance($id)
     {
@@ -342,4 +386,17 @@ class UserController extends Controller
             'overdue_tasks' => $overdue,
         ]);
     }
+public function messages()
+{
+    return [
+        'name.required' => 'Full name is required.',
+        'email.required' => 'Corporate email is required.',
+        'gender.in' => 'Please select a valid gender.',
+        'user_type.in' => 'Invalid user type selected.',
+        'phone.max' => 'Phone number cannot exceed 10 characters.',
+
+        
+    ];
+}
+
 }

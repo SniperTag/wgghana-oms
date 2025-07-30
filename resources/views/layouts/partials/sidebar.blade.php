@@ -34,13 +34,15 @@
             <!-- Side User -->
             <div class="content-side content-side-user px-0 py-0">
                 <div class="smini-visible-block animated fadeIn px-3">
-                    <img class="img-avatar img-avatar32" src="{{ asset('build/assets/media/avatars/avatar15.jpg') }}"
-                        alt="">
+                    <img class="img-avatar img-avatar32" src="{{ asset('media/avatars/avatar15.jpg') }}" alt="">
                 </div>
                 <div class="smini-hidden text-center mx-auto">
                     <a class="img-link" href="{{ route('profile.update') }}">
-                        <img class="img-avatar" src="{{ asset('build/assets/media/avatars/avatar15.jpg') }}"
-                            alt="">
+                        @if (auth()->user()->face_image)
+                            <img class="img-avatar img-avatar32"
+                                src="data:image/jpeg;base64,{{ auth()->user()->face_image }}" alt="Face Image">
+                        @endif
+
                     </a>
                     <ul class="list-inline mt-3 mb-0">
                         <li class="list-inline-item">
@@ -94,8 +96,7 @@
                             </a>
                             <ul class="nav-main-submenu">
                                 <li class="nav-main-item">
-                                    <a class="nav-main-link "
-                                        href="{{ route('admin.create_users') }}">
+                                    <a class="nav-main-link " href="{{ route('admin.create_users') }}">
                                         <span class="nav-main-link-name">Create Staff</span>
                                     </a>
                                 </li>
@@ -110,7 +111,7 @@
                                 <li class="nav-main-item">
                                     <a class="nav-main-link {{ request()->routeIs('admin.users_index') ? 'active' : '' }}"
                                         href="{{ route('admin.users_index') }}">
-                                        <span class="nav-main-link-name">View All Staffs</span>
+                                        <span class="nav-main-link-name">All Staffs</span>
                                     </a>
                                 </li>
                             </ul>
@@ -153,7 +154,7 @@
 
                                 <li class="nav-main-item">
                                     <a class="nav-main-link" href="{{ route('attendance.index') }}">
-                                        <span class="nav-main-link-name">View All Attendance</span>
+                                        <span class="nav-main-link-name">All Attendance</span>
                                     </a>
                                 </li>
 
@@ -162,6 +163,7 @@
                                         <span class="nav-main-link-name">My Attendance</span>
                                     </a>
                                 </li>
+
 
                             </ul>
                         </li>
@@ -174,14 +176,15 @@
                                 <span class="nav-main-link-name">Leave Records</span>
                             </a>
                             <ul class="nav-main-submenu">
-                                <li class="nav-main-item">
-                                    <a class="nav-main-link" href="{{ route('leaves.index') }}">
-                                        <span class="nav-main-link-name">View All Leave</span>
+
+                                <li>
+                                    <a class="nav-main-link" href="{{ route('leaves.status') }}">
+                                        <span class="nav-main-link-name">Staffs On Leave</span>
                                     </a>
                                 </li>
 
                                 <li class="nav-main-item">
-                                    <a class="nav-main-link" href="{{ route('leaves.index') }}">
+                                    <a class="nav-main-link" href="{{ route('leaves.hr.pending') }}">
                                         <span class="nav-main-link-name">View Pending Leaves</span>
                                     </a>
                                 </li>
@@ -191,68 +194,47 @@
                                         <span class="nav-main-link-name">Create Leave</span>
                                     </a>
                                 </li>  --}}
-                                
-                                    <li class="nav-main-item">
-                                        <a class="nav-main-link" href="{{ route('leave_balances.create') }}">
-                                            <span class="nav-main-link-name">Create Leave Balance for
-                                               
-                                        </a>
-                                    </li>
-                               
+
+                                <li class="nav-main-item">
+                                    <a class="nav-main-link" href="{{ route('leave_balances.create') }}">
+                                        <span class="nav-main-link-name">Create Leave Balance
+
+                                    </a>
+                                </li>
+
                             </ul>
                         </li>
 
                         <!-- Staff Management -->
-                        <li class="nav-main-heading">Staff Management</li>
+                        <li class="nav-main-heading">Visitors Management</li>
                         <li class="nav-main-item">
                             <a class="nav-main-link nav-main-link-submenu" data-toggle="submenu" href="#">
-                                <i class="nav-main-link-icon fa fa-vector-square"></i>
-                                <span class="nav-main-link-name">Assessment</span>
+                                <i class="nav-main-link-icon fa fa-users"></i>
+                                <span class="nav-main-link-name">Visitors</span>
                             </a>
                             <ul class="nav-main-submenu">
+
                                 <li class="nav-main-item">
-                                    <a class="nav-main-link nav-main-link-submenu" data-toggle="submenu" href="#">
-                                        <span class="nav-main-link-name">Projects</span>
+                                    <a class="nav-main-link" href="{{ route('visitors.dashboard') }}">
+                                        <span class="nav-main-link-name">Dashboard</span>
                                     </a>
-                                    <ul class="nav-main-submenu">
-                                        <li class="nav-main-item">
-                                            <a class="nav-main-link" href="#">
-                                                <span class="nav-main-link-name">Create Project</span>
-                                            </a>
-                                        </li>
-                                        <li class="nav-main-item">
-                                            <a class="nav-main-link" href="#">
-                                                <span class="nav-main-link-name">Assign Staffs</span>
-                                            </a>
-                                        </li>
-                                        <li class="nav-main-item">
-                                            <a class="nav-main-link" href="#">
-                                                <span class="nav-main-link-name">View Projects</span>
-                                            </a>
-                                        </li>
-                                    </ul>
+                                </li>
+
+                                <li class="nav-main-item">
+                                    <a class="nav-main-link" href="{{ route('visitor.register') }}">
+                                        <span class="nav-main-link-name">Register Visitor</span>
+                                    </a>
                                 </li>
                                 <li class="nav-main-item">
-                                    <a class="nav-main-link nav-main-link-submenu" data-toggle="submenu" href="#">
-                                        <span class="nav-main-link-name">Tasks Section</span>
+                                    <a class="nav-main-link" href="#">
+                                        <span class="nav-main-link-name">View Visitors</span>
                                     </a>
-                                    <ul class="nav-main-submenu">
-                                        <li class="nav-main-item">
-                                            <a class="nav-main-link" href="#">
-                                                <span class="nav-main-link-name">Create Task</span>
-                                            </a>
-                                        </li>
-                                        <li class="nav-main-item">
-                                            <a class="nav-main-link" href="#">
-                                                <span class="nav-main-link-name">Assign Task</span>
-                                            </a>
-                                        </li>
-                                        <li class="nav-main-item">
-                                            <a class="nav-main-link" href="#">
-                                                <span class="nav-main-link-name">View Tasks</span>
-                                            </a>
-                                        </li>
-                                    </ul>
+                                </li>
+
+                                <li class="nav-main-item">
+                                    <a class="nav-main-link" href="{{ route('appointment.booking') }}">
+                                        <span class="nav-main-link-name">Book Appointment</span>
+                                    </a>
                                 </li>
                             </ul>
                         </li>
@@ -283,13 +265,13 @@
                         <!-- Leave Management -->
                         <li class="nav-main-heading">Leave Management</li>
                         <li class="nav-main-item">
-                            <a class="nav-main-link" href="{{ route('staff.leave.apply') }}">
+                            <a class="nav-main-link" href="{{ route('leaves.create') }}">
                                 <i class="nav-main-link-icon fa fa-pencil"></i>
                                 <span class="nav-main-link-name">Request Leave</span>
                             </a>
                         </li>
                         <li class="nav-main-item">
-                            <a class="nav-main-link" href="{{ route('staff.leaves.index') }}">
+                            <a class="nav-main-link" href="{{ route('leaves.index') }}">
                                 <i class="nav-main-link-icon fa fa-address-book-o"></i>
                                 <span class="nav-main-link-name">My Leaves</span>
                             </a>
@@ -330,19 +312,19 @@
                             </a>
                             <ul class="nav-main-submenu">
                                 <li class="nav-main-item">
-                                    <a class="nav-main-link" href="{{ route('supervisor.leaves.index') }}">
+                                    <a class="nav-main-link" href="{{ route('leaves.index') }}">
                                         <span class="nav-main-link-name">My Leaves History</span>
                                     </a>
                                 </li>
 
                                 <li class="nav-main-item">
-                                    <a class="nav-main-link" href="{{ route('supervisor.subordinates.index') }}">
+                                    <a class="nav-main-link" href="{{ route('leaves.supervisor.pending') }}">
                                         Pending Leaves
                                     </a>
                                 </li>
 
                                 <li class="nav-main-item">
-                                    <a class="nav-main-link" href="{{ route('supervisor.leaves.create') }}">
+                                    <a class="nav-main-link" href="{{ route('leaves.create') }}">
                                         <span class="nav-main-link-name">Request Leave</span>
                                     </a>
                                 </li>

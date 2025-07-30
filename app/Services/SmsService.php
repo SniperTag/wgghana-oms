@@ -7,52 +7,52 @@ use Illuminate\Support\Facades\Log;
 
 class SmsService
 {
-    protected string $baseUrl;
-    protected string $apiKey;
-    protected string $senderId;
+ 
+    protected $sender;
+    protected $key;
 
     public function __construct()
     {
-        $this->baseUrl = config('services.nalo.base_url');
-        $this->apiKey = config('services.nalo.api_key');
-        $this->senderId = config('services.nalo.sender_id');
+       $this->key = config('services.bulksmsgh.key');
+        $this->sender = config('services.bulksmsgh.sender_id');
     }
 
-    /**
-     * Send SMS using Nalo Solutions API.
-     *
-     * @param string $recipientPhone
-     * @param string $message
-     * @return bool
-     */
-    public function send(string $recipientPhone, string $message): bool
+    public function send($recipient, $message)
     {
-        try {
-            $response = Http::post("{$this->baseUrl}/sms/api", [
-                'key' => $this->apiKey,
-                'to' => $recipientPhone,
-                'msg' => $message,
-                'sender_id' => $this->senderId,
-            ]);
+        $response = Http::post('https://clientlogin.bulksmsgh.com/sms/api', [
+            'key'       => $this->key,
+            'to'        => $recipient,
+            'msg'       => $message,
+            'sender_id' => $this->sender,
+        ]);
 
-            if ($response->successful()) {
-                Log::info("SMS sent to {$recipientPhone} via Nalo.");
-                return true;
-            }
+         $code = trim($response->body()); // e.g. "1000"
+        $message = $this->interpretResponseCode($code);
 
-            Log::error('Nalo SMS failed', [
-                'phone' => $recipientPhone,
-                'message' => $message,
-                'response' => $response->body(),
-            ]);
+         // Log result
+        Log::info("SMS to {$recipient}: [{$code}] {$message}");
 
-            return false;
-        } catch (\Exception $e) {
-            Log::error('Nalo SMS Exception', [
-                'exception' => $e->getMessage(),
-                'phone' => $recipientPhone,
-            ]);
-            return false;
-        }
+        return [
+            'code' => $code,
+            'status' => $message,
+            'success' => $code === '1000' || $code === '1007', // success or scheduled
+        ];
+    }
+
+    protected function interpretResponseCode(string $code): string
+    {
+        return match ($code) {
+            '1000' => '✅ Message submitted successfully.',
+            '1002' => '❌ SMS sending failed.',
+            '1003' => '❌ Insufficient balance.',
+            '1004' => '❌ Invalid API key.',
+            '1005' => '❌ Invalid phone number.',
+            '1006' => '❌ Invalid sender ID (max 11 characters).',
+            '1007' => '⏳ Message scheduled for later delivery.',
+            '1008' => '❌ Empty message content.',
+            default => '❓ Unknown response code.',
+        };
     }
 }
+
+

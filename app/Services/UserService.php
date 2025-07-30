@@ -57,7 +57,7 @@ class UserService
 
             // Create reset token and link
             $token = Password::createToken($user);
-            $resetUrl = route('password.change', ['token' => $token, 'email' => $user->email]);
+            $resetUrl = route('login', ['token' => $token, 'email' => $user->email]);
 
             // Send welcome email
             // Check for SMTP-level failures (e.g., invalid email address)

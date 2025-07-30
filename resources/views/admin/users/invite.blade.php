@@ -108,27 +108,39 @@
                                 <h5 class="mb-0">Invite New User</h5>
                             </div>
                             <div class="card-body">
-                                @if(session('success'))
+                                @if (session('success'))
                                     <div class="alert alert-success">{{ session('success') }}</div>
                                 @endif
 
-                                <form action="{{ route('admin.invite_store') }}" method="POST">
+                                <form action="{{ route('admin.invite.store') }}" method="POST">
                                     @csrf
 
-                                    <div class="mb-3">
-                                        <label for="email" class="form-label">User Email</label>
-                                        <input type="email" name="email" id="email"
-                                               class="form-control @error('email') is-invalid @enderror"
-                                               placeholder="Enter user's email" required>
-
-                                        @error('email')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
+                                    <div class="mb-4">
+                                        <label for="email"
+                                            class="block font-medium text-sm text-gray-700">Email</label>
+                                        <input type="email" name="email" id="email" required
+                                            class="mt-1 block w-full rounded-md border-gray-300" />
                                     </div>
 
-                                    <button type="submit" class="btn btn-primary">Send Invite</button>
-                                    <a href="{{ route('dashboard') }}" class="btn btn-secondary">Cancel</a>
+                                    <div class="mb-4">
+                                        <label for="roles" class="block font-medium text-sm text-gray-700">Assign
+                                            Roles</label>
+                                        <select name="roles[]" id="roles" multiple required
+                                            class="mt-1 block w-full rounded-md border-gray-300">
+                                            @foreach ($roles as $role)
+                                                <option value="{{ $role->name }}">{{ ucfirst($role->name) }}</option>
+                                            @endforeach
+                                        </select>
+                                        <p class="text-xs text-gray-500 mt-1">Hold Ctrl (Cmd) to select multiple roles.
+                                        </p>
+                                    </div>
+
+                                    <button type="submit"
+                                        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                                        Send Invite
+                                    </button>
                                 </form>
+
                             </div>
                         </div>
                     </div>

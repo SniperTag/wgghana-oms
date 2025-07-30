@@ -8,14 +8,14 @@
 
  {{-- External Css --}}
 {{-- Icons --}}
-<link rel="shortcut icon" href="{{ asset('build/assets/media/favicons/favicon.png') }}">
-<link rel="icon" type="image/png" sizes="192x192" href="{{ asset('build/assets/media/favicons/favicon-192x192.png') }}">
-<link rel="apple-touch-icon" sizes="180x180" href="{{ asset('build/assets/media/favicons/apple-touch-icon-180x180.png') }}">
+<link rel="shortcut icon" href="{{ asset('media/favicons/favicon.png') }}">
+<link rel="icon" type="image/png" sizes="192x192" href="{{ asset('media/favicons/favicon-192x192.png') }}">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ asset('media/favicons/apple-touch-icon-180x180.png') }}">
 <!-- END Icons -->
 
 <!-- Stylesheets -->
 <!-- Codebase framework -->
-<link rel="stylesheet" id="css-main" href="{{ asset('build/assets/css/codebase.min.css') }}">
+<link rel="stylesheet" id="css-main" href="{{ asset('css/codebase.min.css') }}">
 
 
 

@@ -8,26 +8,22 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use App\Models\User;
+
 
 class UserInviteMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $token;
+    public User $user;
+    public string $token;
 
-    /**
-     * Create a new message instance.
-     *
-     * @param string $token
-     */
-    public function __construct($token)
+    public function __construct(User $user, string $token)
     {
+        $this->user = $user;
         $this->token = $token;
     }
 
-    /**
-     * Get the message envelope.
-     */
     public function envelope(): Envelope
     {
         return new Envelope(
@@ -35,19 +31,16 @@ class UserInviteMail extends Mailable
         );
     }
 
-    /**
-     * Get the message content definition.
-     */
     public function content(): Content
-    {
-        return new Content(
-            view: 'emails.user_invite',
-        );
-    }
+{
+    return new Content(
+        view: 'emails.user_invite',
+        with: [
+            'token' => $this->token,
+        ],
+    );
+}
 
-    /**
-     * Get the attachments for the message.
-     */
     public function attachments(): array
     {
         return [];

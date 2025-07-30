@@ -2,9 +2,13 @@
 
 namespace App\Providers;
 
-use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
-use Illuminate\Mail\Events\MessageSent;
+use App\Events\LeaveApproved;
+use App\Events\LeaveRejected;
 use App\Listeners\LogSentEmails;
+use Illuminate\Mail\Events\MessageSent;
+use App\Listeners\SendLeaveApprovalNotification;
+use App\Listeners\SendLeaveRejectionNotification;
+use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -14,6 +18,12 @@ class EventServiceProvider extends ServiceProvider
     protected $listen = [
         MessageSent::class => [
             LogSentEmails::class,
+        ],
+        LeaveApproved::class => [
+            SendLeaveApprovalNotification::class,
+        ],
+        LeaveRejected::class => [
+            SendLeaveRejectionNotification::class,
         ],
     ];
 

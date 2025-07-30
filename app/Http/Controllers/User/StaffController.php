@@ -125,15 +125,37 @@ class StaffController extends Controller
     }
 
     // Function to show the staff attendance page
-    public function attendance()
-    {
-        // Fetching the authenticated user
-        $user = Auth::user();
-        // Fetching the attendance records for the authenticated user
-        $attendanceRecords = AttendanceRecord::where('user_id', $user->id)->orderBy('attendance_date', 'desc')->paginate(10);
-        // Returning the view with the attendance records
-        return view('staff.attendance', compact('attendanceRecords'));
+     public function attendance(Request $request)
+{
+    $user = Auth::user();
+
+    $query = AttendanceRecord::with('user.department')
+        ->where('user_id', $user->id);
+
+    // Handle predefined filters
+    if ($request->filled('filter')) {
+        switch ($request->filter) {
+            case 'today':
+                $query->whereDate('attendance_date', now());
+                break;
+            case 'this_week':
+                $query->whereBetween('attendance_date', [now()->startOfWeek(), now()->endOfWeek()]);
+                break;
+            case 'this_month':
+                $query->whereBetween('attendance_date', [now()->startOfMonth(), now()->endOfMonth()]);
+                break;
+        }
     }
+
+    // Handle custom date range
+    if ($request->filled('from') && $request->filled('to')) {
+        $query->whereBetween('attendance_date', [$request->from, $request->to]);
+    }
+
+    $attendanceRecords = $query->orderBy('attendance_date', 'desc')->paginate(10);
+
+    return view('staff.attendance', compact('attendanceRecords', 'user'));
+}
 
 
     //Function to create and View Leave

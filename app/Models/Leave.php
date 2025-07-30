@@ -39,7 +39,7 @@ class Leave extends Model
         'hr_id',
         'hr_status', // pending/approved/rejected
         'hr_approved_at',
-       
+
     ];
 
     protected $casts = [
@@ -145,5 +145,6 @@ public function hr()
         return $query->where('status', 'approved')
             ->whereDate('start_date', '<=', now())
             ->whereDate('end_date', '>=', now());
+
     }
 }

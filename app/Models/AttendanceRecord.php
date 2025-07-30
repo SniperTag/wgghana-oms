@@ -14,10 +14,6 @@ class AttendanceRecord extends Model
         'check_out_time',
         'status',
         'face_snapshot',
-        'stepped_out_time',
-        'returned_time',
-        'step_out_duration',
-        'step_out_reason',
         'notes',
         'ip_address',
         'device_info',
@@ -38,7 +34,7 @@ class AttendanceRecord extends Model
     }
     public function breakTimes()
 {
-    return $this->hasMany(BreakTime::class);
+    return $this->hasMany(BreakSession::class);
 }
 
 }

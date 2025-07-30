@@ -12,12 +12,12 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasFactory, Notifiable, HasRoles,CanResetPassword;
+    use HasFactory, Notifiable, HasRoles, CanResetPassword;
 
     protected $fillable = [
-        'name', 'email', 'password', 'department_id','staff_id','clockin_pin',
-    'pin_changed','password_changed', 'supervisor_id', 'avatar','face_image',
-        'phone', 'is_active', 'is_invited', 'invite_token', 'invite_token_expiry', 'invite_token_used'
+        'name', 'email','gender', 'password', 'staff_id','clockin_pin',
+    'pin_changed','password_changed', 'avatar','face_image',
+        'phone', 'corporate_email', 'personal_email', 'date_of_birth', 'nationality', 'is_active'
     ];
 
     protected $hidden = [
@@ -29,10 +29,16 @@ class User extends Authenticatable implements MustVerifyEmail
         'is_active' => 'boolean',
     ];
 
+    public function emergencyContacts()
+{
+    return $this->hasMany(EmergencyContact::class);
+}
+
     public function department()
     {
         return $this->belongsTo(Department::class);
     }
+    
 
 public function leaveBalances()
 {
@@ -41,7 +47,7 @@ public function leaveBalances()
 
     public function visitors()
     {
-        return $this->hasMany(Visitors::class, 'host_id');
+        return $this->hasMany(Visitor::class, 'host_id');
     }
 
     public function attendanceRecords()
@@ -57,6 +63,12 @@ public function leaveBalances()
     {
         return $this->hasMany(Event::class);
     }
+
+    public function hostedVisitors()
+{
+    return $this->hasMany(Visitor::class, 'host_id');
+}
+
 
 // User.php
 
@@ -93,21 +105,10 @@ public function subordinates()
         return $query->where('is_active', true);
     }
 
-//     protected static function booted()
-// {
-//     static::creating(function ($user) {
-//         do {
-//             $random = random_int(1000, 9999);
-//             $year = now()->year;
-//             $staffId = "WG-$random-$year";
-//         } while (User::where('staff_id', $staffId)->exists());
 
-//         $user->staff_id = $staffId;
-//     });
-// }
 public function breakTimes()
 {
-    return $this->hasMany(BreakTime::class);
+    return $this->hasMany(BreakSession::class);
 }
 public function projects() {
     return $this->belongsToMany(Project::class);

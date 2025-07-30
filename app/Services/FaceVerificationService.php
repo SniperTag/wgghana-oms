@@ -34,3 +34,42 @@ class FaceVerificationService
         return rand(80, 100) / 100; // e.g. 0.80 - 1.00
     }
 }
+
+
+// namespace App\Services;
+
+// use Illuminate\Support\Facades\Log;
+// use Illuminate\Support\Facades\Http;
+
+// class FaceVerificationService
+// {
+//     /**
+//      * Compares a submitted face snapshot to the stored face image via external API.
+//      * @param string $submittedBase64
+//      * @param string $storedBase64
+//      * @return bool
+//      */
+//     public function verifyFace(string $submittedBase64, string $storedBase64): bool
+//     {
+//         try {
+//             $response = Http::timeout(10)->post('http://192.168.100.65:5000/compare-faces', [
+//                 'live_image' => $submittedBase64,
+//                 'stored_image' => $storedBase64,
+//             ]);
+
+//             if ($response->successful()) {
+//                 $json = $response->json();
+//                 Log::info("🧠 Face verification response:", $json);
+
+//                 return isset($json['verified']) && $json['verified'] === true;
+//             } else {
+//                 Log::error('Face verification API returned error: ' . $response->body());
+//             }
+//         } catch (\Exception $e) {
+//             Log::error('Face verification API request failed: ' . $e->getMessage());
+//         }
+
+//         return false;
+//     }
+// }
+

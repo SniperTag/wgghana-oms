@@ -32,16 +32,6 @@ return new class extends Migration
 
             // Store face snapshot, you might want to keep this as text (base64) or a file path
             $table->longtext('face_snapshot')->nullable();
-
-            // Timestamp for when user stepped out temporarily
-            $table->timestamp('stepped_out_time')->nullable();
-            // Timestamp for when user returned after stepping out
-            $table->timestamp('returned_time')->nullable();
-            // Duration of the step out in minutes, nullable if not applicable
-            $table->integer('step_out_duration')->nullable();
-            // Reason for stepping out, nullable if not applicable
-            $table->string('step_out_reason')->nullable();
-            // Duration of the attendance in minutes, nullable if not applicable
             
             // Additional notes if any
             $table->text('notes')->nullable();

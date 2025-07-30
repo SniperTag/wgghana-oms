@@ -42,7 +42,7 @@
 
                             <!-- Header -->
                             <div class="px-4 py-2 mb-4 text-center">
-                                <img src="{{ asset('build/assets/image/Office_logo.jpg') }}"
+                                <img src="{{ asset('image/Office_logo.jpg') }}"
                                     alt="Waltergates Office Logo" class="w-50 mb-4 mx-auto d-block">
 
                                 <h1 class="h3 fw-bold mt-4 mb-2">Welcome to Your Dashboard</h1>

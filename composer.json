@@ -8,6 +8,8 @@
     "require": {
         "php": "^8.2",
         "barryvdh/laravel-dompdf": "^3.1",
+        "blade-ui-kit/blade-heroicons": "^2.6",
+        "blade-ui-kit/blade-icons": "^1.8",
         "jenssegers/agent": "^2.6",
         "laravel/breeze": "^2.3",
         "laravel/framework": "^12.0",
@@ -15,10 +17,13 @@
         "laravel/tinker": "^2.10.1",
         "livewire/livewire": "^3.6",
         "livewirez/laravel-helpers": "^1.0",
+        "mallardduck/blade-lucide-icons": "^1.23",
         "milon/barcode": "^12.0",
         "php-flasher/flasher-toastr-laravel": "^2.1",
         "pusher/pusher-php-server": "^7.2",
+        "simplesoftwareio/simple-qrcode": "^4.2",
         "spatie/laravel-activitylog": "^4.10",
+        "spatie/laravel-medialibrary": "^11.13",
         "spatie/laravel-permission": "^6.17",
         "twilio/sdk": "^8.6"
     },

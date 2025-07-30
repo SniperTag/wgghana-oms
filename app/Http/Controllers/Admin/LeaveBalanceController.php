@@ -52,6 +52,7 @@ public function store(Request $request)
             'leave_type_id' => 'required|exists:leave_types,id',
             'total_days' => 'required|numeric|min:0',
             'used_days' => 'required|numeric|min:0',
+            'remaining_days' => 'required|numeric|min:0',
             'year' => 'required|integer|min:' . (now()->year - 10) . '|max:' . (now()->year + 10),
         ]);
 

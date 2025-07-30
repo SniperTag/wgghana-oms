@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Storage;
 use App\Services\FaceVerificationService;
 use App\Notifications\StaffStatusAlert;
 use App\Services\NotificationService;
+use App\Models\BreakSession;
+use App\livewire\StepOutManager;
 
 
 
@@ -23,69 +25,153 @@ class AttendanceController extends Controller
     /**
      * Show attendance records filtered by role and search
      */
-    public function index(Request $request)
-    {
-        $user = Auth::user();
-        $userCount = User::count();
+   public function index(Request $request)
+{
+    $user = Auth::user();
+    $userCount = User::count();
 
-        $query = AttendanceRecord::with(['user.department']);
+    $query = AttendanceRecord::with(['user.department']);
 
-        if ($request->filled('name')) {
-            $query->whereHas('user', function ($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->name . '%');
-            });
-        }
+    // Determine if any filters were applied
+    $hasFilter = $request->filled('name') || $request->filled('filter') || ($request->filled('from') && $request->filled('to'));
 
-        if ($user->hasRole('admin')) {
-            // All records
-        } elseif ($user->hasRole('hr')) {
-            $query->whereHas('user', function ($q) use ($user) {
-                $q->where('department_id', $user->department_id);
-            });
-        } else {
-            $query->where('user_id', $user->id);
-        }
-
-        $attendanceRecords = $query->latest()->paginate(10);
-
-        return view('admin.attendance.index', compact('attendanceRecords', 'userCount', 'user'));
+    // Name search
+    if ($request->filled('name')) {
+        $query->whereHas('user', function ($q) use ($request) {
+            $q->where('name', 'like', '%' . $request->name . '%');
+        });
     }
+
+    // Date filter (Today, This Week, This Month)
+    if ($request->filled('filter')) {
+        $now = now();
+
+        switch ($request->filter) {
+            case 'today':
+                $query->whereDate('created_at', $now->toDateString());
+                break;
+
+            case 'this_week':
+                $query->whereBetween('created_at', [$now->startOfWeek(), $now->endOfWeek()]);
+                break;
+
+            case 'this_month':
+                $query->whereBetween('created_at', [$now->startOfMonth(), $now->endOfMonth()]);
+                break;
+        }
+    }
+
+    // Custom date range
+    if ($request->filled('from') && $request->filled('to') && !$request->filled('filter')) {
+        $query->whereBetween('created_at', [$request->from, $request->to]);
+    }
+
+    // Role-based visibility
+    if ($user->hasRole('admin')) {
+        // View all
+    } elseif ($user->hasRole('hr')) {
+        $query->whereHas('user', function ($q) use ($user) {
+            $q->where('department_id', $user->department_id);
+        });
+    } else {
+        $query->where('user_id', $user->id);
+    }
+
+    $attendanceRecords = $query->latest()->paginate(10)->appends($request->query());
+
+    $onBreak = BreakSession::where('user_id', $user->id)
+        ->whereNull('ended_at')
+        ->exists();
+
+    return view('admin.attendance.index', compact(
+        'attendanceRecords',
+        'userCount',
+        'user',
+        'hasFilter',
+        'onBreak'
+    ));
+}
+
 
     /**
      * View logged-in user's attendance based on role
      */
-    public function myAttendance()
-    {
-        $user = Auth::user();
-        $userCount = User::count();
+    public function myAttendance(Request $request)
+{
+    $user = Auth::user();
+    $userCount = User::count();
 
-        if ($user->hasRole('admin')) {
-            $attendanceRecords = AttendanceRecord::with(['user.department'])->latest()->paginate(10);
-        } elseif ($user->hasRole('hr')) {
-            $attendanceRecords = AttendanceRecord::whereHas('user', function ($q) use ($user) {
-                $q->where('department_id', $user->department_id);
-            })->latest()->paginate(10);
-        } else {
-            $attendanceRecords = AttendanceRecord::with('user.department')
-                ->where('user_id', $user->id)
-                ->latest('attendance_date')
-                ->paginate(10);
+    $query = AttendanceRecord::with(['user.department']);
+
+    // Date filter
+    if ($request->filled('filter')) {
+        $now = now();
+
+        switch ($request->filter) {
+            case 'today':
+                $query->whereDate('created_at', $now->toDateString());
+                break;
+
+            case 'this_week':
+                $query->whereBetween('created_at', [$now->startOfWeek(), $now->endOfWeek()]);
+                break;
+
+            case 'this_month':
+                $query->whereBetween('created_at', [$now->startOfMonth(), $now->endOfMonth()]);
+                break;
         }
-
-        return view('admin.attendance.myAtten', compact('attendanceRecords', 'user', 'userCount'));
     }
+
+    // Custom date range
+    if ($request->filled('from') && $request->filled('to') && !$request->filled('filter')) {
+        $query->whereBetween('created_at', [$request->from, $request->to]);
+    }
+
+    // Role-based filtering
+    if ($user->hasRole('admin')) {
+        // all
+    } elseif ($user->hasRole('hr')) {
+        $query->whereHas('user', function ($q) use ($user) {
+            $q->where('department_id', $user->department_id);
+        });
+    } else {
+        $query->where('user_id', $user->id);
+    }
+
+    $attendanceRecords = $query->latest('attendance_date')->paginate(10)->appends($request->query());
+
+    // Additional checks
+    $onBreak = BreakSession::where('user_id', $user->id)->whereNull('ended_at')->exists();
+
+    $currentlySteppedOut = StepOutManager::where('user_id', $user->id)->whereNull('returned_at')->exists();
+
+    $hasClockedIn = AttendanceRecord::where('user_id', $user->id)
+        ->whereDate('attendance_date', today())
+        ->whereNotNull('check_in_time')
+        ->exists();
+
+    return view('admin.attendance.record', compact(
+        'attendanceRecords',
+        'user',
+        'userCount',
+        'onBreak',
+        'currentlySteppedOut',
+        'hasClockedIn'
+    ));
+}
+
 
     /**
      * Handle check-in/check-out/step-out/return actions
      */
     public function handleAttendance(Request $request, FaceVerificationService $faceService, NotificationService $notificationService)
     {
-        Log::info('📥 Attendance request started', $request->all());
+        Log::info('Attendance Request Payload:', $request->all());
 
         $validated = $request->validate([
             'staff_id' => 'required|string',
-            'pin' => 'nullable|string',
-            'action' => 'required|in:check_in,check_out,step_out,returned_time,start_break,end_break',
+            'clockin_pin' => 'nullable|string',
+            'action' => 'required|in:check_in,check_out,step_out_time,returned_time,start_break,end_break',
             'face_snapshot' => 'required_if:action,check_in|string|nullable',
             'notes' => 'nullable|string',
         ]);
@@ -93,23 +179,18 @@ class AttendanceController extends Controller
         $validated['staff_id'] = trim($validated['staff_id']);
         $user = User::where('staff_id', $validated['staff_id'])->first();
 
-        Log::info("🔍 Staff lookup for ID: {$validated['staff_id']}");
-
         if (!$user) {
             Log::warning("❌ Invalid Staff ID: {$validated['staff_id']}");
-            toastr()->error('❌ Invalid Staff ID');
-            return back();
+            return $this->response($request, false, '❌ Invalid Staff ID');
         }
 
         // Require PIN for check_out
         if ($validated['action'] === 'check_out') {
-            if (empty($validated['pin']) || !Hash::check($validated['pin'], $user->clockin_pin)) {
+            if (empty($validated['clockin_pin']) || !Hash::check($validated['clockin_pin'], $user->clockin_pin)) {
                 Log::warning("❌ Invalid PIN for Staff ID: {$validated['staff_id']}");
-                toastr()->error('❌ Invalid PIN');
-                return back();
+                return $this->response($request, false, '❌ Invalid PIN');
             }
         }
-
 
         $today = now()->toDateString();
         $attendance = AttendanceRecord::firstOrCreate(
@@ -120,20 +201,17 @@ class AttendanceController extends Controller
         switch ($validated['action']) {
             case 'check_in':
                 if ($attendance->check_in_time) {
-                    toastr()->error('❌ Already checked in today.');
-                    return back();
+                    return $this->response($request, false, '❌ Already checked in today.');
                 }
 
                 if (!$user->face_image) {
-                    toastr()->error('🧠 No face enrolled. Contact Admin.');
-                    return back();
+                    return $this->response($request, false, '🧠 No face enrolled. Contact Admin.');
                 }
 
                 $match = $faceService->verifyFace($validated['face_snapshot'], $user->face_image);
                 if (!$match) {
                     Log::warning("❌ Face mismatch for {$user->staff_id}");
-                    toastr()->error('❌ Face did not match. Try again.');
-                    return back();
+                    return $this->response($request, false, '❌ Face did not match. Try again.');
                 }
 
                 $ip = $request->ip();
@@ -155,91 +233,70 @@ class AttendanceController extends Controller
                     'notes' => $validated['notes'] ?? null,
                 ]);
 
-                // ✅ Send clock-in notification
                 $notificationService->sendClockInAlert($user, $checkInTime);
-
                 Log::info("🟢 Checked in: {$user->name} at {$checkInTime}, IP: $ip, Device: $deviceInfo");
-                toastr()->success('🟢 Checked in successfully.');
-                break;
+
+                return $this->response($request, true, '🟢 Welcome To Work, ' . auth::user()->name . '. Enjoy your day!.');
 
             case 'check_out':
-                if (!$attendance->check_in_time) {
-                    toastr()->error('❌ You must check in before checking out.');
-                    return back();
-                }
-
-                if ($attendance->check_out_time) {
-                    toastr()->error('❌ Already checked out today.');
-                    return back();
-                }
-
-                $checkOutTime = now();
-                $cutoffTime = now()->setTime(17, 30);
-
-                if ($checkOutTime->lt($cutoffTime)) {
-                    if (empty($validated['notes'])) {
-                        toastr()->error('❌ Please provide a notes explaining early clock-out.');
-                        return back();
+                try {
+                    if (!$attendance->check_in_time) {
+                        return $this->response($request, false, '❌ You must check in before checking out.');
                     }
 
-                    Log::info("⏰ Early clock-out by {$user->name}. Notes: {$validated['notes']}");
-                    $notificationService->sendEarlyCheckoutAlert($user, $checkOutTime->format('H:i:s'));
+                    if ($attendance->check_out_time) {
+                        return $this->response($request, false, '❌ Already checked out today.');
+                    }
+
+                    $checkOutTime = now();
+                    $cutoffTime = now()->setTime(17, 30);
+
+                    if ($checkOutTime->lt($cutoffTime)) {
+                        if (empty($validated['notes'])) {
+                            return $this->response($request, false, '❌ Please provide a note explaining early clock-out.');
+                        }
+                        Log::info("⏰ Early clock-out by {$user->name}. Notes: {$validated['notes']}");
+                        $notificationService->sendEarlyCheckoutAlert($user, $checkOutTime->format('H:i:s'));
+                    }
+
+                    $attendance->update([
+                        'check_out_time' => $checkOutTime->format('H:i:s'),
+                        'notes' => $validated['notes'] ?? $attendance->notes,
+                    ]);
+
+                    $notificationService->sendClockOutAlert($user, $checkOutTime->format('H:i:s'));
+                    Log::info("🔚 Checked out: {$user->name} at {$checkOutTime->format('H:i:s')}");
+
+                    return $this->response($request, true, '🔚 Done for the Day,' . auth::user()->name . '.Have a Good night.');
+
+                } catch (\Exception $e) {
+                    Log::error("Checkout error for {$user->staff_id}: " . $e->getMessage());
+                    return $this->response($request, false, '❌ Unexpected error occurred. ' . $e->getMessage());
                 }
-                $attendance->update([
-                    'check_out_time' => $checkOutTime->format('H:i:s'),
-                    'notes' => $validated['notes'] ?? $attendance->notes,
-                ]);
 
-                // ✅ Send clock-out notification
-                $notificationService->sendClockOutAlert($user, $checkOutTime->format('H:i:s'));
 
-                Log::info("🔚 Checked out: {$user->name} at {$checkOutTime->format('H:i:s')}");
-                toastr()->success('🔚 Checked out successfully.');
-                break;
-
-            case 'step_out':
-                $attendance->update([
-                    'step_out_time' => now()->format('H:i:s'),
-                    'notes' => $validated['notes'] ?? $attendance->notes,
-                ]);
-
-                $this->broadcastStatus($user, "{$user->name} stepped out at " . now()->format('H:i'));
-                toastr()->success('🚶 Stepped out recorded.');
-                break;
-
-            case 'returned_time':
-                $attendance->update([
-                    'returned_time' => now()->format('H:i:s'),
-                    'notes' => $validated['notes'] ?? $attendance->notes,
-                ]);
-
-                $this->broadcastStatus($user, "{$user->name} returned at " . now()->format('H:i'));
-                toastr()->success('✅ Returned recorded.');
-                break;
-
-            case 'start_break':
-                $attendance->update([
-                    'start_break_time' => now()->format('H:i:s'),
-                    'notes' => $validated['notes'] ?? $attendance->notes,
-                ]);
-
-                $this->broadcastStatus($user, "{$user->name} started break at " . now()->format('H:i'));
-                toastr()->success('🍔 Break started.');
-                break;
-
-            case 'end_break':
-                $attendance->update([
-                    'end_break_time' => now()->format('H:i:s'),
-                    'notes' => $validated['notes'] ?? $attendance->notes,
-                ]);
-
-                $this->broadcastStatus($user, "{$user->name} ended break at " . now()->format('H:i'));
-                toastr()->success('☕ Break ended.');
-                break;
+            // Add other cases here...
 
             default:
-                toastr()->error('❌ Invalid action.');
-                Log::error("❌ Unknown action attempted: {$validated['action']}");
+                return $this->response($request, false, '❌ Invalid action.');
+        }
+    }
+
+    // Helper method to unify JSON or redirect response with flash
+    protected function response(Request $request, bool $success, string $message)
+    {
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => $success,
+                'message' => $message,
+            ]);
+        }
+
+        // Use toastr or session flash for normal requests
+        if ($success) {
+            toastr()->success($message);
+        } else {
+            toastr()->error($message);
         }
 
         return back();

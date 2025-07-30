@@ -33,90 +33,97 @@
         <main id="main-container content-full">
             <!-- Page Content -->
             <div class="content mt-7">
-                <div class="row">
-                    <!-- Row #1 -->
-                    <div class="col-6 col-xl-3">
-                        <a class="block block-rounded block-bordered block-link-shadow" href="javascript:void(0)">
-                            <div
-                                class="block-content block-content-full d-sm-flex justify-content-between align-items-center">
-                                <div class="d-none d-sm-block">
-                                    <i class="si si-bag fa-2x text-primary-light"></i>
-                                </div>
-                                <div class="text-end">
-                                    <div class="fs-3 fw-semibold text-primary">1500</div>
-                                    <div class="fs-sm fw-semibold text-uppercase text-muted">Total visitors</div>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-6 col-xl-3">
-                        <a class="block block-rounded block-bordered block-link-shadow" href="javascript:void(0)">
-                            <div
-                                class="block-content block-content-full d-sm-flex justify-content-between align-items-center">
-                                <div class="d-none d-sm-block">
-                                    <i class="si si-wallet fa-2x text-earth-light"></i>
-                                </div>
-                                <div class="text-end">
-                                    <div class="fs-3 fw-semibold text-earth">$780</div>
-                                    <div class="fs-sm fw-semibold text-uppercase text-muted">Attance Record</div>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-6 col-xl-3">
-                        <a class="block block-rounded block-bordered block-link-shadow" href="javascript:void(0)">
-                            <div
-                                class="block-content block-content-full d-sm-flex justify-content-between align-items-center">
-
-                                <div class="row">
-                                    {{-- Pending --}}
-                                    <div class="col-12 col-md-4">
-                                        <div class="">
-                                            <div class="fs-3 fw-semibold text-success">{{ $approvedCount }}</div>
-                                            <div class="fs-sm fw-semibold text-uppercase text-muted">Approved
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {{-- Approved --}}
-                                    <div class="col-12 col-md-4">
-                                        <div class=" ">
-                                            <div class="fs-3 fw-semibold text-warning">{{ $pendingCount }}</div>
-                                            <div class="fs-sm fw-semibold text-uppercase text-muted">Pendding
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {{-- Rejected --}}
-                                    <div class="col-12 col-md-4">
-                                        <div class=" ">
-                                            <div class="fs-3 fw-semibold text-danger">{{ $rejectedCount }}</div>
-                                            <div class="fs-sm fw-semibold text-uppercase text-muted">Rejected
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-
-                            </div>
-                        </a>
-                    </div>
-
+               <div class="row g-3">
+    <!-- Remaining Days -->
+    <div class="col-6 col-xl-2">
+        <a class="block block-rounded block-bordered block-link-shadow" href="javascript:void(0)">
+            <div class="block-content block-content-full d-sm-flex justify-content-between align-items-center">
+                <div class="d-none d-sm-block">
+                    <i class="fas fa-calendar fa-2x text-primary-light"></i>
                 </div>
-                <div class="col-6 col-xl-3">
-                    <a class="block block-rounded block-bordered block-link-shadow" href="#">
-                        <div
-                            class="block-content block-content-full d-sm-flex justify-content-between align-items-center">
-                            <div class="d-none d-sm-block">
-                                <i class="si si-users fa-2x text-pulse"></i>
-                            </div>
-                            <div class="text-end">
-                                <div class="fs-3 fw-semibold text-pulse">{{ $onLeaveCount }}</div>
-                                <div class="fs-sm fw-semibold text-uppercase text-muted">Staffs on Leave</div>
-                            </div>
-                        </div>
-                    </a>
+                <div class="text-end">
+                    <div class="fs-3 fw-semibold text-primary">{{ $remainingAnnualLeave }}</div>
+                    <div class="fs-sm fw-semibold text-uppercase text-muted">Remaining Days</div>
                 </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Attendance Record -->
+    {{--  <div class="col-6 col-xl-2">
+        <a class="block block-rounded block-bordered block-link-shadow" href="javascript:void(0)">
+            <div class="block-content block-content-full d-sm-flex justify-content-between align-items-center">
+                <div class="d-none d-sm-block">
+                    <i class="si si-wallet fa-2x text-earth-light"></i>
+                </div>
+                <div class="text-end">
+                    <div class="fs-3 fw-semibold text-earth">$780</div>
+                    <div class="fs-sm fw-semibold text-uppercase text-muted">Attendance Record</div>
+                </div>
+            </div>
+        </a>
+    </div>  --}}
+
+    <!-- Leave Status Counts -->
+    <div class="col-6 col-xl-2">
+        <a class="block block-rounded block-bordered block-link-shadow" href="#">
+            <div class="block-content block-content-full d-sm-flex justify-content-between align-items-center">
+                <div class="d-none d-sm-block">
+                    <i class="bi bi-calendar-check fa-2x text-success"></i>
+                </div>
+                <div class="text-end">
+                    <div class="fs-3 fw-semibold text-success">{{  $approvedCount }}</div>
+                    <div class="fs-sm fw-semibold text-uppercase text-muted">Approved Leave</div>
+                </div>
+            </div>
+        </a>
+    </div>
+
+<div class="col-6 col-xl-2">
+        <a class="block block-rounded block-bordered block-link-shadow" href="#">
+            <div class="block-content block-content-full d-sm-flex justify-content-between align-items-center">
+                <div class="d-none d-sm-block">
+                    <i class="bi bi-calendar-x fa-2x text-pulse"></i>
+                </div>
+                <div class="text-end">
+                    <div class="fs-3 fw-semibold text-pulse">{{  $rejectedCount }}</div>
+                    <div class="fs-sm fw-semibold text-uppercase text-muted">Rejected Leave</div>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Staffs on Leave -->
+    <div class="col-6 col-xl-2">
+        <a class="block block-rounded block-bordered block-link-shadow" href="#">
+            <div class="block-content block-content-full d-sm-flex justify-content-between align-items-center">
+                <div class="d-none d-sm-block">
+                    <i class="bi bi-calendar-range fa-2x text-primary"></i>
+                </div>
+                <div class="text-end">
+                    <div class="fs-3 fw-semibold text-primary">{{  $pendingCount }}</div>
+                    <div class="fs-sm fw-semibold text-uppercase text-muted">Pending Leave</div>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-6 col-xl-2">
+        <a class="block block-rounded block-bordered block-link-shadow" href="#">
+            <div class="block-content block-content-full d-sm-flex justify-content-between align-items-center">
+                <div class="d-none d-sm-block">
+                    <i class="si si-users fa-2x text-mute"></i>
+                </div>
+                <div class="text-end">
+                    <div class="fs-3 fw-semibold text-pulse">{{ $onLeaveCount }}</div>
+                    <div class="fs-sm fw-semibold text-uppercase text-muted">Staff on Leave</div>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+
                 <!-- END Row #1 -->
 
                 <div class="container-fluid">

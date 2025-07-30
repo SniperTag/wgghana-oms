@@ -141,7 +141,7 @@
                                         <div class="row">
                                             <div class="col-md-8">
 
-                                                <form action="{{ route('leaves.store') }}" method="POST" novalidate>
+                                                <form action="{{ route('supervisor.leaves.store') }}" method="POST" novalidate>
                                                     @csrf
 
                                                     {{-- Leave Type Dropdown --}}

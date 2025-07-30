@@ -60,7 +60,7 @@
                                     border-radius: 6px;
                                     font-weight: bold;
                                     display: inline-block;
-                                ">Change Password</a>
+                                ">Login Now!</a>
                             </p>
 
                             <p style="font-size: 14px; color: #555;">

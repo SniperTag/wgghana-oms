@@ -11,35 +11,26 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->string('staff_id')->unique(); // e.g., WG-1234-2025
-            $table->string('clockin_pin')->nullable(); // hashed PIN
-             $table->longText('face_image')->nullable(); // Base64 encoded face snapshot
-            $table->boolean('pin_changed')->default(false);
-
-            // Invite User by Token
-            $table->string('invite_token')->nullable();
-            $table->boolean('is_invited')->default(false);
-            $table->string('invite_token_expiry')->nullable();
-            $table->string('invite_token_used')->nullable();
-
-            // Department and Position
-            $table->foreignId('department_id')->nullable()->constrained('departments')->onDelete('set null');
-            $table->string('phone')->nullable();
-
-            $table->boolean('is_active')->default(true);
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
-            $table->boolean('password_changed')->default(false);
-            $table->foreignId('supervisor_id')->nullable()->constrained('users')->onDelete('set null');
-            $table->string('avatar')->nullable(); // Path to avatar image
-
-
-            $table->rememberToken();
-            $table->timestamps();
-        });
+    $table->id();
+    $table->string('staff_id')->unique(); // Auto-generated WG-1234-2025
+    $table->string('name');
+    $table->string('corporate_email')->unique(); // For login
+    $table->string('email')->nullable();
+    $table->string('phone')->nullable();
+    $table->string('gender')->nullable(); // male/female/other
+    $table->date('date_of_birth')->nullable();
+    $table->string('nationality')->nullable();
+    $table->boolean('is_active')->default(true);
+    $table->timestamp('email_verified_at')->nullable();
+    $table->string('password');
+    $table->string('avatar')->nullable(); // profile picture
+    $table->longText('face_image')->nullable(); // base64 or path
+    $table->string('clockin_pin')->nullable();
+    $table->boolean('pin_changed')->default(false);
+    $table->boolean('password_changed')->default(false);
+    $table->rememberToken();
+    $table->timestamps();
+});
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();

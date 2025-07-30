@@ -77,4 +77,18 @@ return [
         public_path('storage') => storage_path('app/public'),
     ],
 
+   'sets' => [
+        'heroicons' => [
+            'path' => 'heroicons',
+            'disk' => 's3-icons',
+            'prefix' => 'heroicon',
+        ],
+        'zondicons' => [
+            'path' => 'zondicons',
+            'disk' => 's3-icons',
+            'prefix' => 'zondicon',
+        ],
+    ],
+
+   
 ];

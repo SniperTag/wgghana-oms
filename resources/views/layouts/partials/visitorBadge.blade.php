@@ -1,0 +1,1 @@
+@livewire('visitor.visitor-badge')

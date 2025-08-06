@@ -8,445 +8,467 @@
     @include('layouts.header')
 
     <!-- Main Container -->
-    <main id="main-container" class="content-full">
-        <div class="page-container d-flex flex-column min-vh-100">
+    <div>
+        <main id="main-container" class="content-full">
+            <div class="page-container d-flex flex-column min-vh-100">
 
-            <!-- Navbar -->
-            <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm">
-                <div class="container">
-                    <a class="navbar-brand text-dark fw-bold" href="index.html">
-                        <i class="bi bi-people-fill me-2 text-dark"></i>
-                        Visitors Manager
-                    </a>
-                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
 
-                    <div class="collapse navbar-collapse" id="navbarNav">
-                        <ul class="navbar-nav ms-auto">
-                            <li class="nav-item">
-                                <a class="nav-link active text-dark fw-bold" href="#">Dashboard</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" href="{{ route('appointment.booking') }}">Appointments</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" href="add-visitor.html">
-                                    <i class="bi bi-plus-circle me-1"></i> Walk-in
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" href="book-appointment.html">
-                                    <i class="bi bi-calendar-plus me-1"></i> Book Appointment
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </nav>
+                <div class="bg-white shadow rounded mb-6 px-4 py-3 flex justify-between items-center container mt-3">
+                    <!-- Right: User Profile -->
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm text-gray-700 hidden sm:inline">{{ Auth::user()->name }}</span>
+                        <img src="{{ Auth::user()->profile_photo_url ?? asset('images/default-avatar.png') }}"
+                            alt="User Profile" class="h-10 w-10 rounded-full object-cover border border-gray-300">
+                        <h2 class="text-lg font-bold text-gray-700">Visitors Management Dashboard</h2>
 
-            <!-- Content Container -->
-            <div class="container mt-4">
+                    </div>
+                    <!-- Left: Navigation Buttons -->
+                    <div class="flex flex-wrap gap-2 items-center">
+                        <a href="{{ route('book.appointment') }}"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm">
+                            Book Appointment
+                        </a>
+                        <a href="{{ route('visitor.registration') }}"
+                            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm">
+                            Register Visitor
+                        </a>
+                        <a href=""
+                            class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm">
+                            Visitor Manager
+                        </a>
+                    </div>
 
-                <!-- Stats Cards -->
-                <div class="row mb-4">
-                    <div class="col-md-3 mb-3">
-                        <div class="card text-gray-600">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <h6 class="card-title">Total Visitors</h6>
-                                        <h2 class="mb-0" id="totalVisitors">{{ $visitorCount }}</h2>
-                                    </div>
-                                    <div class="align-self-center">
-                                        <i class="bi bi-people fs-1 text-primary"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="card text-gray-600">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <h6 class="card-title">Checked In</h6>
-                                        <h2 class="mb-0" id="checkedInVisitors">{{ $checkedInVisitors }}</h2>
-                                    </div>
-                                    <div class="align-self-center">
-                                        <i class="bi bi-check-circle fs-1 text-success"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="card text-gray-600">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <h6 class="card-title">Pending</h6>
-                                        <h2 class="mb-0">{{ $pendingVisitors }}</h2>
-                                    </div>
-                                    <div class="align-self-center">
-                                        <i class="bi bi-clock fs-1 text-warning"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="card text-gray-600">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <h6 class="card-title">Checked Out</h6>
-                                        <h2 class="mb-0" id="checkedOutVisitors">{{ $checkedOutVisitors }}</h2>
-                                    </div>
-                                    <div class="align-self-center">
-                                        <i class="bi bi-x-circle fs-1 text-danger"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+
                 </div>
 
-                <!-- Today's Appointments -->
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0">Today's Appointments</h5>
+                <div class="container mt-4">
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-blue-100 text-blue-800 p-4 rounded shadow">
+                            <h3 class="text-sm font-semibold">Individual Visitors</h3>
+                            <p class="text-3xl">{{ $summary['individual_count'] }}</p>
+                        </div>
+                        <div class="bg-green-100 text-green-800 p-4 rounded shadow">
+                            <h3 class="text-sm font-semibold">Groups</h3>
+                            <p class="text-3xl">{{ $summary['group_count'] }}</p>
+                        </div>
+                        <div class="bg-purple-100 text-purple-800 p-4 rounded shadow">
+                            <h3 class="text-sm font-semibold">Total Visitors</h3>
+                            <p class="text-3xl">{{ $summary['total_visitors'] }}</p>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        @if ($todayAppointments->count() > 0)
-                            <div class="table-responsive">
-                                <table class="table table-striped table-hover align-middle">
-                                    <thead>
-                                        <tr>
-                                            <th>#</th>
-                                            <th>Visitor Name</th>
-                                            <th>Schedule Date & Time</th>
-                                            <th>Host Name</th>
-                                            <th>Purpose</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($todayAppointments as $index => $appt)
-                                            @php
-                                                $badgeColor = match ($appt->status) {
-                                                    'pending' => 'primary',
-                                                    'approved' => 'success',
-                                                    'rejected' => 'danger',
-                                                    'cancelled' => 'secondary',
-                                                    'expired' => 'warning',
-                                                    'completed' => 'dark',
-                                                    default => 'secondary',
-                                                };
-                                            @endphp
-                                            <tr>
-                                                <td>{{ $index + 1 }}</td>
-                                                <td>{{ $appt->visitors->pluck('full_name')->join(', ') }}</td>
-                                                <td>{{ \Carbon\Carbon::parse($appt->scheduled_at)->format('d M Y, g:i A') }}
-                                                </td>
-                                                <td>{{ $appt->user->name ?? 'N/A' }}</td>
-                                                <td>{{ $appt->purpose ?? 'N/A' }}</td>
-                                                <td>
-                                                    <span class="badge bg-{{ $badgeColor }}">
-                                                        {{ ucfirst($appt->status) }}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        @else
-                            <p class="text-muted">No appointments scheduled for today.</p>
-                        @endif
-                    </div>
-                </div>
 
-
-                <!-- Visitors List -->
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Visitors</h5>
-                    </div>
-                    <div class="card-body">
-                        <!-- Search and Filter -->
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
-                                    <input type="text" class="form-control" placeholder="Search visitors..."
-                                        wire:model.debounce.500ms="searchTerm" />
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="btn-group" role="group">
-                                    <input type="radio" class="btn-check" name="statusFilter" id="filterAll"
-                                        value="all" wire:model="statusFilter" checked>
-                                    <label class="btn btn-outline-primary" for="filterAll">All</label>
-
-                                    <input type="radio" class="btn-check" name="statusFilter" id="filterPending"
-                                        value="pending" wire:model="statusFilter">
-                                    <label class="btn btn-outline-primary" for="filterPending">Pending</label>
-
-                                    <input type="radio" class="btn-check" name="statusFilter" id="filterCheckedIn"
-                                        value="checked-in" wire:model="statusFilter">
-                                    <label class="btn btn-outline-primary" for="filterCheckedIn">Checked In</label>
-
-                                    <input type="radio" class="btn-check" name="statusFilter"
-                                        id="filterCheckedOut" value="checked-out" wire:model="statusFilter">
-                                    <label class="btn btn-outline-primary" for="filterCheckedOut">Checked Out</label>
-                                </div>
+                    <div class="container mx-auto py-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-2xl font-semibold uppercase">Visitor Appointments</h2>
+                            <div>
+                                <button wire:click="switchTo('today')"
+                                    class="btn btn-sm {{ $view === 'today' ? 'btn-primary' : 'btn-outline' }}">
+                                    Today
+                                </button>
+                                <button wire:click="switchTo('upcoming')"
+                                    class="btn btn-sm {{ $view === 'upcoming' ? 'btn-primary' : 'btn-outline' }}">
+                                    Upcoming
+                                </button>
                             </div>
                         </div>
 
-                        <!-- Visitors Table -->
-                        <div class="table-responsive bg-white rounded shadow p-3">
-                            <table class="table table-hover align-middle">
-                                <thead class="table-light">
+                        @if ($view === 'today')
+                            <h4 class="text-lg font-medium mb-2">Today's Appointments</h4>
+                            <table class="table table-bordered w-full text-sm">
+                                <thead>
                                     <tr>
-                                        <th>Photo</th>
-                                        <th>Name</th>
-                                        <th>Group UID</th>
-                                        <th>UID</th>
-                                        <th>Email</th>
-                                        <th>Company</th>
+                                        <th>Visitor</th>
                                         <th>Phone</th>
+                                        <th>Host</th>
+                                        <th>Department</th>
+                                        <th>Time</th>
                                         <th>Status</th>
-                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse ($visitors as $visitor)
-                                        @php
-                                            $statusColors = [
-                                                'pending' => 'warning',
-                                                'checked-in' => 'success',
-                                                'checked-out' => 'danger',
-                                                'active' => 'primary',
-                                            ];
-                                            $badgeColor = $statusColors[$visitor->status] ?? 'secondary';
-                                            $isGroup = $visitor->group_members->count() > 0;
-                                        @endphp
+                                    @forelse ($todayAppointments as $appointment)
                                         <tr>
-                                            <td>
-                                                <img src="{{ $visitor->photo ? asset('storage/' . $visitor->photo) : asset('images/default-avatar.png') }}"
-                                                    class="rounded-circle border" width="40" height="40">
-                                            </td>
-                                            <td>
-                                                <strong>{{ $visitor->full_name }}</strong>
-                                                @if ($isGroup)
-                                                    <span class="badge bg-info ms-1">Group
-                                                        ({{ $visitor->group_members->count() }})</span>
-                                                @endif
-                                                <br>
-                                                <small
-                                                    class="text-muted">{{ ucfirst($visitor->gender ?? 'N/A') }}</small>
-                                            </td>
-                                            <td>
-                                                @if ($visitor->group_uid)
-                                                    <span class="badge bg-secondary">{{ $visitor->group_uid }}</span>
-                                                @else
-                                                    <span class="badge bg-secondary">N/A</span>
-                                                @endif
-                                            </td>
-                                            <td><span class="badge bg-secondary">{{ $visitor->visitor_uid }}</span>
-                                            </td>
-                                            <td>{{ $visitor->email ?? 'N/A' }}</td>
-                                            <td>{{ $visitor->company ?? 'N/A' }}</td>
-                                            <td>{{ $visitor->phone ?? 'N/A' }}</td>
-                                            <td><span
-                                                    class="badge bg-{{ $badgeColor }}">{{ ucfirst($visitor->status) }}</span>
-                                            </td>
-                                            <td>
-                                                <button class="btn btn-sm btn-outline-primary"
-                                                    wire:click="viewDetails({{ $visitor->id }})">
-                                                    <i class="bi bi-eye"></i>
-                                                </button>
-
-                                                @if ($isGroup)
-                                                    <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal"
-                                                        data-bs-target="#groupMembersModal{{ $visitor->id }}">
-                                                        <i class="bi bi-people"></i>
-                                                    </button>
-
-                                                    <button class="btn btn-sm btn-outline-secondary"
-                                                        data-bs-toggle="collapse"
-                                                        data-bs-target="#groupAccordion{{ $visitor->id }}">
-                                                        <i class="bi bi-chevron-down"></i>
-                                                    </button>
-                                                @endif
-
-                                                <button class="btn btn-sm btn-outline-danger"
-                                                    wire:click="checkOut({{ $visitor->id }})">
-                                                    <i class="bi bi-box-arrow-right"></i>
-                                                </button>
-                                            </td>
+                                            <td>{{ $appointment->visitor_name }}</td>
+                                            <td>{{ $appointment->visitor_phone }}</td>
+                                            <td>{{ $appointment->host->name ?? 'N/A' }}</td>
+                                            <td>{{ $appointment->department->name ?? 'N/A' }}</td>
+                                            <td>{{ $appointment->time->format('h:i A') }}</td>
+                                            <td>{{ ucfirst($appointment->status) }}</td>
                                         </tr>
-
-                                        @if ($isGroup)
-                                            <!-- Inline Accordion Row -->
-                                            <tr class="collapse bg-light" id="groupAccordion{{ $visitor->id }}">
-                                                <td colspan="8">
-                                                    <h6 class="fw-bold mb-2">Group Members:</h6>
-                                                    <ul class="list-group">
-                                                        @foreach ($visitor->group_members as $member)
-                                                            <li
-                                                                class="list-group-item d-flex justify-content-between align-items-center">
-                                                                {{ $member->full_name }}
-                                                                <span
-                                                                    class="badge bg-secondary">{{ $member->visitor_uid }}</span>
-                                                            </li>
-                                                        @endforeach
-                                                    </ul>
-                                                </td>
-                                            </tr>
-
-                                            <!-- Modal -->
-                                            <div class="modal fade" id="groupMembersModal{{ $visitor->id }}"
-                                                tabindex="-1">
-                                                <div class="modal-dialog modal-lg">
-                                                    <div class="modal-content">
-                                                        <div class="modal-header">
-                                                            <h5 class="modal-title">Group Members for
-                                                                {{ $visitor->full_name }}</h5>
-                                                            <button type="button" class="btn-close"
-                                                                data-bs-dismiss="modal"></button>
-                                                        </div>
-                                                        <div class="modal-body">
-                                                            <ul class="list-group">
-                                                                @foreach ($visitor->group_members as $member)
-                                                                    <li
-                                                                        class="list-group-item d-flex justify-content-between align-items-center">
-                                                                        {{ $member->full_name }}
-                                                                        <span
-                                                                            class="text-muted">{{ $member->phone ?? 'N/A' }}</span>
-                                                                    </li>
-                                                                @endforeach
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        @endif
                                     @empty
                                         <tr>
-                                            <td colspan="8" class="text-center text-muted">No visitors found.</td>
+                                            <td colspan="6" class="text-center">No appointments today.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
                             </table>
+                        @else
+                            <h4 class="text-lg font-medium mb-2">Upcoming Appointments</h4>
+                            <table class="table table-bordered w-full text-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Visitor</th>
+                                        <th>Phone</th>
+                                        <th>Host</th>
+                                        <th>Department</th>
+                                        <th>Date</th>
+                                        <th>Time</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse ($upcomingAppointments as $appointment)
+                                        <tr>
+                                            <td>{{ $appointment->visitor_name }}</td>
+                                            <td>{{ $appointment->visitor_phone }}</td>
+                                            <td>{{ $appointment->host->name ?? 'N/A' }}</td>
+                                            <td>{{ $appointment->department->name ?? 'N/A' }}</td>
+                                            <td>{{ $appointment->date->format('d M, Y') }}</td>
+                                            <td>{{ $appointment->time->format('h:i A') }}</td>
+                                            <td>{{ ucfirst($appointment->status) }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="7" class="text-center">No upcoming appointments.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        @endif
+                    </div>
 
-                            <div class="mt-3">
-                                {{ $visitors->links() }}
-                            </div>
+
+                    <div class="flex gap-4 mb-4">
+                        <input type="text" wire:model.debounce.500ms="search"
+                            placeholder="Search by name, email, company..." class="border rounded p-2 flex-grow" />
+                        <select wire:model="status" class="border rounded p-2">
+                            <option value="active">Active</option>
+                            <option value="banned">Banned</option>
+                        </select>
+                        <div wire:loading wire:target="search, status" class="text-gray-500">
+                            Loading results...
                         </div>
 
                     </div>
-                </div>
 
-            </div> <!-- container mt-4 -->
-        </div> <!-- page-container -->
+                    <h2 class="text-xl font-semibold mb-2">Individual Visitors</h2>
+                    <div class="overflow-auto bg-white shadow rounded mb-5 table-responsive">
+                        <table id="visitorsTable" class="w-full text-sm display nowrap">
 
-        <!-- Visitor Details Modal -->
-        <div class="modal fade" id="visitorModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Visitor Details</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body" id="visitorModalBody">
-                        {{-- This content can be Livewire-rendered or filled by JS on event --}}
-                        @if ($selectedVisitor)
-                            <div>
-                                <p><strong>Name:</strong> {{ $selectedVisitor->full_name }}</p>
-                                <p><strong>Email:</strong> {{ $selectedVisitor->email ?? 'N/A' }}</p>
-                                <p><strong>Company:</strong> {{ $selectedVisitor->company ?? 'N/A' }}</p>
-                                <p><strong>Status:</strong> {{ ucfirst($selectedVisitor->status) }}</p>
-                                <!-- Add more visitor details as needed -->
-                            </div>
-                        @else
-                            <p>Select a visitor to see details.</p>
-                        @endif
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary" id="transferBtn"
-                            wire:click="showTransferModal">
-                            <i class="bi bi-arrow-left-right"></i> Transfer
-                        </button>
-                        <button type="button" class="btn btn-success" id="checkInBtn" style="display: none;">
-                            <i class="bi bi-box-arrow-in-right"></i> Check In
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary" id="checkOutBtn"
-                            style="display: none;">
-                            <i class="bi bi-box-arrow-right"></i> Check Out
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="p-2 text-left">#</th>
+                                    <th class="p-2 text-left">UID</th>
+                                    <th class="p-2 text-left">Full Name</th>
+                                    <th class="p-2 text-left">Email</th>
+                                    <th class="p-2 text-left">Phone</th>
+                                    <th class="p-2 text-left">Company</th>
+                                    <th class="p-2 text-left">Status</th>
+                                    <th class="p-2 text-left">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($individualVisitors as $visitor)
+                                    <tr class="border-b hover:bg-gray-50">
+                                        <td class="p-2">{{ $loop->iteration }}</td>
+                                        <td class="p-2">{{ $visitor->visitor_uid }}</td>
+                                        <td class="p-2">{{ $visitor->full_name }}</td>
+                                        <td class="p-2">{{ $visitor->email }}</td>
+                                        <td class="p-2">{{ $visitor->phone }}</td>
+                                        <td class="p-2">{{ $visitor->company }}</td>
+                                        <td class="p-2 capitalize">{{ $visitor->status }}</td>
+                                        <td class="p-2 space-x-2">
+                                            <div class="relative inline-block text-left" x-data="{ open: false }">
+                                                <button @click="open = !open" type="button"
+                                                    class="inline-flex justify-center w-full px-2 py-1 text-sm font-medium text-gray-700 hover:text-blue-600 focus:outline-none">
+                                                    <i class="fas fa-ellipsis-v"></i>
+                                                </button>
 
-        <!-- Transfer Modal -->
-        {{--  <div class="modal fade" id="transferModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title"><i class="bi bi-arrow-left-right me-2"></i>Transfer Visitor</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                <div x-show="open" @click.away="open = false"
+                                                    class="absolute z-10 right-0 mt-2 w-32 origin-top-right bg-white border border-gray-200 rounded shadow-lg"
+                                                    x-cloak>
+                                                    <button wire:click="editVisitor({{ $visitor->id }})"
+                                                        class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                        <i class="fas fa-edit mr-1"></i> Edit
+                                                    </button>
+                                                    <button wire:click="confirmDelete({{ $visitor->id }})"
+                                                        class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                                                        <i class="fas fa-trash mr-1"></i> Delete
+                                                    </button>
+                                                </div>
+                                            </div>
+
+
+                                        </td>
+                                        {{-- <td>
+                                            <button x-data @click="$wire.emit('showBadge', {{ $visitor->id }})"
+                                                class="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700">
+                                                <i class="fas fa-id-badge mx-1"></i>
+                                            </button>
+
+
+
+
+                                        </td> --}}
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="8" class="p-4 text-center text-gray-500">No visitors found.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                        <div wire:loading wire:target="showVisitorDetails"
+                            class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                            <div class="loader">Loading...</div>
+                        </div>
                     </div>
-                    <div class="modal-body">
-                        <form wire:submit.prevent="transferVisitor">
-                            <div class="mb-3">
-                                <label for="newHost" class="form-label">Transfer to Host *</label>
-                                <select class="form-select" id="newHost" wire:model.defer="transferHost" required>
-                                    <option value="">Select new host</option>
-                                    <option value="Sarah Johnson">Sarah Johnson</option>
-                                    <option value="Mike Wilson">Mike Wilson</option>
-                                    <option value="Lisa Chen">Lisa Chen</option>
-                                    <option value="David Brown">David Brown</option>
-                                    <option value="Emily Davis">Emily Davis</option>
-                                </select>
-                                @error('transferHost') <small class="text-danger">{{ $message }}</small> @enderror
-                            </div>
-                            <div class="mb-3">
-                                <label for="transferReason" class="form-label">Reason for Transfer *</label>
-                                <textarea class="form-control" id="transferReason" rows="3" wire:model.defer="transferReason" placeholder="Enter reason for transfer" required></textarea>
-                                @error('transferReason') <small class="text-danger">{{ $message }}</small> @enderror
-                                <div class="mt-2">
-                                    <small class="text-muted">Quick reasons:</small>
-                                    <div class="mt-1">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary me-1"
-                                            wire:click.prevent="$set('transferReason', 'Meeting room change')">Meeting room change</button>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary me-1"
-                                            wire:click.prevent="$set('transferReason', 'Host unavailable')">Host unavailable</button>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary"
-                                            wire:click.prevent="$set('transferReason', 'Department transfer')">Department transfer</button>
+
+                    <div>
+                        @if ($showModal && $selectedVisitor)
+                            <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+                                wire:keydown.escape="closeModal" wire:click.self="closeModal" tabindex="0"
+                                style="outline:none;">
+                                <div class="bg-white rounded shadow-lg w-11/12 max-w-lg p-6 relative" wire:click.stop>
+                                    <button wire:click="closeModal"
+                                        class="absolute top-2 right-2 text-gray-600 hover:text-gray-900 text-xl font-bold"
+                                        aria-label="Close modal">&times;</button>
+
+                                    <h3 class="text-xl font-bold mb-4">Visitor Details
+                                        ({{ $selectedVisitor->visitor_uid }})</h3>
+                                    <p><strong>Full Name:</strong> {{ $selectedVisitor->full_name }}</p>
+                                    <p><strong>Email:</strong> {{ $selectedVisitor->email }}</p>
+                                    <p><strong>Phone:</strong> {{ $selectedVisitor->phone }}</p>
+                                    <p><strong>Gender:</strong> {{ $selectedVisitor->gender }}</p>
+                                    <p><strong>Date Of Birth:</strong> {{ $selectedVisitor->date_of_birth }}</p>
+                                    <p><strong>Company:</strong> {{ $selectedVisitor->company }}</p>
+                                    <p><strong>Address:</strong> {{ $selectedVisitor->address }}</p>
+                                    <p><strong>Nationality:</strong> {{ $selectedVisitor->nationality }}</p>
+
+                                    <div class="mt-4 space-x-3">
+                                        <button wire:click="requestCheckIn({{ $selectedVisitor->id }})"
+                                            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+                                            Request Check-in
+                                        </button>
+
+                                        <!-- If you track active visitLog, you can show Check-out button here -->
+                                        @php
+                                            $activeVisitLog = \App\Models\VisitLog::where(
+                                                'visitor_id',
+                                                $selectedVisitor->id,
+                                            )
+                                                ->where('status', 'checked_in')
+                                                ->latest()
+                                                ->first();
+                                        @endphp
+                                        @if ($activeVisitLog)
+                                            <button wire:click="checkOut({{ $activeVisitLog->id }})"
+                                                class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
+                                                Check-out
+                                            </button>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
-                            <div class="modal-footer px-0">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-arrow-left-right"></i> Transfer Visitor
-                                </button>
-                            </div>
-                        </form>
+                        @endif
                     </div>
+
+                    <div>
+                        <table id="visitorsTable" class="w-full text-sm display nowrap">
+
+                        </table>
+                        {{ $individualVisitors->links() }}
+                        @if ($individualVisitors->isEmpty())
+                            <p class="text-gray-400">No visitors found matching your search.</p>
+                        @endif
+
+                    </div>
+
+
+                    <h2 class="text-xl font-semibold mb-2">Group Visitors</h2>
+                    @php use Illuminate\Support\Str; @endphp
+
+                    <div class="overflow-auto bg-white shadow rounded table-responsive">
+                        <table id="groupsTable"
+                            class="w-full text-sm mb-4 table table-striped table-hover display nowrap">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="p-2 text-left">Group UID</th>
+                                    <th class="p-2 text-left">Group Leader</th>
+                                    <th class="p-2 text-left">Company</th>
+                                    <th class="p-2 text-left">Members</th>
+                                    <th class="p-2 text-left">Status</th>
+                                    <th class="p-2 text-left">Actions</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @forelse ($groupVisitors as $index => $group)
+                                    <!-- Leader Row -->
+                                    <tr class="border-b hover:bg-gray-50" data-group="{{ $group['group_uid'] }}">
+                                        <td class="p-2">{{ $group['group_uid'] }}</td>
+                                        <td class="p-2">{{ $group['leader']->full_name }}</td>
+                                        <td class="p-2">{{ $group['leader']->company }}</td>
+                                        <td class="p-2">
+                                            <span
+                                                class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded">
+                                                {{ $group['members_count'] }}
+                                                {{ Str::plural('Member', $group['members_count']) }}
+                                            </span>
+                                        </td>
+                                        <td class="p-2">
+                                            <span
+                                                class="inline-block px-2 py-1 rounded text-xs font-semibold
+                            {{ $group['leader']->status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                                {{ $group['leader']->status }}
+                                            </span>
+                                        </td>
+                                        <td class="p-2">
+                                            <button class="text-blue-600 hover:underline"
+                                                wire:click="toggleGroup({{ $index }})">
+                                                {{ in_array($index, $expandedGroups) ? 'Hide Members' : 'View Members' }}
+                                            </button>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Member Search Input -->
+                                    @if (in_array($index, $expandedGroups))
+                                        <tr>
+                                            <td colspan="6" class="px-4 py-2 bg-gray-100">
+                                                <input type="text" placeholder="Search group members..."
+                                                    wire:model.debounce.500ms="groupSearchTerms.{{ $group['group_uid'] }}"
+                                                    class="border rounded px-3 py-1 w-full text-sm" />
+                                            </td>
+                                        </tr>
+                                    @endif
+
+                                    <!-- Members (Except Leader) -->
+                                    @if (in_array($index, $expandedGroups))
+                                        @foreach ($group['members'] as $member)
+                                            @continue($member->is_leader)
+                                            <tr class="border-b bg-gray-50 text-sm"
+                                                data-group="{{ $group['group_uid'] }}">
+                                                <td class="p-2 pl-6">↳ {{ $member->group_uid }}</td>
+                                                <td class="p-2">{{ $member->full_name }}</td>
+                                                <td class="p-2">{{ $member->company }}</td>
+                                                <td class="p-2">-</td>
+                                                <td class="p-2">
+                                                    <span
+                                                        class="inline-block px-2 py-1 rounded text-xs font-semibold
+                                    {{ $member->status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                                        {{ $member->status }}
+                                                    </span>
+                                                </td>
+                                                <td class="p-2">
+                                                    <button onclick="window.printGroup('{{ $group['group_uid'] }}')"
+                                                        class="text-gray-600 hover:underline mr-2">
+                                                        Print
+                                                    </button>
+                                                    <button wire:click="exportGroup('{{ $group['group_uid'] }}')"
+                                                        class="text-green-600 hover:underline">
+                                                        Export
+                                                    </button>
+                                                    <button onclick="exportGroup('{{ $group['group_uid'] }}')"
+                                                        class="text-green-600 hover:underline">
+                                                        Export Group
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    @endif
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="p-4 text-center text-gray-400 italic">
+                                            No group visitors found.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+
                 </div>
             </div>
-        </div>  --}}
-
-        @include('livewire.modals.visitor-details')
 
 
-    </main>
-    <!-- END Main Container -->
+
+        </main>
+
+        <!-- END Main Container -->
+    </div>
+
+
 </div>
+
+
+
+{{-- 
+<script>
+    function exportGroup(groupUid) {
+        const table = $('#groupsTable').DataTable();
+        table.search(groupUid).draw(); // filter by group UID
+
+        setTimeout(() => {
+            table.button('.buttons-excel').trigger(); // export filtered
+            table.search('').draw(); // reset filter
+        }, 500);
+    }
+</script> --}}
+@push('scripts')
+    <script>
+        function initVisitorsTable() {
+            // Destroy existing instance if it exists
+            if ($.fn.dataTable.isDataTable('#visitorsTable')) {
+                $('#visitorsTable').DataTable().destroy();
+            }
+
+            // Initialize DataTable
+            $('#visitorsTable').DataTable({
+                responsive: true,
+                scrollX: true,
+                dom: "<'d-flex justify-content-between align-items-center mb-3'<'dataTables_filter'f><'dt-buttons'B>>" +
+                    "rt" +
+                    "<'d-flex justify-content-between align-items-center mt-3'<'dataTables_info'i><'dataTables_paginate'p>>",
+                buttons: [{
+                        extend: 'csv',
+                        className: 'btn btn-sm btn-primary',
+                        exportOptions: {
+                            rows: ':visible'
+                        }
+                    },
+                    {
+                        extend: 'excel',
+                        className: 'btn btn-sm btn-success',
+                        exportOptions: {
+                            rows: ':visible'
+                        }
+                    },
+                    {
+                        extend: 'pdf',
+                        className: 'btn btn-sm btn-danger',
+                        exportOptions: {
+                            rows: ':visible'
+                        }
+                    },
+                    {
+                        extend: 'print',
+                        className: 'btn btn-sm btn-secondary',
+                        exportOptions: {
+                            rows: ':visible'
+                        }
+                    }
+                ]
+            });
+        }
+
+        // Init on first load and after Livewire updates
+        document.addEventListener('livewire:load', () => {
+            initVisitorsTable();
+
+            Livewire.hook('message.processed', () => {
+                initVisitorsTable();
+            });
+        });
+    </script>
+@endpush

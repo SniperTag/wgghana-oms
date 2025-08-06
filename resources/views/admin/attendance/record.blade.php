@@ -34,7 +34,8 @@
 
                     <div class="container-fluid">
                         <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h1 class="fw-bold font-san-serif font-extrabold text-3xl text-uppercase">{{Str::title($user->name)}} ATTENDANCE RECORDS</h1>
+                            <h1 class="fw-bold font-san-serif font-extrabold text-3xl text-uppercase">
+                                {{ Str::title($user->name) }} ATTENDANCE RECORDS</h1>
 
                         </div>
 
@@ -86,7 +87,8 @@
                         <div class="mb-4 flex flex-wrap items-center justify-start gap-3 text-sm">
 
                             {{-- Step Out Livewire Component --}}
-                            @livewire('step-out-manager')
+                            {{-- @livewire('step-out-manager') --}}
+                            <livewire:step-out-manager/>
 
                             {{-- Clock In/Out Dropdown --}}
                             @php
@@ -110,7 +112,7 @@
                                 @endif
                             </div>
 
-                            {{--  @livewire('break-manager')  --}}
+                            {{-- @livewire('break-manager')  --}}
 
                         </div>
 

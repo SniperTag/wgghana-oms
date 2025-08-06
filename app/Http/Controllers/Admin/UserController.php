@@ -19,6 +19,7 @@ use App\Http\Requests\UpdateUserRequest;
 use App\Http\Requests\InviteStoreRequest;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Hash;
+use App\Models\EmploymentDetail;
 
 
 
@@ -68,8 +69,8 @@ class UserController extends Controller
         $leaveTypes = LeaveType::where('is_excluded', false)->get();
         $femaleCount = User::where('gender','female')->count();
         $maleCount = User::where('gender', 'male')->count();
-        $staffCount = User::where('user_type', 'staff')->count();
-        $nationalServiceCount = User::where('user_type', 'national_service')->count();
+        $staffCount = EmploymentDetail::where('user_type', 'staff')->count();
+        $nationalServiceCount = EmploymentDetail::where('user_type', 'national_service')->count();
         // Returning view with necessary data for creating a user
         return view('admin.users.create', compact('roles', 
         'userCount', 'departments',

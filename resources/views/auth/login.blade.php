@@ -2,18 +2,27 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale() ?? 'en') }}" class="dark">
 
 <head>
-    @include('partials.head') {{-- Contains meta tags, title, stylesheets --}}
+    @include('layouts.head') {{-- Contains meta tags, title, stylesheets --}}
 </head>
 
 <body>
     <div id="page-container" class="main-content-boxed">
         <script>
-            @if(session('success'))
+            @if (session('success'))
                 toastr.success("{{ session('success') }}");
-            @elseif(session('error'))
+            @elseif (session('error'))
                 toastr.error("{{ session('error') }}");
             @endif
         </script>
+
+        @auth
+            if (typeof Echo !== 'undefined') {
+            Echo.private('App.Models.User.{{ auth()->id() }}')
+            .notification((notification) => {
+            toastr.info(notification.message, notification.title);
+            });
+            }
+        @endauth
         <!-- Main Container -->
         <main id="main-container">
             <!-- Page Content -->
@@ -42,8 +51,8 @@
 
                             <!-- Header -->
                             <div class="px-4 py-2 mb-4 text-center">
-                                <img src="{{ asset('image/Office_logo.jpg') }}"
-                                    alt="Waltergates Office Logo" class="w-50 mb-4 mx-auto d-block">
+                                <img src="{{ asset('image/Office_logo.jpg') }}" alt="Waltergates Office Logo"
+                                    class="w-50 mb-4 mx-auto d-block">
 
                                 <h1 class="h3 fw-bold mt-4 mb-2">Welcome to Your Dashboard</h1>
                                 <h2 class="h5 fw-medium text-muted mb-0">Please sign in</h2>
@@ -52,50 +61,52 @@
 
                             <!-- Sign In Form -->
                             <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
+                            <x-auth-session-status class="mb-4" :status="session('status')" />
 
-    <form method="POST" action="{{ route('login') }}">
-        @csrf
+                            <form method="POST" action="{{ route('login') }}">
+                                @csrf
 
-        <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
-            {{--  <x-input-error :messages="$errors->get('email')" class="mt-2" />  --}}
-        </div>
+                                <!-- Email Address -->
+                                <div>
+                                    <x-input-label for="email" :value="__('Email')" />
+                                    <x-text-input id="email" class="block mt-1 w-full" type="email" name="email"
+                                        :value="old('email')" required autofocus autocomplete="username" />
+                                    {{--  <x-input-error :messages="$errors->get('email')" class="mt-2" />  --}}
+                                </div>
 
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
+                                <!-- Password -->
+                                <div class="mt-4">
+                                    <x-input-label for="password" :value="__('Password')" />
 
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="current-password" />
+                                    <x-text-input id="password" class="block mt-1 w-full" type="password"
+                                        name="password" required autocomplete="current-password" />
 
-            {{--  <x-input-error :messages="$errors->get('password')" class="mt-2" />  --}}
-        </div>
+                                    {{--  <x-input-error :messages="$errors->get('password')" class="mt-2" />  --}}
+                                </div>
 
-        <!-- Remember Me -->
-        <div class="block mt-4">
-            <label for="remember_me" class="inline-flex items-center">
-                <input id="remember_me" type="checkbox" class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:focus:ring-offset-gray-800" name="remember">
-                <span class="ms-2 text-sm text-gray-600 dark:text-gray-400">{{ __('Remember me') }}</span>
-            </label>
-        </div>
+                                <!-- Remember Me -->
+                                <div class="block mt-4">
+                                    <label for="remember_me" class="inline-flex items-center">
+                                        <input id="remember_me" type="checkbox"
+                                            class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:focus:ring-offset-gray-800"
+                                            name="remember">
+                                        <span
+                                            class="ms-2 text-sm text-gray-600 dark:text-gray-400">{{ __('Remember me') }}</span>
+                                    </label>
+                                </div>
 
-        <div class="flex items-center justify-end mt-4">
-            {{--  @if (Route::has('auth.forgot-password'))
+                                <div class="flex items-center justify-end mt-4">
+                                    {{--  @if (Route::has('auth.forgot-password'))
                 <a class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800" href="{{ route('password.request') }}">
                     {{ __('Forgot your password?') }}
                 </a>
             @endif  --}}
 
-            <x-primary-button class="ms-3 w-100 justify-center">
-                {{ __('Log in') }}
-            </x-primary-button>
-        </div>
-    </form>
+                                    <x-primary-button class="ms-3 w-100 justify-center">
+                                        {{ __('Log in') }}
+                                    </x-primary-button>
+                                </div>
+                            </form>
                             <!-- END Sign In Form -->
 
                         </div>
@@ -116,10 +127,10 @@
         const yearSpan = document.querySelector('[data-toggle="year-copy"]');
         if (yearSpan) yearSpan.textContent = new Date().getFullYear();
         toastr.options = {
-        "closeButton": true,
-        "progressBar": true,
-        "positionClass": "toast-bottom-right",
-    }
+            "closeButton": true,
+            "progressBar": true,
+            "positionClass": "toast-bottom-right",
+        }
     </script>
 
 

@@ -1,21 +1,23 @@
-<!-- Scripts loaded at the end -->
-<!-- jQuery -->
-{{--  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>  --}}
-<script src="{{ asset('js/lib/jquery.min.js') }}"></script>
+<!-- jQuery (only one source; use local or CDN, not both) -->
+{{-- <script src="{{ asset('js/lib/jquery.min.js') }}"></script> --}}
+{{-- Or use CDN instead of local --}}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Bootstrap Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Core Plugins -->
 <script src="{{ asset('js/codebase.app.min.js') }}"></script>
 <script src="{{ asset('js/plugins/jquery-validation/jquery.validate.min.js') }}"></script>
 <script src="{{ asset('js/plugins/chart.js/chart.umd.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
 
+
+<!-- Page Specific Scripts -->
 <script src="{{ asset('js/pages/op_auth_signin.min.js') }}"></script>
 <script src="{{ asset('js/pages/be_pages_dashboard.min.js') }}"></script>
 
-
-
-
-<!-- Bootstrap (if needed) -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-<!-- DataTables + Buttons -->
+<!-- DataTables + Export Buttons -->
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
@@ -25,22 +27,31 @@
 <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
 
-<!-- Toastr -->
+<!-- DataTables + Dependencies -->
+    <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+
+
+<!-- Toastr Notifications -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
-<!-- Moment + DateRangePicker -->
+<!-- Moment.js + DateRangePicker -->
 <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
 
-<!-- Pusher + Laravel Echo -->
+<!-- Real-time: Pusher + Laravel Echo -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pusher/8.2.0/pusher.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/laravel-echo/1.11.3/echo.iife.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
 
+
+<!-- Livewire Scripts -->
 @livewireScripts
 @stack('modals')
+
 
 <!-- Inline Echo notification script (lightweight, waits for DOM load) -->
 <script>
@@ -81,7 +92,7 @@
     toastr.options = {
         closeButton: true,
         progressBar: true,
-        positionClass: "toast-bottom-right",
+        positionClass: "toast-top-right",
         timeOut: "5000"
     };
 
@@ -97,7 +108,7 @@
         $('#attendanceTable').DataTable({
             responsive: true,
             scrollX: true,
-            dom: 'Bfrtip',
+            // dom: 'Bfrtip',
               dom:
             "<'d-flex justify-content-between align-items-center mb-3 text-white'<'dataTables_filter'f><'dt-buttons'B>>" +
             "rt" +
@@ -108,3 +119,6 @@
         });
     });
 </script>
+
+
+

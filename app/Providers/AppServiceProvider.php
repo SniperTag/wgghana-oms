@@ -3,9 +3,10 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use App\Services\AppointmentService;
+use App\Services\VisitorService;
 use Spatie\Activitylog\Models\Activity;
 use App\Models\Activity as CustomActivity;
-
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -14,7 +15,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Register AppointmentService as a singleton
+        $this->app->singleton(AppointmentService::class, function ($app) {
+            return new AppointmentService();
+        });
     }
 
     /**
@@ -22,6 +26,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-       //
+        //
     }
 }

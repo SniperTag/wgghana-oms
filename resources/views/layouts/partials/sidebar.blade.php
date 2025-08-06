@@ -37,13 +37,13 @@
                     <img class="img-avatar img-avatar32" src="{{ asset('media/avatars/avatar15.jpg') }}" alt="">
                 </div>
                 <div class="smini-hidden text-center mx-auto">
-                    <a class="img-link" href="{{ route('profile.update') }}">
+                    {{-- <a class="img-link" href="{{ route('profile.update') }}">
                         @if (auth()->user()->face_image)
                             <img class="img-avatar img-avatar32"
                                 src="data:image/jpeg;base64,{{ auth()->user()->face_image }}" alt="Face Image">
                         @endif
 
-                    </a>
+                    </a> --}}
                     <ul class="list-inline mt-3 mb-0">
                         <li class="list-inline-item">
                             <a class="link-fx text-dual fs-sm fw-semibold text-uppercase"
@@ -205,7 +205,7 @@
                             </ul>
                         </li>
 
-                        <!-- Staff Management -->
+                        <!-- Visitors Management -->
                         <li class="nav-main-heading">Visitors Management</li>
                         <li class="nav-main-item">
                             <a class="nav-main-link nav-main-link-submenu" data-toggle="submenu" href="#">
@@ -215,25 +215,25 @@
                             <ul class="nav-main-submenu">
 
                                 <li class="nav-main-item">
-                                    <a class="nav-main-link" href="{{ route('visitors.dashboard') }}">
+                                    <a class="nav-main-link" href="{{ route('visitor.dashboard') }}">
                                         <span class="nav-main-link-name">Dashboard</span>
                                     </a>
                                 </li>
 
-                                <li class="nav-main-item">
-                                    <a class="nav-main-link" href="{{ route('visitor.register') }}">
+                                 <li class="nav-main-item">
+                                    <a class="nav-main-link" href="{{ route('visitor.registration') }}">
                                         <span class="nav-main-link-name">Register Visitor</span>
                                     </a>
                                 </li>
-                                <li class="nav-main-item">
-                                    <a class="nav-main-link" href="#">
-                                        <span class="nav-main-link-name">View Visitors</span>
+                               <li class="nav-main-item">
+                                    <a class="nav-main-link" href="{{ route('book.appointment') }}">
+                                        <span class="nav-main-link-name">Book Appointment</span>
                                     </a>
                                 </li>
 
                                 <li class="nav-main-item">
-                                    <a class="nav-main-link" href="{{ route('appointment.booking') }}">
-                                        <span class="nav-main-link-name">Book Appointment</span>
+                                    <a class="nav-main-link" href="{{ route('my.appointments') }}">
+                                        <span class="nav-main-link-name">My Appointments</span>
                                     </a>
                                 </li>
                             </ul>

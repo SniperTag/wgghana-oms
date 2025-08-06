@@ -1,80 +1,107 @@
 <!-- Main Container -->
+<style>
+    @media (min-width: 1200px) {
+        .col-xl-1-5 {
+            flex: 0 0 auto;
+            width: 20%;
+        }
+    }
+
+    .dashboard-card {
+        min-height: 90px;
+    }
+</style>
 <main id="main-container content-full">
     <!-- Page Content -->
     <div class="content mt-7">
         <div class="row">
-            <!-- Row #1 -->
-            <div class="col-6 col-xl-2">
-                <a class="block block-rounded block-bordered block-link-shadow" href="javascript:void(0)">
-                    <div class="block-content block-content-full d-sm-flex justify-content-between align-items-center">
-                        <div class="d-none d-sm-block">
-                            <i class="si si-bag fa-2x text-primary-light"></i>
+            <div class="row g-3 mb-5">
+                <!-- Total Visitors -->
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-1-5">
+                    <a class="block block-rounded block-bordered block-link-shadow dashboard-card h-100"
+                        href="{{ route('visitor.dashboard') }}">
+                        <div
+                            class="block-content block-content-full d-flex justify-content-between align-items-center h-100">
+                            <div>
+                                <i class="si si-bag fa-xl text-primary-light"></i>
+                            </div>
+                            <div class="text-end">
+                                <div class="fs-4 fw-semibold text-primary">{{ $visitorCount }}</div>
+                                <div class="fs-6 fw-semibold text-uppercase text-muted">Total Visitors</div>
+                            </div>
                         </div>
-                        <div class="text-end">
-                            <div class="fs-3 fw-semibold text-primary">{{ $visitorCount }}</div>
-                            <div class="fs-sm fw-semibold text-uppercase text-muted">Total visitors</div>
+                    </a>
+                </div>
+
+                <!-- Attendance Record -->
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-1-5">
+                    <a class="block block-rounded block-bordered block-link-shadow dashboard-card h-100"
+                        href="{{ route('attendance.index') }}">
+                        <div
+                            class="block-content block-content-full d-flex justify-content-between align-items-center h-100">
+                            <div>
+                                <i class="si si-wallet fa-xl text-earth-light"></i>
+                            </div>
+                            <div class="text-end">
+                                <div class="fs-4 fw-semibold text-earth">{{ $attendanceCount }}</div>
+                                <div class="fs-6 fw-semibold text-uppercase text-muted">Attendance Record</div>
+                            </div>
                         </div>
-                    </div>
-                </a>
-            </div>
-            <div class="col-6 col-xl-2">
-                <a class="block block-rounded block-bordered block-link-shadow" href="{{ route('attendance.index') }}">
-                    <div class="block-content block-content-full d-sm-flex justify-content-between align-items-center">
-                        <div class="d-none d-sm-block">
-                            <i class="si si-wallet fa-2x text-earth-light"></i>
+                    </a>
+                </div>
+
+                <!-- Staff On Leave -->
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-1-5">
+                    <a class="block block-rounded block-bordered block-link-shadow dashboard-card h-100"
+                        href="{{ route('leaves.status', ['view' => 'current']) }}">
+                        <div
+                            class="block-content block-content-full d-flex justify-content-between align-items-center h-100">
+                            <div>
+                                <i class="fas fa-user-clock fa-xl text-primary"></i>
+                            </div>
+                            <div class="text-end">
+                                <div class="fs-4 fw-semibold text-primary">{{ $onLeaveCount }}</div>
+                                <div class="fs-6 fw-semibold text-uppercase text-muted">On Leave Now</div>
+                            </div>
                         </div>
-                        <div class="text-end">
-                            <div class="fs-3 fw-semibold text-earth">{{ $attendanceCount }}</div>
-                            <div class="fs-sm fw-semibold text-uppercase text-muted">Attance Record</div>
+                    </a>
+                </div>
+
+                <!-- Upcoming Leaves -->
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-1-5">
+                    <a class="block block-rounded block-bordered block-link-shadow dashboard-card h-100"
+                        href="{{ route('leaves.status', ['view' => 'upcoming']) }}">
+                        <div
+                            class="block-content block-content-full d-flex justify-content-between align-items-center h-100">
+                            <div>
+                                <i class="fas fa-calendar-alt fa-xl text-info"></i>
+                            </div>
+                            <div class="text-end">
+                                <div class="fs-4 fw-semibold text-info">{{ $upcomingLeaveCount }}</div>
+                                <div class="fs-6 fw-semibold text-uppercase text-muted">Upcoming Leaves</div>
+                            </div>
                         </div>
-                    </div>
-                </a>
-            </div>
-            <!-- Staff Currently On Leave -->
-            <div class="col-6 col-xl-2">
-                <a class="block block-rounded block-bordered block-link-shadow"
-                    href="{{ route('leaves.status', ['view' => 'current']) }}">
-                    <div class="block-content block-content-full d-sm-flex justify-content-between align-items-center">
-                        <div class="d-none d-sm-block">
-                            <i class="fas fa-user-clock fa-2x text-primary"></i>
+                    </a>
+                </div>
+
+                <!-- Total Users -->
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-1-5">
+                    <a class="block block-rounded block-bordered block-link-shadow dashboard-card h-100"
+                        href="{{ route('admin.users_index') }}">
+                        <div
+                            class="block-content block-content-full d-flex justify-content-between align-items-center h-100">
+                            <div>
+                                <i class="si si-users fa-xl text-pulse"></i>
+                            </div>
+                            <div class="text-end">
+                                <div class="fs-4 fw-semibold text-pulse">{{ $userCount }}</div>
+                                <div class="fs-6 fw-semibold text-uppercase text-muted">Users</div>
+                            </div>
                         </div>
-                        <div class="text-end">
-                            <div class="fs-3 fw-semibold text-primary">{{ $onLeaveCount }}</div>
-                            <div class="fs-sm fw-semibold text-uppercase text-muted">On Leave Now</div>
-                        </div>
-                    </div>
-                </a>
+                    </a>
+                </div>
             </div>
 
-            <!-- Staff Going On Leave -->
-            <div class="col-6 col-xl-2">
-                <a class="block block-rounded block-bordered block-link-shadow"
-                    href="{{ route('leaves.status', ['view' => 'upcoming']) }}">
-                    <div class="block-content block-content-full d-sm-flex justify-content-between align-items-center">
-                        <div class="d-none d-sm-block">
-                            <i class="fas fa-calendar-alt fa-2x text-info"></i>
-                        </div>
-                        <div class="text-end">
-                            <div class="fs-3 fw-semibold text-info">{{ $upcomingLeaveCount }}</div>
-                            <div class="fs-sm fw-semibold text-uppercase text-muted">Upcoming Leaves</div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-
-            <div class="col-6 col-xl-2">
-                <a class="block block-rounded block-bordered block-link-shadow" href="{{ route('admin.users_index') }}">
-                    <div class="block-content block-content-full d-sm-flex justify-content-between align-items-center">
-                        <div class="d-none d-sm-block">
-                            <i class="si si-users fa-2x text-pulse"></i>
-                        </div>
-                        <div class="text-end">
-                            <div class="fs-3 fw-semibold text-pulse">{{ $userCount }}</div>
-                            <div class="fs-sm fw-semibold text-uppercase text-muted">Users</div>
-                        </div>
-                    </div>
-                </a>
-            </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
@@ -146,21 +173,21 @@
                                         <i class="fa fa-caret-up"></i> +16%
                                     </div>
                                     <div class="fs-4 fw-semibold">720</div>
-                                    <div class="fs-sm fw-semibold text-uppercase text-muted">This Month</div>
+                                    <div class="fs-6 fw-semibold text-uppercase text-muted">This Month</div>
                                 </div>
                                 <div class="col-6 col-sm-4">
                                     <div class="fw-semibold text-danger">
                                         <i class="fa fa-caret-down"></i> -3%
                                     </div>
                                     <div class="fs-4 fw-semibold">160</div>
-                                    <div class="fs-sm fw-semibold text-uppercase text-muted">This Week</div>
+                                    <div class="fs-6 fw-semibold text-uppercase text-muted">This Week</div>
                                 </div>
                                 <div class="col-12 col-sm-4">
                                     <div class="fw-semibold text-success">
                                         <i class="fa fa-caret-up"></i> +9%
                                     </div>
                                     <div class="fs-4 fw-semibold">24.3</div>
-                                    <div class="fs-sm fw-semibold text-uppercase text-muted">Average</div>
+                                    <div class="fs-6 fw-semibold text-uppercase text-muted">Average</div>
                                 </div>
                             </div>
                         </div>
@@ -196,21 +223,21 @@
                                         <i class="fa fa-caret-up"></i> +4%
                                     </div>
                                     <div class="fs-4 fw-semibold">$ 6,540</div>
-                                    <div class="fs-sm fw-semibold text-uppercase text-muted">This Month</div>
+                                    <div class="fs-6 fw-semibold text-uppercase text-muted">This Month</div>
                                 </div>
                                 <div class="col-6 col-sm-4">
                                     <div class="fw-semibold text-danger">
                                         <i class="fa fa-caret-down"></i> -7%
                                     </div>
                                     <div class="fs-4 fw-semibold">$ 1,525</div>
-                                    <div class="fs-sm fw-semibold text-uppercase text-muted">This Week</div>
+                                    <div class="fs-6 fw-semibold text-uppercase text-muted">This Week</div>
                                 </div>
                                 <div class="col-12 col-sm-4">
                                     <div class="fw-semibold text-success">
                                         <i class="fa fa-caret-up"></i> +35%
                                     </div>
                                     <div class="fs-4 fw-semibold">$ 9,352</div>
-                                    <div class="fs-sm fw-semibold text-uppercase text-muted">Balance</div>
+                                    <div class="fs-6 fw-semibold text-uppercase text-muted">Balance</div>
                                 </div>
                             </div>
                         </div>
@@ -218,12 +245,12 @@
                 </div>
                 <!-- END Row #2 -->
             </div>  --}}
-            <div class="row">
+            <div class="row mt-6">
                 <!-- Row #3 -->
                 <div class="col-md-6">
                     <div class="block block-rounded block-bordered">
                         <div class="block-header block-header-default border-bottom">
-                            <h2 class="block-title fs-4 font-serif font-extrabold">DAILY ATTENDANCE LIST</h2>
+                            <h2 class="block-title fs-4 font-san-serif font-extrabold">DAILY ATTENDANCE LIST</h2>
                             <div class="block-options">
                                 <button type="button" class="btn-block-option" data-toggle="block-option"
                                     data-action="state_toggle" data-action-mode="demo">
@@ -280,7 +307,7 @@
                 <div class="col-md-6">
                     <div class="block block-rounded block-bordered">
                         <div class="block-header block-header-default border-bottom">
-                            <h3 class="block-title block-title fs-4 font-serif font-extrabold">STAFFS ASSESMENT RATING
+                            <h3 class="block-title block-title fs-4 font-san-serif font-extrabold">STAFFS ASSESMENT RATING
                             </h3>
                             <div class="block-options">
                                 <button type="button" class="btn-block-option" data-toggle="block-option"

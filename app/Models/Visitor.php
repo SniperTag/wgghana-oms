@@ -72,4 +72,18 @@ public function group_members()
     {
         return preg_replace('/\D/', '', $value); // Remove non-numeric characters
     }
+
+    // app/Models/User.php
+public function getProfilePhotoUrlAttribute()
+{
+    return $this->photo
+        ? asset('storage/' . $this->photo)
+        : null;
+}
+    public function getSignatureUrlAttribute()
+    {
+        return $this->signature
+            ? asset('storage/' . $this->signature)
+            : null;
+    }   
 }

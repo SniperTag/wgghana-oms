@@ -2,14 +2,17 @@
 
 namespace App\Services;
 
+use Carbon\Carbon;
 use App\Models\User;
+use App\Models\Visitor;
+use App\Services\SmsService;
+use Illuminate\Support\Facades\Log;
+use App\Notifications\StaffStatusAlert;
 use Illuminate\Support\Facades\Notification;
+use App\Notifications\GroupVisitorNotification;
 use App\Notifications\EarlyClockOutNotification;
 use App\Notifications\MissedClockInNotification;
-use App\Notifications\StaffStatusAlert;
-use App\Services\SmsService;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Log;
+use App\Notifications\VisitorRegisteredNotification;
 
 class NotificationService
 {
@@ -71,5 +74,17 @@ class NotificationService
         // Example: Log or send a notification (customize as needed)
         Log::info("🔔 Clock-in alert sent to {$user->name} at {$checkInTime}");
         // You can implement actual notification logic here, e.g., email, SMS, etc.
+    }
+
+      public function notifyNewVisitorRegistered(Visitor $visitor): void
+    {
+        $admins = User::role(['Admin', 'HR'])->get();
+        Notification::send($admins, new VisitorRegisteredNotification($visitor));
+    }
+
+    public function notifyGroupVisitorsRegistered(array  $visitors): void
+    {
+        $admins = User::role(['Admin', 'HR'])->get();
+        Notification::send($admins, new GroupVisitorNotification($visitors));
     }
 }

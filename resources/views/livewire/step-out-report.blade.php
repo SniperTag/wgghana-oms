@@ -1,19 +1,35 @@
-
-
-<style>
-    /* Force white background and readable input text */
+{{-- <style>
+    /* General input style */
     .dataTables_filter input {
-        background-color: #ffffff !important;
-        color: #000000 !important;
-        border: 1px solid #ccc !important;
         padding: 0.5rem 0.75rem;
         border-radius: 0.375rem;
         width: 100%;
         max-width: 250px;
         font-size: 0.875rem;
+        background-color: #ffffff;
+        color: #000000;
+        border: 1px solid #ccc;
     }
 
-    /* Responsive DataTable toolbar (search + buttons) on mobile */
+    @media (prefers-color-scheme: dark) {
+        .dataTables_filter input {
+            background-color: #1f2937 !important; /* dark:bg-gray-800 */
+            color: #f9fafb !important;           /* text-white */
+            border-color: #374151 !important;    /* dark:border-gray-700 */
+        }
+
+        .dataTables_wrapper .dataTables_filter label {
+            color: #f3f4f6 !important;
+        }
+
+        .dt-buttons button {
+            background-color: #374151 !important;
+            color: #f9fafb !important;
+            border-color: #4b5563 !important;
+        }
+    }
+
+    /* Mobile responsiveness */
     @media (max-width: 768px) {
         .dataTables_filter,
         .dt-buttons {
@@ -32,9 +48,9 @@
             margin-bottom: 0.5rem;
         }
     }
-</style>
+</style> --}}
 
-<div class="p-4 dark:bg-gray-800 rounded shadow mt-3 mb-3">
+<div class="p-4 bg-white dark:bg-gray-900 rounded shadow mt-3 mb-3">
     {{-- Header --}}
     <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
         <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">
@@ -49,14 +65,14 @@
             </select>
 
             <input type="text" id="stepOutSearch" placeholder="Search Step Out..."
-                class="p-2 border rounded w-full sm:w-auto" />
+                class="p-2 border rounded w-full sm:w-auto dark:bg-gray-800 dark:text-white dark:border-gray-700" />
         </div>
     </div>
 
     {{-- Step Out Table --}}
     <div class="overflow-x-auto">
-        <table class="w-full table-auto text-sm text-left" id="StepOutReportTable">
-            <thead class="bg-gray-100 text-gray-700 uppercase">
+        <table class="w-full table-auto text-sm text-left text-gray-800 dark:text-gray-100" id="StepOutReportTable">
+            <thead class="bg-gray-100 dark:bg-gray-800 uppercase text-gray-700 dark:text-gray-200">
                 <tr>
                     <th>Staff</th>
                     <th>Reason</th>
@@ -67,7 +83,7 @@
             </thead>
             <tbody>
                 @forelse($stepOutRecords as $entry)
-                    <tr class="border-b">
+                    <tr class="border-b dark:border-gray-700">
                         <td>{{ $entry->user->name }}</td>
                         <td>{{ $entry->reason ?? '—' }}</td>
                         <td>{{ $entry->stepped_out_at->format('D h:i A') }}</td>
@@ -82,7 +98,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="text-gray-500 text-center py-3">No data found.</td>
+                        <td colspan="5" class="text-gray-500 dark:text-gray-400 text-center py-3">No data found.</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -94,19 +110,17 @@
     </div>
 
     {{-- Break Section --}}
-    <div class="mt-8">
+    <div class="mt-5">
         <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">
             Break Sessions Report
         </h2>
 
-        {{-- Break Search --}}
         <input type="text" id="breakSearch" placeholder="Search Breaks..."
-            class="mb-2 p-2 border rounded w-full md:w-1/3" />
+            class="mb-2 p-2 border float-right rounded w-full md:w-1/3 dark:bg-gray-800 dark:text-white dark:border-gray-700" />
 
-        {{-- Break Table --}}
         <div class="overflow-x-auto">
-            <table class="w-full table-auto text-sm text-left" id="BreakReportTable">
-                <thead class="bg-gray-100 text-gray-700 uppercase">
+            <table class="w-full table-auto text-sm text-left text-gray-800 dark:text-gray-100" id="BreakReportTable">
+                <thead class="bg-gray-100 dark:bg-gray-800 uppercase text-gray-700 dark:text-gray-200">
                     <tr>
                         <th>Staff</th>
                         <th>Break Type</th>
@@ -117,7 +131,7 @@
                 </thead>
                 <tbody>
                     @forelse($breakRecords as $break)
-                        <tr class="border-b">
+                        <tr class="border-b dark:border-gray-700">
                             <td>{{ $break->user->name }}</td>
                             <td>{{ $break->break_type }}</td>
                             <td>{{ $break->started_at->format('D h:i A') }}</td>
@@ -132,7 +146,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-gray-500 text-center py-3">No break data found.</td>
+                            <td colspan="5" class="text-gray-500 dark:text-gray-400 text-center py-3">No break data found.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -152,9 +166,9 @@
             responsive: true,
             scrollX: true,
             dom:
-                "<'d-flex justify-content-between align-items-center mb-3 text-white'<'dataTables_filter'f><'dt-buttons'B>>" +
+                "<'d-flex justify-between items-center mb-3'<'dataTables_filter'f><'dt-buttons'B>>" +
                 "rt" +
-                "<'d-flex justify-content-between align-items-center mt-3'<'dataTables_info'i><'dataTables_paginate'p>>",
+                "<'d-flex justify-between items-center mt-3'<'dataTables_info'i><'dataTables_paginate'p>>",
             buttons: ['csv', 'excel', 'pdf']
         });
 
@@ -166,9 +180,9 @@
             responsive: true,
             scrollX: true,
             dom:
-                "<'d-flex justify-content-between align-items-center mb-3 text-white'<'dataTables_filter'f><'dt-buttons'B>>" +
+                "<'d-flex justify-between items-center mb-3'<'dataTables_filter'f><'dt-buttons'B>>" +
                 "rt" +
-                "<'d-flex justify-content-between align-items-center mt-3'<'dataTables_info'i><'dataTables_paginate'p>>",
+                "<'d-flex justify-between items-center mt-3'<'dataTables_info'i><'dataTables_paginate'p>>",
             buttons: ['csv', 'excel', 'pdf']
         });
 
@@ -177,9 +191,3 @@
         });
     });
 </script>
-
-
-
-
-
-

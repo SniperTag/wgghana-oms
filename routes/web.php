@@ -18,11 +18,12 @@ use App\Http\Controllers\User\{
     SupervisorController,
     FaceEnrollmentController
 };
+use App\Livewire\Visitor\VisitorsDashboard;
 use App\Livewire\Admin\Dashboard;
 use App\Livewire\Visitor\Registration;
-use App\Livewire\Visitor\VisitorsDashboard;
 use App\Livewire\Visitor\AppointmentBooking;
 use App\Livewire\Visitor\AppointmentCheckin;
+use \App\Livewire\Visitor\HostAppointments;
 
 
 
@@ -37,6 +38,7 @@ Route::get('/', fn () => view('welcome'));
 Route::post('/attendance/check-out', [AttendanceController::class, 'checkOut'])->name('staff.checkout');
 Route::post('/attendance', [AttendanceController::class, 'handleAttendance'])->name('attendance.handle');
 Route::get('admin/attendance/verify/{staff_id}', [AttendanceController::class, 'lookupStaff'])->name('verify.staff');
+Route::get('/book-appointment', \App\Livewire\Visitor\BookAppointment::class)->name('book.appointment');
 
 // Invite Registration
 Route::get('auth/invite-register/{token}', [UserController::class, 'showRegistrationForm'])->name('invite.register');
@@ -62,6 +64,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/leaves', [LeaveController::class, 'index'])->name('leaves.index');
     Route::get('/leaves/create', [LeaveController::class, 'create'])->name('leaves.create');
     Route::post('/leaves', [LeaveController::class, 'store'])->name('leaves.store');
+
+      // Host Appointments
+    Route::get('livewire/visitor/host-appointments',HostAppointments::class)->name('my.appointments');
+  
 });
 
 /*
@@ -70,11 +76,13 @@ Route::middleware(['auth'])->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:admin|admin|receptionist'])->group(function () {
-    Route::get('/visitor/register', Registration::class)->name('visitor.register');
-    Route::get('/visitor/visitors-dashboard', VisitorsDashboard::class)->name('visitors.dashboard');
-Route::get('livewire/appointment-booking', AppointmentBooking::class)->name('appointment.booking');
+    Route::get('/visitor/register', Registration::class)->name('visitor.registration');
+   // routes/web.php
 
-Route::get('appointments/checkin/{appointment}', AppointmentCheckin::class)->name('appointments.checkin');
+Route::get('/visitor/dashboard', VisitorsDashboard::class)->name('visitor.dashboard');
+// Route::get('livewire/appointment-booking', AppointmentBooking::class)->name('appointment.booking');
+
+// Route::get('appointments/checkin/{appointment}', AppointmentCheckin::class)->name('appointments.checkin');
 });
 
 /*
@@ -82,7 +90,7 @@ Route::get('appointments/checkin/{appointment}', AppointmentCheckin::class)->nam
 | HR & Admin Routes
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'role:admin|hr|receptionist'])->group(function () {
+Route::middleware(['auth', 'role:admin|hr|supervisor|manager'])->group(function () {
     Route::get('/leaves/hr-pending', [LeaveController::class, 'hrPending'])->name('leaves.hr.pending');
     Route::post('/leaves/{id}/approve', [LeaveController::class, 'approve'])->name('leaves.approve');
     Route::post('/leaves/{id}/reject', [LeaveController::class, 'reject'])->name('leaves.reject');

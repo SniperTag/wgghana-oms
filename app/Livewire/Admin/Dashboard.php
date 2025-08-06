@@ -16,6 +16,7 @@ class Dashboard extends Component
     public $userCount, $departmentCount, $attendanceCount, $leaveCount;
     public $supervisorPending, $hrPending, $approved, $rejected;
     public $user, $roles, $unreadCount, $todayAttendance, $upcomingLeaveCount, $onLeaveCount,$visitorCount;
+    public $filter = '';
 
     public function mount()
     {
@@ -48,7 +49,7 @@ class Dashboard extends Component
     public function render()
     {
         return view('livewire.admin.dashboard')->layout('layouts.partials.admin');
-            
-           
+
+
     }
 }

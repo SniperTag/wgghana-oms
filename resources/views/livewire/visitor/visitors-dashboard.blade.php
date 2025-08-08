@@ -32,7 +32,7 @@
                             class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm">
                             Register Visitor
                         </a>
-                        <a href=""
+                        <a href="{{ route('manage.visitors') }}"
                             class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm">
                             Visitor Manager
                         </a>
@@ -146,9 +146,17 @@
                             <option value="active">Active</option>
                             <option value="banned">Banned</option>
                         </select>
-                        <div wire:loading wire:target="search, status" class="text-gray-500">
-                            Loading results...
+                        <div wire:loading wire:target="search, status" class="flex items-center gap-2 text-blue-600">
+                            <svg class="animate-spin h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg"
+                                fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                    stroke-width="4" />
+                                <path class="opacity-75" fill="currentColor"
+                                    d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 100 16v-4l-3 3 3 3v-4a8 8 0 01-8-8z" />
+                            </svg>
+                            <span>Loading...</span>
                         </div>
+
 
                     </div>
 
@@ -214,7 +222,8 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="p-4 text-center text-gray-500">No visitors found.</td>
+                                        <td colspan="8" class="p-4 text-center text-gray-500">No visitors found.
+                                        </td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -294,6 +303,7 @@
                             class="w-full text-sm mb-4 table table-striped table-hover display nowrap">
                             <thead class="bg-gray-100">
                                 <tr>
+                                    <th class="p-2 text-left">#</th>
                                     <th class="p-2 text-left">Group UID</th>
                                     <th class="p-2 text-left">Group Leader</th>
                                     <th class="p-2 text-left">Company</th>
@@ -307,29 +317,29 @@
                                 @forelse ($groupVisitors as $index => $group)
                                     <!-- Leader Row -->
                                     <tr class="border-b hover:bg-gray-50" data-group="{{ $group['group_uid'] }}">
-                                        <td class="p-2">{{ $group['group_uid'] }}</td>
-                                        <td class="p-2">{{ $group['leader']->full_name }}</td>
-                                        <td class="p-2">{{ $group['leader']->company }}</td>
-                                        <td class="p-2">
-                                            <span
-                                                class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded">
-                                                {{ $group['members_count'] }}
-                                                {{ Str::plural('Member', $group['members_count']) }}
-                                            </span>
-                                        </td>
-                                        <td class="p-2">
-                                            <span
-                                                class="inline-block px-2 py-1 rounded text-xs font-semibold
+                                    <td class="p-2">{{ $loop->iteration }}</td>
+                                    <td class="p-2">{{ $group['group_uid'] }}</td>
+                                    <td class="p-2">{{ $group['leader']->full_name }}</td>
+                                    <td class="p-2">{{ $group['leader']->company }}</td>
+                                    <td class="p-2">
+                                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded">
+                                            {{ $group['members_count'] }}
+                                            {{ Str::plural('Member', $group['members_count']) }}
+                                        </span>
+                                    </td>
+                                    <td class="p-2">
+                                        <span
+                                            class="inline-block px-2 py-1 rounded text-xs font-semibold
                             {{ $group['leader']->status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                                {{ $group['leader']->status }}
-                                            </span>
-                                        </td>
-                                        <td class="p-2">
-                                            <button class="text-blue-600 hover:underline"
-                                                wire:click="toggleGroup({{ $index }})">
-                                                {{ in_array($index, $expandedGroups) ? 'Hide Members' : 'View Members' }}
-                                            </button>
-                                        </td>
+                                            {{ $group['leader']->status }}
+                                        </span>
+                                    </td>
+                                    <td class="p-2">
+                                        <button class="text-blue-600 hover:underline"
+                                            wire:click="toggleGroup({{ $index }})">
+                                            {{ in_array($index, $expandedGroups) ? 'Hide Members' : 'View Members' }}
+                                        </button>
+                                    </td>
                                     </tr>
 
                                     <!-- Member Search Input -->

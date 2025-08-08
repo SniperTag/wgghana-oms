@@ -5,6 +5,7 @@ namespace App\Livewire\Visitor;
 use App\Models\Visitor;
 use App\Models\VisitorType;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Appointment;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Livewire\Component;
@@ -16,11 +17,21 @@ class Registration extends Component
     public $singleIdTypeOther = '';
     public $groupLeaderIdTypeOther = '';
     public $groupMembersIdTypeOther = [];
+public $visitor = null;
 
     public function mount()
     {
         Log::info('Mounting Visitor Registration Component');
+
         $this->visitorType = VisitorType::pluck('name', 'id')->toArray();
+
+if ($prefill = request('prefill')) {
+        $this->single['phone'] = $prefill;
+        $this->visitor = Visitor::where('phone', $prefill)
+                            ->orWhere('id_number', $prefill)
+                            ->orWhere('visitor_uid', $prefill)
+                            ->first();
+    }
     }
 
     // Single visitor form
@@ -281,7 +292,7 @@ public function registerGroupVisitors()
         'id_type' => $leaderIdType,
         'visitor_uid' => $this->generateVisitorUID(),
         'visitor_type_id' => $this->group['leader']['visitor_type'] ?? 1,
-        'created_by' => Auth::id(),
+        'created_by' => Auth::id() ?? "",
         'status' => 'active',
         'is_leader' => true,
         'group_uid' => $groupUid,

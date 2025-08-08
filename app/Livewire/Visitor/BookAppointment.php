@@ -65,7 +65,7 @@ class BookAppointment extends Component
             $this->step = 2;
         } else {
             session()->flash('error', 'Sorry. Please register first.');
-            return redirect()->route('visitor.registration', ['prefill' => $this->search_input]);
+            return redirect()->to(route('visitor.registration', ['prefill' => $this->search_input]));
         }
     }
 

@@ -3,6 +3,7 @@
 
 <head>
     @include('layouts.app') {{-- Contains meta tags, title, stylesheets --}}
+    @livewireStyles
 </head>
 
 <body>
@@ -129,7 +130,7 @@
     <!-- Footer Scripts -->
     @include('layouts.js')
 
-
+@livewireScripts
 </body>
 
 </html>

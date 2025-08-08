@@ -27,7 +27,7 @@
             <div class="dropdown d-inline-block">
               <button type="button" class="btn btn-sm btn-alt-secondary" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <i class="fa fa-user d-sm-none"></i>
-                <span class="d-none d-sm-inline-block fw-semibold">{{ auth()->user()->initials() }}</span>
+                <span class="d-none d-sm-inline-block fw-semibold">{{ auth()->user()->initials()}}</span>
                 <i class="fa fa-angle-down opacity-50 ms-1"></i>
               </button>
               <div class="dropdown-menu dropdown-menu-md dropdown-menu-end p-0" aria-labelledby="page-header-user-dropdown">
@@ -194,6 +194,6 @@
         <!-- END Header Loader -->
 
       </header>
-       
+
 
       <!-- END Header -->

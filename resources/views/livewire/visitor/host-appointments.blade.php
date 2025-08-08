@@ -15,23 +15,23 @@
 
     {{-- Summary Cards --}}
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-    <div class="bg-blue-100 text-blue-800 p-4 rounded shadow">
-        <h3 class="text-sm font-semibold">Approved Appointments</h3>
-        <p class="text-3xl">{{ $approvedCount }}</p>
+        <div class="bg-blue-100 text-blue-800 p-4 rounded shadow">
+            <h3 class="text-sm font-semibold">Approved Appointments</h3>
+            <p class="text-3xl">{{ $approvedCount }}</p>
+        </div>
+        <div class="bg-red-100 text-red-800 p-4 rounded shadow">
+            <h3 class="text-sm font-semibold">Declined Appointments</h3>
+            <p class="text-3xl">{{ $declinedCount }}</p>
+        </div>
+        <div class="bg-yellow-100 text-yellow-800 p-4 rounded shadow">
+            <h3 class="text-sm font-semibold">Rescheduled Appointments</h3>
+            <p class="text-3xl">{{ $wasRescheduledCount }}</p>
+        </div>
+        <div class="bg-purple-100 text-purple-800 p-4 rounded shadow">
+            <h3 class="text-sm font-semibold">Total Appointments</h3>
+            <p class="text-3xl">{{ $totalCount }}</p>
+        </div>
     </div>
-    <div class="bg-red-100 text-red-800 p-4 rounded shadow">
-        <h3 class="text-sm font-semibold">Declined Appointments</h3>
-        <p class="text-3xl">{{ $declinedCount }}</p>
-    </div>
-    <div class="bg-yellow-100 text-yellow-800 p-4 rounded shadow">
-        <h3 class="text-sm font-semibold">Rescheduled Appointments</h3>
-        <p class="text-3xl">{{ $rescheduledCount }}</p>
-    </div>
-    <div class="bg-purple-100 text-purple-800 p-4 rounded shadow">
-        <h3 class="text-sm font-semibold">Total Appointments</h3>
-        <p class="text-3xl">{{ $totalCount }}</p>
-    </div>
-</div>
 
     {{-- Flash Message --}}
     @if (session()->has('message'))
@@ -43,7 +43,7 @@
     {{-- Appointments Table --}}
     <h3 class="text-xl font-semibold mb-3">📋 My Appointments</h3>
 
-    @if ($appointments->count())
+    @if ($appointments && $appointments->count() > 0)
         <div class="overflow-x-auto">
             <table class="min-w-full bg-white border rounded shadow text-sm">
                 <thead class="bg-gray-50 text-gray-700">
@@ -126,100 +126,81 @@
 
     {{-- Decline Modal --}}
     @if ($declineModal)
-        <x-modal title="Decline Appointment" wireClose="declineModal">
-            <label class="block text-sm font-medium mb-1">Reason for Declining</label>
-            <textarea wire:model.defer="declineReason" rows="3"
-                class="w-full border rounded p-2 focus:ring focus:ring-red-300"></textarea>
-            @error('declineReason') <p class="text-sm text-red-500 mt-1">{{ $message }}</p> @enderror
-
-            <div class="flex justify-end gap-2 mt-4">
-                <button wire:click="$set('declineModal', false)"
-                    class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500">Cancel</button>
-                <button wire:click="declineConfirmed"
-                    class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">Submit</button>
+        <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" id="decline-modal">
+            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                <div class="mt-3">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Decline Appointment</h3>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-1">Reason for Declining</label>
+                        <textarea wire:model.defer="declineReason" rows="3"
+                            class="w-full border rounded p-2 focus:ring focus:ring-red-300" placeholder="Please provide a reason for declining this appointment..."></textarea>
+                        @error('declineReason') 
+                            <p class="text-sm text-red-500 mt-1">{{ $message }}</p> 
+                        @enderror
+                    </div>
+                    <div class="flex justify-end gap-2 mt-4">
+                        <button wire:click="closeDeclineModal"
+                            class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500">
+                            Cancel
+                        </button>
+                        <button wire:click="declineConfirmed"
+                            class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+                            Submit
+                        </button>
+                    </div>
+                </div>
             </div>
-        </x-modal>
+        </div>
     @endif
 
     {{-- Reschedule Modal --}}
     @if ($rescheduleModal)
-        <x-modal name="decline-appointment" maxWidth="md" :show="$declineModal" focusable>
-    <h2 class="text-lg font-semibold mb-4">Decline Appointment</h2>
+        <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" id="reschedule-modal">
+            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                <div class="mt-3">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Reschedule Appointment</h3>
+                    
+                    <div class="mb-4">
+                        <label class="block mb-1 text-sm font-medium">New Date</label>
+                        <input type="date" wire:model="newDate"
+                            class="w-full border rounded p-2 focus:ring focus:ring-indigo-300"
+                            min="{{ date('Y-m-d') }}">
+                        @error('newDate')
+                            <span class="text-sm text-red-500 block mt-1">{{ $message }}</span>
+                        @enderror
+                    </div>
 
-    <label class="block mb-2 text-sm font-medium">Reason for declining:</label>
-    <textarea wire:model.defer="declineReason" rows="4"
-        class="w-full border rounded p-2 focus:ring focus:ring-red-300"></textarea>
-    @error('declineReason')
-        <span class="text-sm text-red-500">{{ $message }}</span>
-    @enderror
+                    <div class="mb-4">
+                        <label class="block mb-1 text-sm font-medium">New Time</label>
+                        <input type="time" wire:model="newTime"
+                            class="w-full border rounded p-2 focus:ring focus:ring-indigo-300">
+                        @error('newTime')
+                            <span class="text-sm text-red-500 block mt-1">{{ $message }}</span>
+                        @enderror
+                    </div>
 
-    <div class="mt-4 flex justify-end space-x-2">
-        <button wire:click="closeDeclineModal"
-            class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">
-            Cancel
-        </button>
-        <button wire:click="declineConfirmed"
-            class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
-            Submit Decline
-        </button>
-    </div>
-
-    <div class="mt-2">
-        <button wire:click="showRescheduleModal({{ $appointmentToDecline }})"
-            class="mt-2 text-indigo-600 hover:underline text-sm">
-            📅 Reschedule Appointment
-        </button>
-    </div>
-</x-modal>
-
-<x-modal name="reschedule-appointment" maxWidth="md" :show="$rescheduleModal" focusable>
-    <h2 class="text-lg font-semibold mb-4">Reschedule Appointment</h2>
-
-    <div class="mb-4">
-        <label class="block mb-1 text-sm font-medium">New Date</label>
-        <input type="date" wire:model="newDate"
-            class="w-full border rounded p-2 focus:ring focus:ring-indigo-300">
-        @error('newDate')
-            <span class="text-sm text-red-500">{{ $message }}</span>
-        @enderror
-    </div>
-
-    <div class="mb-4">
-        <label class="block mb-1 text-sm font-medium">New Time</label>
-        <input type="time" wire:model="newTime"
-            class="w-full border rounded p-2 focus:ring focus:ring-indigo-300">
-        @error('newTime')
-            <span class="text-sm text-red-500">{{ $message }}</span>
-        @enderror
-    </div>
-
-    <div class="mt-4 flex justify-end space-x-2">
-        <button wire:click="closeRescheduleModal"
-            class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">
-            Cancel
-        </button>
-        <button wire:click="rescheduleConfirmed"
-            class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
-            Confirm Reschedule
-        </button>
-    </div>
-</x-modal>
-
+                    <div class="flex justify-end gap-2 mt-4">
+                        <button wire:click="closeRescheduleModal"
+                            class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500">
+                            Cancel
+                        </button>
+                        <button wire:click="rescheduleConfirmed"
+                            class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">
+                            Confirm Reschedule
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     @endif
 
-</div>
-
+                </div>
             </div>
-
-
-
         </main>
-
         <!-- END Main Container -->
     </div>
-
-
 </div>
+
 <script>
     Livewire.on('openModal', modalName => {
         window.dispatchEvent(new CustomEvent('open-modal', { detail: modalName }));

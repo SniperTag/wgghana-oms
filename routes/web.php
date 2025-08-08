@@ -23,7 +23,8 @@ use App\Livewire\Admin\Dashboard;
 use App\Livewire\Visitor\Registration;
 use App\Livewire\Visitor\AppointmentBooking;
 use App\Livewire\Visitor\AppointmentCheckin;
-use \App\Livewire\Visitor\HostAppointments;
+use App\Livewire\Visitor\HostAppointments;
+use App\Livewire\Visitor\ManageVisitors;
 
 
 
@@ -81,8 +82,8 @@ Route::middleware(['auth', 'role:admin|admin|receptionist'])->group(function () 
 
 Route::get('/visitor/dashboard', VisitorsDashboard::class)->name('visitor.dashboard');
 // Route::get('livewire/appointment-booking', AppointmentBooking::class)->name('appointment.booking');
+Route::get('livewire/visitor/manage-visitors',ManageVisitors::class)->name('manage.visitors');
 
-// Route::get('appointments/checkin/{appointment}', AppointmentCheckin::class)->name('appointments.checkin');
 });
 
 /*

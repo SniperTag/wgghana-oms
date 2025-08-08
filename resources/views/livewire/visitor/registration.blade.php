@@ -1,21 +1,32 @@
 <div id="page-container"
-    class="sidebar-o sidebar-dark enable-page-overlay side-scroll page-header-fixed page-header-modern main-content-boxed">
+    class="sidebar-o sidebar-dark enable-page-overlay side-scroll page-header-fixed page-header-modern main-content-boxed"
+    style="background-image: url('https://images.unsplash.com/photo-1551836022-d5d88e9218df?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80');
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-size: cover;
+            background-attachment: fixed;
+            min-height: 100vh;
+            margin: 0;">
 
-    <!-- Sidebar -->
-    @include('layouts.partials.sidebar')
+    @if (Auth::check())
+        <!-- Sidebar -->
+        @include('layouts.partials.sidebar')
 
-    <!-- Header -->
-    @include('layouts.header')
+        <!-- Header -->
+        @include('layouts.header')
+    @endif
 
     <!-- Main Container -->
-    <div>
+
         <main id="main-container" class="content-full">
             <div class="page-container d-flex flex-column min-vh-100">
 
 
-                <div class="p-6 bg-white rounded shadow max-w-7xl mx-auto">
-                    <h2 class="text-2xl font-bold mb-6">Visitor Registration</h2>
-
+                <div class="p-6 bg-white rounded shadow max-w-7xl mx-auto mt-5">
+                    <h2 class="text-2xl font-bold mb-6">Visitor Registration</h2> 
+                    @auth
+                    <p>{{ auth()->user()->name }} Kindly enter accurate Datas</p>
+                    @endauth
                     {{-- Toastr Notifications --}}
                     @if (session()->has('message'))
                         <script>
@@ -32,6 +43,15 @@
                             });
                         </script>
                     @endif
+
+                    @if (session('error'))
+                        <div class="bg-red-600 text-white p-3 rounded mb-4">
+                            {{ session('error') }}
+                        </div>
+                    @endif
+
+                    {{-- <input type="text" wire:model="single.phone" placeholder="Phone" /> --}}
+
 
                     <!-- Tabs -->
                     <div class="flex border-b mb-4 space-x-4">
@@ -254,11 +274,14 @@
 
 
         </main>
-    </div>
+
 </div>
 <script>
     window.addEventListener('notify', event => {
-        const { type, message } = event.detail;
+        const {
+            type,
+            message
+        } = event.detail;
         if (type === 'success') {
             toastr.success(message);
         } else if (type === 'error') {

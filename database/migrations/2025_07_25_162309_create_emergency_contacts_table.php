@@ -15,9 +15,11 @@ return new class extends Migration
             $table->id();
     $table->foreignId('user_id')->constrained()->onDelete('cascade');
     $table->string('name');
-    $table->string('relationship');
+    $table->enum('relationship',['parent', 'spouse', 'sibling', 'friend', 'other'])->nullable();
     $table->string('phone');
     $table->string('email')->nullable();
+    $table->string('address')->nullable();
+    $table->integer('age')->nullable();
     $table->timestamps();
         });
     }

@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    @include('layouts.app')
+
+    @include('layouts.head')
 </head>
 <body class="bg-gray-100 text-gray-900">
-    
+
     {{ $slot }}
+
 @include('layouts.js')
 
 </body>

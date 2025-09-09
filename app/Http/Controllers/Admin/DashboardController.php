@@ -112,4 +112,7 @@ class DashboardController extends Controller
         return view('admin.attendance.record', compact('records', 'user', 'hasFilter'))
             ->with('i', (request()->input('page', 1) - 1) * 5);
     }
+
+
+ 
 }

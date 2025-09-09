@@ -10,7 +10,7 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
 
 <head>
-    @include('layouts.app')
+    @include('layouts.head')
 </head>
 
 <body>
@@ -18,7 +18,7 @@
 
 
     <div id="page-container"
-        class="sidebar-o sidebar-light enable-page-overlay side-scroll page-header-fixed page-header-modern main-content-boxed">
+        class="sidebar-o sidebar-d enable-page-overlay side-scroll page-header-fixed page-header-modern main-content-boxed">
 
         @include('layouts.partials.sidebar')
 
@@ -183,18 +183,41 @@
     </div>
     @livewire('view-clock-out-reason')
 
-    {{--  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>  --}}
     @include('layouts.js')
 
 
-    <script>
-        document.addEventListener('livewire:load', function() {
-            Livewire.on('showClockOutReasonModal', id => {
-                console.log('Modal Event Triggered with ID:', id);
-            });
-        });
-    </script>
 
 </body>
 
 </html>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize DataTable
+        $('#attendanceTable').DataTable({
+            responsive: true,
+            dom: 'Bfrtip',
+            buttons: [
+                'copy', 'csv', 'excel', 'pdf', 'print'
+            ],
+            "order": [[ 0, "asc" ]]
+        });
+
+        // Listen for Livewire event to show modal
+        Livewire.on('showClockOutReasonModal', recordId => {
+            // Fetch the reason via AJAX
+            fetch(`/attendance/reason/${recordId}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Populate the modal with the reason
+                    document.getElementById('clockOutReasonContent').innerText = data.reason || 'No reason provided.';
+                    // Show the modal
+                    const clockOutReasonModal = new bootstrap.Modal(document.getElementById('clockOutReasonModal'));
+                    clockOutReasonModal.show();
+                })
+                .catch(error => {
+                    console.error('Error fetching clock-out reason:', error);
+                    alert('Failed to fetch clock-out reason. Please try again.');
+                });
+        });
+    });
+</script>

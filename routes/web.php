@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Models\SubRole;
+
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\{
     RoleController,
@@ -9,7 +11,11 @@ use App\Http\Controllers\Admin\{
     AttendanceController,
     PermissionController,
     LeaveBalanceController,
-    UserAccessController
+    UserAccessController,
+    SuperAdminController,
+    AssessmentController,
+    ProjectController,
+
 };
 use App\Http\Controllers\User\{
     StaffController,
@@ -18,15 +24,29 @@ use App\Http\Controllers\User\{
     SupervisorController,
     FaceEnrollmentController
 };
-use App\Livewire\Visitor\VisitorsDashboard;
-use App\Livewire\Admin\Dashboard;
-use App\Livewire\Visitor\Registration;
-use App\Livewire\Visitor\AppointmentBooking;
-use App\Livewire\Visitor\AppointmentCheckin;
-use App\Livewire\Visitor\HostAppointments;
-use App\Livewire\Visitor\ManageVisitors;
+use App\Livewire\Visitor\{
+    VisitorsDashboard,
+    Registration,
+    BookAppointment,
+    HostAppointments,
+    ManageVisitors
+};
 
+use App\Livewire\Admin\{
+    Dashboard,
 
+};
+
+use App\Livewire\SuperAdmin\{
+    Page,
+};
+
+// use App\Livewire\{
+//     FaceEnrollment,
+//     HostVisitApprovals,
+//     StaffsOnLoeave,
+//     StepOutHistory,
+// };
 
 /*
 |--------------------------------------------------------------------------
@@ -35,24 +55,30 @@ use App\Livewire\Visitor\ManageVisitors;
 */
 Route::get('/', fn () => view('welcome'));
 
+// Route::get('/text', fn () => view('text'));
 // Public Attendance Routes
 Route::post('/attendance/check-out', [AttendanceController::class, 'checkOut'])->name('staff.checkout');
 Route::post('/attendance', [AttendanceController::class, 'handleAttendance'])->name('attendance.handle');
 Route::get('admin/attendance/verify/{staff_id}', [AttendanceController::class, 'lookupStaff'])->name('verify.staff');
-Route::get('/book-appointment', \App\Livewire\Visitor\BookAppointment::class)->name('book.appointment');
 
 // Invite Registration
 Route::get('auth/invite-register/{token}', [UserController::class, 'showRegistrationForm'])->name('invite.register');
 Route::post('auth/invite-register', [UserController::class, 'processRegistration'])->name('invite.register.submit');
 
+// Visitor Public Booking
+Route::get('/book-appointment', BookAppointment::class)->name('book.appointment');
+
+
+Route::get('/subroles-by-department/{department}', [UserController::class, 'byDepartment'])
+    ->name('subroles.byDepartment');
+
 /*
 |--------------------------------------------------------------------------
-| Authenticated Routes
+| Authenticated Routes (All Logged-in Users)
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth'])->group(function () {
-
-    // Profile Routes
+    // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -61,168 +87,146 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/user/face-enrollment', [FaceEnrollmentController::class, 'show'])->name('face.enroll');
     Route::post('/face-enrollment/save', [FaceEnrollmentController::class, 'saveFaceImage'])->name('face.enroll.save');
 
-    // General Staff Leave Access
+    // Staff Leave Routes
     Route::get('/leaves', [LeaveController::class, 'index'])->name('leaves.index');
     Route::get('/leaves/create', [LeaveController::class, 'create'])->name('leaves.create');
     Route::post('/leaves', [LeaveController::class, 'store'])->name('leaves.store');
 
-      // Host Appointments
-    Route::get('livewire/visitor/host-appointments',HostAppointments::class)->name('my.appointments');
-  
+    // Host Appointments
+    Route::get('visitor/host-appointments', HostAppointments::class)->name('my.appointments');
 });
 
 /*
 |--------------------------------------------------------------------------
-| Admin, HR, AND Receiptionist Routes
+| Visitor Routes (Admin & Receptionist)
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'role:admin|admin|receptionist'])->group(function () {
-    Route::get('/visitor/register', Registration::class)->name('visitor.registration');
-   // routes/web.php
-
-Route::get('/visitor/dashboard', VisitorsDashboard::class)->name('visitor.dashboard');
-// Route::get('livewire/appointment-booking', AppointmentBooking::class)->name('appointment.booking');
-Route::get('livewire/visitor/manage-visitors',ManageVisitors::class)->name('manage.visitors');
-
+Route::prefix('visitor')->middleware(['auth', 'role:super_admin|admin|receptionist'])->group(function () {
+    Route::get('/dashboard', VisitorsDashboard::class)->name('visitor.dashboard');
+    Route::get('/register', Registration::class)->name('visitor.registration');
+    Route::get('/manage', ManageVisitors::class)->name('manage.visitors');
 });
+
+
 
 /*
 |--------------------------------------------------------------------------
-| HR & Admin Routes
+| Admin, HR, and Manager Routes
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'role:admin|hr|supervisor|manager'])->group(function () {
-    Route::get('/leaves/hr-pending', [LeaveController::class, 'hrPending'])->name('leaves.hr.pending');
-    Route::post('/leaves/{id}/approve', [LeaveController::class, 'approve'])->name('leaves.approve');
-    Route::post('/leaves/{id}/reject', [LeaveController::class, 'reject'])->name('leaves.reject');
-    Route::get('/leaves/leave-status', [LeaveController::class, 'approvedLeaveStatus'])->name('leaves.status');
-});
 
-/*
-|--------------------------------------------------------------------------
-| Dashboard Routes (Role-Based)
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth:web'])->group(function () {
+
+
+Route::middleware(['auth', 'role:super_admin|admin|manager'])->group(function () {
+    // Admin Dashboard
     Route::get('admin/dashboard', Dashboard::class)->name('dashboard');
+     Route::get('super-admin/page', Page::class)->name('super_admin.page');
+    // Users
+    Route::get('admin/users', [UserController::class, 'indexUser'])->name('all.staffs');
+    Route::get('admin/users/create', [UserController::class, 'createUser'])->name('admin.create_users');
+    Route::post('admin/users/store', [UserController::class, 'storeUser'])->name('admin.users.store');
+    Route::get('admin/users/{id}/id-card', [UserController::class, 'downloadIdCard'])->name('staff.id-card');
+    Route::get('admin/users/{id}/preview', [UserController::class, 'previewStaffID'])->name('admin.users.preview');
+    Route::get('admin/users/edit/{user}', [UserController::class, 'editUser'])->name('admin.users.edit');
+    Route::put('admin/users/{id}', [UserController::class, 'updateUser'])->name('admin.update_user');
+    Route::delete('admin/users/destroy/{user}', [UserController::class, 'destroyUser'])->name('admin.destroy_user');
 
-    Route::get('hr/dashboard', [DashboardController::class, 'index'])
-        ->middleware('role:hr')->name('hr.dashboard');
 
-    Route::get('receptionist/dashboard', [DashboardController::class, 'receptionist'])
-        ->middleware('role:receptionist')->name('receptionist.dashboard');
-
-    Route::get('staff/staff-dashboard', [StaffController::class, 'staff'])
-        ->middleware('role:staff')->name('staff.dashboard');
-
-    Route::get('manager/manager-dashboard', fn () => view('manager.dashboard'))
-        ->middleware('role:manager')->name('manager.dashboard');
-
-    Route::get('finance/finance-dashboard', fn () => view('finance.dashboard'))
-        ->middleware('role:finance')->name('finance.dashboard');
-
-    Route::get('supervisor/dashboard', [SupervisorController::class, 'supervisor'])
-        ->middleware('role:supervisor')->name('supervisor.dashboard');
-});
-
-/*
-|--------------------------------------------------------------------------
-| Admin Routes
-|--------------------------------------------------------------------------
-*/
-Route::prefix('admin')->middleware(['auth', 'role:admin|hr'])->group(function () {
-
-    // User Management
-    Route::get('/users', [UserController::class, 'indexUser'])->name('admin.users_index');
-    Route::get('/users/create', [UserController::class, 'createUser'])->name('admin.create_users');
-    Route::post('/users/store', [UserController::class, 'storeUser'])->name('admin.store');
-    Route::get('/users/{id}/id-card', [UserController::class, 'downloadIdCard'])->name('staff.id-card');
-    Route::get('/admin/users/{id}/preview', [UserController::class, 'previewStaffID'])->name('admin.users.preview');
-    Route::get('/users/edit/{user}', [UserController::class, 'editUser'])->name('admin.users.edit');
-    Route::put('/users/{id}', [UserController::class, 'updateUser'])->name('admin.update');
-    Route::delete('/users/destroy/{user}', [UserController::class, 'destroyUser'])->name('admin.destroy_user');
-
-    // User Invitation
-    Route::get('/users/invite', [UserController::class, 'invite'])->name('admin.invite_user');
-    Route::post('/users/invite', [UserController::class, 'inviteStore'])->name('admin.invite.store');
-    Route::get('/users/{id}/performance', [UserController::class, 'getUserPerformance'])->name('admin.users.performance');
-
-    // Role Management
-    Route::resource('roles', RoleController::class);
-    Route::get('roles/{role}/assign-permissions', [RoleController::class, 'assignPermissions'])->name('roles.assignPermissions');
-    Route::post('roles/{role}/assign-permissions', [RoleController::class, 'assignPermissionsStore'])->name('roles.assignPermissions.store');
-    Route::get('roles/{role}/assign-users', [RoleController::class, 'assignUsers'])->name('roles.assignUsers');
-    Route::post('roles/{role}/assign-users', [RoleController::class, 'assignUsersStore'])->name('roles.assignUsers.store');
-
-    // View/Edit Permissions
-    Route::get('/roles/{role}/edit', [RoleController::class, 'edit'])->name('roles.edit');
-    Route::put('/roles/{role}', [RoleController::class, 'update'])->name('roles.update');
-    Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
-    Route::get('/roles/index', [RoleController::class, 'index'])->name('roles.index');
-    Route::get('/roles/create', [RoleController::class, 'create'])->name('roles.create');
-    Route::post('/roles/store', [RoleController::class, 'store'])->name('roles.store');
-    Route::get('/roles/{role}', [RoleController::class, 'show'])->name('roles.show');
+    // Role & Permissions
+    Route::resource('admin/roles', RoleController::class);
+    Route::get('admin/roles/{role}/assign-permissions', [RoleController::class, 'assignPermissions'])->name('roles.assignPermissions');
+    Route::post('admin/roles/{role}/assign-permissions', [RoleController::class, 'assignPermissionsStore'])->name('roles.assignPermissions.store');
+    Route::get('admin/roles/{role}/assign-users', [RoleController::class, 'assignUsers'])->name('roles.assignUsers');
+    Route::post('admin/roles/{role}/assign-users', [RoleController::class, 'assignUsersStore'])->name('roles.assignUsers.store');
 
     // Permissions
-    Route::get('/permissions/index', [PermissionController::class, 'index'])->name('permissions.index');
-    Route::get('/permissions/create', [PermissionController::class, 'create'])->name('permissions.create');
-    Route::post('/permissions/store', [PermissionController::class, 'store'])->name('permissions.store');
-    Route::get('/permissions/edit/{permission}', [PermissionController::class, 'edit'])->name('permissions.edit');
-    Route::put('/permissions/{permission}', [PermissionController::class, 'update'])->name('permissions.update');
-    Route::delete('/permissions/destroy/{permission}', [PermissionController::class, 'destroy'])->name('permissions.destroy');
+    Route::resource('admin/permissions', PermissionController::class)->except(['show']);
 
     // Access Control
-    Route::get('roles/{role}/permissions', [RoleController::class, 'permissions'])->name('roles.permissions');
-    Route::get('users/{user}/permissions', [RoleController::class, 'userPermissions'])->name('users.permissions');
-    Route::get('access/partials/roles', [RoleController::class, 'index'])->name('access.roles');
-    Route::get('access/management', [UserAccessController::class, 'index'])->name('access.management');
-    Route::post('access/{user}/give-permission', [UserAccessController::class, 'givePermission'])->name('access.givePermission');
-    Route::delete('access/{user}/revoke-permission/{permission}', [UserAccessController::class, 'revokePermission'])->name('access.revokePermission');
+    Route::get('admin/access/management', [UserAccessController::class, 'index'])->name('access.management');
+    Route::post('admin/access/{user}/give-permission', [UserAccessController::class, 'givePermission'])->name('access.givePermission');
+    Route::delete('admin/access/{user}/revoke-permission/{permission}', [UserAccessController::class, 'revokePermission'])->name('access.revokePermission');
+    Route::post('admin/access/revoke-multiple', [UserAccessController::class, 'revokeMultiplePermissions'])->name('access.revokeMultiplePermissions');
+    Route::delete('admin/access/{user}/revoke-all', [UserAccessController::class, 'revokeAllPermissions'])->name('access.revokeAllPermissions');
 
-    // Leave Balances
-    Route::get('/{user}/leave_balances/index', [LeaveBalanceController::class, 'index'])->name('leave_balances.index');
-    Route::get('/leave_balances/create', [LeaveBalanceController::class, 'create'])->name('leave_balances.create');
-    Route::post('/leave_balances', [LeaveBalanceController::class, 'store'])->name('leave_balances.store');
-    Route::get('/{id}/edit-modal', [LeaveBalanceController::class, 'editModal'])->name('leave_balances.edit-modal');
-    Route::put('/{leaveBalance}', [LeaveBalanceController::class, 'update'])->name('leave_balances.update');
 
-    // Admin Attendance View
-    Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
-    Route::get('/attendance/record', [DashboardController::class, 'adminAttendance'])->name('admin.attendance');
+    // Leave Management (HR/Admin)
+    Route::get('leaves/hr-pending', [LeaveController::class, 'hrPending'])->name('leaves.hr.pending');
+    Route::post('leaves/{id}/approve', [LeaveController::class, 'approve'])->name('leaves.approve');
+    Route::post('leaves/{id}/reject', [LeaveController::class, 'reject'])->name('leaves.reject');
+    Route::get('leaves/leave-status', [LeaveController::class, 'approvedLeaveStatus'])->name('leaves.status');
+
+    // Leave Balance
+    Route::get('admin/leave_balances', [LeaveBalanceController::class, 'index'])->name('leave_balances.index');
+    Route::get('admin/leave_balances/create', [LeaveBalanceController::class, 'create'])->name('leave_balances.create');
+    Route::post('admin/leave_balances', [LeaveBalanceController::class, 'store'])->name('leave_balances.store');
+    Route::put('admin/leave_balances/{leaveBalance}', [LeaveBalanceController::class, 'update'])->name('leave_balances.update');
+
+    // Attendance Overview
+    Route::get('admin/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+    Route::get('admin/attendance/record', [DashboardController::class, 'adminAttendance'])->name('admin.attendance');
 
     // Break Time
-    Route::post('/break/start', [BreakTimeController::class, 'start'])->name('staff.break.start');
-    Route::post('/break/end', [BreakTimeController::class, 'end'])->name('staff.break.end');
+    Route::post('admin/break/start', [BreakTimeController::class, 'start'])->name('staff.break.start');
+    Route::post('admin/break/end', [BreakTimeController::class, 'end'])->name('staff.break.end');
 });
 
 /*
 |--------------------------------------------------------------------------
-| Supervisor-Only Routes
+| Supervisor Routes
 |--------------------------------------------------------------------------
 */
 Route::prefix('supervisor')->middleware(['auth', 'role:supervisor'])->group(function () {
+    Route::get('/dashboard', [SupervisorController::class, 'dashboard'])->name('supervisor.dashboard');
     Route::get('/attendance', [SupervisorController::class, 'attendance'])->name('supervisor.self.attendance');
-    Route::get('/profile', [SupervisorController::class, 'profile'])->name('supervisor.profile');
-    Route::get('/leaves/supervisor-pending', [LeaveController::class, 'supervisorPending'])->name('leaves.supervisor.pending');
-    Route::post('/leaves/{id}/approve', [LeaveController::class, 'approve'])->name('leaves.approve');
-    Route::post('/leaves/{id}/reject', [LeaveController::class, 'reject'])->name('leaves.reject');
-    Route::get('/leaves/supervisor/on-leave', [LeaveController::class, 'supervisorOnLeave'])->name('leaves.supervisor.onleave');
+    Route::get('subordinates', [SupervisorController::class, 'subordinatesIndex'])->name('subordinates.index');
+    Route::get('subordinates/{id}', [SupervisorController::class, 'subordinatesShow'])->name('subordinates.show');
+    Route::get('/leaves/pending', [LeaveController::class, 'supervisorPending'])->name('leaves.supervisor.pending');
+    Route::post('/leaves/{id}/approve', [SupervisorController::class, 'approve'])->name('supervisor.approve');
+    Route::post('/leaves/{id}/reject', [SupervisorController::class, 'reject'])->name('supervisor.reject');
 });
 
 /*
 |--------------------------------------------------------------------------
-| Staff-Only Routes
+| Staff Routes
 |--------------------------------------------------------------------------
 */
-Route::prefix('staff')->middleware(['auth', 'role:staff'])->group(function () {
-    Route::get('/attendance', [StaffController::class, 'attendance'])->name('self.attendance');
+
+Route::middleware(['auth', 'role:staff'])->group(function () {
+    Route::get('/staff/dashboard', [StaffController::class, 'staff'])->name('staff.dashboard');
+     Route::get('/attendance', [StaffController::class, 'attendance'])->name('self.attendance');
+    Route::get('/leaves', [StaffController::class, 'index'])->name('staff.leaves');
     Route::post('/break/start', [BreakTimeController::class, 'start'])->name('staff.break.start');
     Route::post('/break/end', [BreakTimeController::class, 'end'])->name('staff.break.end');
 });
+
+
+
+
+
+
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/projects/dashboard', [ProjectController::class, 'dashboard'])->name('project.dashboard');
+Route::get('/projects/index',[ProjectController::class, 'create'])->name('create.project');
+Route::post('/projects/store',[ProjectController::class, 'store'])->name('projects.store');
+Route::get('/projects/tasks-index', [ProjectController::class, 'tasksIndex'])->name('projects.index');
+Route::post('/tasks/store',[ProjectController::class, 'storeTask'])->name('tasks.store');
+Route::delete('/projects/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
+});
+
+
+Route::middleware(['auth'])->group(function(){
+    Route::get('/assessment/dashboard',[AssessmentController::class, 'asdashboard'])->name('assessment.dashboard');
+    Route::post('assessment/store', [AssessmentController::class, 'storeAss'])->name('assessments.store');
+    Route::get('assessment/self-assessment', [AssessmentController::class, 'selfAss'])->name('self.assess');
+    Route::post('selfAssess/store',[AssessmentController::class, 'storeSelf'])->name('assessments.store');
+});
+
 
 /*
 |--------------------------------------------------------------------------
 | Auth Routes
 |--------------------------------------------------------------------------
 */
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

@@ -22,9 +22,11 @@ class LeaveSubmittedNotification extends Notification
 
     public function toMail($notifiable)
     {
+    $name = property_exists($notifiable, 'name') ? $notifiable->name : 'there';
+
         return (new MailMessage)
             ->subject('New Leave Request Submitted')
-            ->greeting("Hello {$notifiable->name},")
+            ->greeting("Hello {$name},")
             ->line("{$this->leave->user->name} submitted a leave request.")
             ->line("From: {$this->leave->start_date} To: {$this->leave->end_date}")
             ->action('Review Request', url("/admin/leaves/{$this->leave->id}"));

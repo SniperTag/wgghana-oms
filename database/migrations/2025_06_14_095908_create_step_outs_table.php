@@ -17,7 +17,7 @@ return new class extends Migration
     $table->timestamp('stepped_out_at');
     $table->timestamp('returned_at')->nullable();
     $table->string('reason')->nullable();
-    $table->enum('status', ['stepped out', 'Available'])->default('Stepped out');
+    $table->string('status_code')->default('NAV');
     $table->timestamps();
 });
     }

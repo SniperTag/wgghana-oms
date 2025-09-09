@@ -20,7 +20,9 @@ class PermissionController extends Controller
     // Show form to create a permission
     public function create()
     {
-        return view('admin.permissions.create' );
+         $permissions = Permission::all();
+          Log::info('Viewing all permissions');
+        return view('admin.permissions.create', compact('permissions'));
     }
 
     // Store a new permission

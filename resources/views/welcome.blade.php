@@ -2,33 +2,25 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale() ?? 'en') }}" class="dark">
 
 <head>
-    @include('layouts.app') {{-- Contains meta tags, title, stylesheets --}}
-    @livewireStyles
+    @include('layouts.head') {{-- Contains meta tags, title, stylesheets --}}
 </head>
 
 <body>
     <div id="page-container" class="main-content-boxed">
         @if (session('success'))
-            <div class="container mt-3">
-                <div class="alert alert-success">
-                    {{ session('success') }}
-                </div>
-            </div>
+            <script>
+                toastr.success("{{ session('success') }}");
+            </script>
         @endif
-
-        @php
-            $errors = $errors ?? (session('errors') ?? new \Illuminate\Support\ViewErrorBag());
-        @endphp
 
         @if ($errors->any())
-            <div class="container mt-3">
-                <div class="alert alert-danger">
-                    @foreach ($errors->all() as $error)
-                        <p>{{ $error }}</p>
-                    @endforeach
-                </div>
-            </div>
+            <script>
+                @foreach ($errors->all() as $error)
+                    toastr.error("{{ $error }}");
+                @endforeach
+            </script>
         @endif
+
 
 
         <!--Main Container-->
@@ -58,7 +50,7 @@
 
                             <!-- Header -->
                             <div class="px-4 py-2 mb-4 text-center">
-                                <img src="{{ asset('image/Office_logo.jpg') }}"
+                                <img src="{{ asset('build/assets/image/Office_logo.jpg') }}"
                                     alt="Waltergates Office Logo" class="w-50 mb-4 mx-auto d-block">
                                 <h1 class="h3 fw-bold mt-4 mb-2">Welcome to Your Dashboard</h1>
                                 <h2 class="h5 fw-medium text-muted mb-0">Please sign in</h2>
@@ -109,7 +101,7 @@
                             <!-- END Sign In Form -->
                             <button type="button" class="btn btn-primary w-full mt-2" data-bs-toggle="modal"
                                 data-bs-target="#clockInModal">
-                                 Clock In
+                                Clock In
                             </button>
 
 
@@ -129,8 +121,7 @@
     </div>
     <!-- Footer Scripts -->
     @include('layouts.js')
-
-@livewireScripts
+    
 </body>
 
 </html>

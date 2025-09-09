@@ -52,7 +52,7 @@
                             </p>
 
                             <p style="text-align: center; margin: 30px 0;">
-                                <a href="{{ $resetUrl }}" style="
+                                <a href="{{$resetUrl }}" style="
                                     background-color: #dc2626;
                                     color: #fff;
                                     padding: 12px 24px;

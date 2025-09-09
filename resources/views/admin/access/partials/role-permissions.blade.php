@@ -1,29 +1,59 @@
-<div>
-    <h5>Assign Permissions to Roles</h5>
+<div class="card p-3">
+    <h4 class="mb-3">Assign Permissions to Roles</h4>
 
-    @foreach (\Spatie\Permission\Models\Role::all() as $role)
-        <div class="card my-3">
-            <div class="card-header">
-                {{ $role->name }}
-            </div>
-            <div class="card-body">
-                <form action="{{ route('roles.assignPermissions.store', $role) }}" method="POST">
-                    @csrf
-                    <div class="row">
-                        @foreach (\Spatie\Permission\Models\Permission::all() as $permission)
-                            <div class="col-md-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="permissions[]"
-                                        value="{{ $permission->name }}"
-                                        {{ $role->hasPermissionTo($permission->name) ? 'checked' : '' }}>
-                                    <label class="form-check-label">{{ $permission->name }}</label>
-                                </div>
-                            </div>
-                        @endforeach
+    @php
+        $roles = \Spatie\Permission\Models\Role::with('permissions')->get();
+        $permissions = \Spatie\Permission\Models\Permission::all();
+    @endphp
+
+    <div class="mb-3">
+        <label class="form-label">Select Role</label>
+        <select id="roleSelect" class="form-select">
+            <option value="">-- Select Role --</option>
+            @foreach($roles as $role)
+                <option value="{{ $role->id }}" data-permissions="{{ json_encode($role->permissions->pluck('id')) }}">
+                    {{ $role->name }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+
+    <form id="rolePermissionsForm" action="" method="POST" style="display:none;">
+        @csrf
+        <div class="row">
+            @foreach($permissions as $perm)
+                <div class="col-md-3">
+                    <div class="form-check">
+                        <input type="checkbox" name="permissions[]" value="{{ $perm->id }}" class="form-check-input permission-checkbox" id="perm-{{ $perm->id }}">
+                        <label class="form-check-label" for="perm-{{ $perm->id }}">{{ $perm->name }}</label>
                     </div>
-                    <button type="submit" class="btn btn-primary mt-3">Update Permissions</button>
-                </form>
-            </div>
+                </div>
+            @endforeach
         </div>
-    @endforeach
+        <button type="submit" class="btn btn-primary mt-3">Update Permissions</button>
+    </form>
 </div>
+
+<script>
+const roleSelect = document.getElementById('roleSelect');
+const rolePermissionsForm = document.getElementById('rolePermissionsForm');
+
+roleSelect.addEventListener('change', function() {
+    const selected = roleSelect.selectedOptions[0];
+    if (!selected || !selected.value) {
+        rolePermissionsForm.style.display = 'none';
+        return;
+    }
+
+    document.querySelectorAll('.permission-checkbox').forEach(cb => cb.checked = false);
+
+    const perms = JSON.parse(selected.dataset.permissions || '[]');
+    perms.forEach(p => {
+        const cb = document.querySelector(`.permission-checkbox[value="${p}"]`);
+        if(cb) cb.checked = true;
+    });
+
+    rolePermissionsForm.action = `/roles/${selected.value}/assign-permissions`;
+    rolePermissionsForm.style.display = 'block';
+});
+</script>

@@ -14,8 +14,8 @@ return [
     |
     */
 
-    'default' => env('MAIL_MAILER', 'log'),
-    'admin_email' => env('MAIL_ADMIN_EMAIL'), 
+    'default' => env('MAIL_MAILER', 'smtp'),
+    'admin_email' => env('MAIL_ADMIN_EMAIL'),
 
     /*
     |--------------------------------------------------------------------------
@@ -43,7 +43,8 @@ return [
             'scheme' => env('MAIL_SCHEME'),
             'url' => env('MAIL_URL'),
             'host' => env('MAIL_HOST', '127.0.0.1'),
-            'port' => env('MAIL_PORT', 2525),
+            'encryption' => env('MAIL_ENCRYPTION', 'ssl'),
+            'port' => env('MAIL_PORT', 465),
             'username' => env('MAIL_USERNAME'),
             'password' => env('MAIL_PASSWORD'),
             'timeout' => null,
@@ -110,8 +111,8 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', 'Example'),
+        'address' => env('MAIL_FROM_ADDRESS', 'wgghanaomsalert@isdbms.com'),
+        'name' => env('MAIL_FROM_NAME', 'WGGHANA'),
     ],
 
 ];

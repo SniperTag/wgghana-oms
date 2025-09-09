@@ -2,16 +2,17 @@
 
 namespace App\Livewire\Visitor;
 
-use App\Mail\AdminAppointmentRescheduledMail;
-use App\Mail\AppointmentAcceptMail;
-use App\Mail\AppointmentDeclinedMail;
+use Carbon\Carbon;
+use Livewire\Component;
+use App\Models\VisitLog;
 use App\Models\Appointment;
 use App\Services\SmsService;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Auth;
+use App\Mail\AppointmentAcceptMail;
+use App\Mail\AppointmentDeclinedMail;
+use App\Mail\AdminAppointmentRescheduledMail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
-use Livewire\Component;
 
 class HostAppointments extends Component
 {
@@ -27,16 +28,16 @@ class HostAppointments extends Component
     public $title = '';
     public $newTime = null;
     public $statusFilter = '';
-    // Initialize these properties with default values
     public $approvedCount = 0;
     public $declinedCount = 0;
     public $wasRescheduledCount = 0;
     public $totalCount = 0;
+    public $checkInCount = 0;
+    public $declinedCheckInCount = 0;
+    public $totalVisitorCount = 0;
+    public $todayCheckInCount = 0;
 
-    public function getAppointmentsProperty()
-    {
-        return $this->appointments ?? collect();
-    }
+    public $visitLogs;
 
     protected $listeners = [
         'appointmentUpdated' => 'loadAppointments',
@@ -52,10 +53,10 @@ class HostAppointments extends Component
 
     public function mount()
     {
-        // Initialize appointments as empty collection first
         $this->appointments = collect();
-        // Then load the actual appointments
         $this->loadAppointments();
+        $this->loadVisitLogs();
+        $this->loadCheckInCounts();
     }
 
     public function loadAppointments()
@@ -70,16 +71,13 @@ class HostAppointments extends Component
                 Log::info("Appointment #{$appointment->id} reverted to pending after reschedule delay");
             }
 
-            $query = Appointment::where('host_id', Auth::id())
-                ->orderBy('date', 'asc');
+            $query = Appointment::where('host_id', Auth::id())->orderBy('date', 'asc');
 
             if ($this->statusFilter !== '') {
                 $query->where('status', $this->statusFilter);
             }
 
             $this->appointments = $query->get();
-
-            // Load counts
             $this->loadCounts();
         } catch (\Exception $e) {
             Log::error("Error loading appointments: " . $e->getMessage());
@@ -91,7 +89,55 @@ class HostAppointments extends Component
         }
     }
 
-    // Separate method to load counts
+    public function loadVisitLogs()
+    {
+        try {
+            $this->visitLogs = VisitLog::with('visitor')->latest()->get();
+        } catch (\Exception $e) {
+            Log::error("Error loading visit logs: " . $e->getMessage());
+            $this->visitLogs = collect();
+        }
+    }
+
+    public function loadCheckInCounts()
+    {
+        try {
+            $hostId = Auth::id();
+            $this->checkInCount = VisitLog::where('host_id', $hostId)
+                ->where('approval_status', 'approved')
+                ->where('status', 'checked_in')
+                ->count();
+
+            $this->declinedCheckInCount = VisitLog::where('host_id', $hostId)
+                ->where('approval_status', 'rejected')
+                ->where('status', 'cancelled')
+                ->count();
+
+            $this->totalVisitorCount = VisitLog::where('host_id', $hostId)
+                ->whereIn('approval_status', ['approved', 'rejected'])
+                ->count();
+
+            $today = Carbon::today();
+            $this->todayCheckInCount = VisitLog::where('host_id', $hostId)
+                ->whereDate('check_in_time', $today)
+                ->where('approval_status', 'approved')
+                ->where('status', 'checked_in')
+                ->count();
+
+            Log::info("Check-in counts loaded", [
+                'check_in_count' => $this->checkInCount,
+                'declined-check_in_count' => $this->declinedCheckInCount,
+                'total_visitor_count' => $this->totalVisitorCount,
+            ]);
+        } catch (\Exception $e) {
+            Log::error("Error loading check-in counts: " . $e->getMessage());
+            $this->checkInCount = 0;
+            $this->declinedCheckInCount = 0;
+            $this->totalVisitorCount = 0;
+            $this->todayCheckInCount = 0;
+        }
+    }
+
     public function loadCounts()
     {
         try {
@@ -100,6 +146,8 @@ class HostAppointments extends Component
             $this->declinedCount = Appointment::where('host_id', $hostId)->where('status', 'cancelled')->count();
             $this->wasRescheduledCount = Appointment::where('host_id', $hostId)->where('was_rescheduled', true)->count();
             $this->totalCount = Appointment::where('host_id', $hostId)->count();
+
+            $this->loadCheckInCounts();
         } catch (\Exception $e) {
             Log::error("Error loading counts: " . $e->getMessage());
             $this->approvedCount = 0;
@@ -140,51 +188,39 @@ class HostAppointments extends Component
     {
         $appointment = Appointment::findOrFail($id);
         $appointment->update(['status' => 'approved']);
-
-        Log::info("Appointment accepted", [
-            'host_id' => Auth::id(),
-            'appointment_id' => $id
-        ]);
+        Log::info("Appointment accepted", ['host_id' => Auth::id(), 'appointment_id' => $id]);
 
         if ($appointment->visitor_email) {
-            Mail::to($appointment->visitor_email)->send(new AppointmentAcceptMail($appointment));
+            try { Mail::to($appointment->visitor_email)->send(new AppointmentAcceptMail($appointment)); } 
+            catch (\Exception $e) { Log::error("Email failed (accept): " . $e->getMessage()); }
         }
 
         if ($appointment->visitor_phone) {
             try {
                 $sms = new SmsService();
-                $sms->send($appointment->visitor_phone, 
+                $sms->send($appointment->visitor_phone,
                     "Hello {$appointment->visitor_name}, your appointment on {$appointment->date->format('M d, Y h:i A')} has been accepted. Thank you - Waltergates Ghana Ltd");
             } catch (\Exception $e) {
-                Log::error("Failed to send SMS (accept): " . $e->getMessage());
+                Log::error("SMS failed (accept): " . $e->getMessage());
             }
         }
 
         $this->loadAppointments();
-        session()->flash('message', 'Appointment accepted and visitor notified.');
+        $this->dispatch('toast', ['type'=>'success','message'=>'Appointment accepted and visitor notified.']);
     }
 
     public function declineConfirmed()
     {
-        $this->validate([
-            'declineReason' => 'required|min:5',
-        ]);
+        $this->validate(['declineReason' => 'required|min:5']);
 
         $appointment = Appointment::findOrFail($this->appointmentToDecline);
+        $appointment->update(['status' => 'cancelled','decline_reason' => $this->declineReason]);
 
-        $appointment->update([
-            'status' => 'cancelled',
-            'decline_reason' => $this->declineReason,
-        ]);
-
-        Log::info("Appointment declined", [
-            'host_id' => Auth::id(),
-            'appointment_id' => $appointment->id,
-            'reason' => $this->declineReason,
-        ]);
+        Log::info("Appointment declined", ['host_id' => Auth::id(),'appointment_id' => $appointment->id,'reason' => $this->declineReason]);
 
         if ($appointment->visitor_email) {
-            Mail::to($appointment->visitor_email)->send(new AppointmentDeclinedMail($appointment));
+            try { Mail::to($appointment->visitor_email)->send(new AppointmentDeclinedMail($appointment)); }
+            catch (\Exception $e) { Log::error("Email failed (decline): " . $e->getMessage()); }
         }
 
         if ($appointment->visitor_phone) {
@@ -193,13 +229,13 @@ class HostAppointments extends Component
                 $sms->send($appointment->visitor_phone,
                     "Hello {$appointment->visitor_name}, your appointment on {$appointment->date->format('M d, Y h:i A')} was declined. Reason: {$this->declineReason} - Waltergates Ghana Ltd");
             } catch (\Exception $e) {
-                Log::error("Failed to send SMS (decline): " . $e->getMessage());
+                Log::error("SMS failed (decline): " . $e->getMessage());
             }
         }
 
         $this->closeDeclineModal();
         $this->loadAppointments();
-        session()->flash('message', 'Appointment declined and visitor notified.');
+        $this->dispatch('toast', ['type'=>'success','message'=>'Appointment declined and visitor notified.']);
     }
 
     public function showRescheduleModal($id)
@@ -250,8 +286,7 @@ class HostAppointments extends Component
     {
         $this->validate([
             'newDate' => ['required', 'date', function ($attribute, $value, $fail) {
-                $dayOfWeek = Carbon::parse($value)->dayOfWeekIso;
-                if ($dayOfWeek > 5) {
+                if (Carbon::parse($value)->dayOfWeekIso > 5) {
                     $fail('Appointments can only be rescheduled to weekdays (Monday to Friday).');
                 }
             }],
@@ -259,21 +294,21 @@ class HostAppointments extends Component
         ]);
 
         $newDateTime = Carbon::parse("{$this->newDate} {$this->newTime}");
-        $minAllowed = Carbon::now()->addMinutes(30);
-        if ($newDateTime->lessThan($minAllowed)) {
-            $this->addError('newTime', 'Appointment time must be at least 30 minutes from now.');
+        if ($newDateTime->lessThan(now()->addMinutes(30))) {
+            $this->addError('newTime','Appointment time must be at least 30 minutes from now.');
             return;
         }
 
         $appointment = Appointment::findOrFail($this->rescheduleAppointmentId);
 
         $overlap = Appointment::where('host_id', $appointment->host_id)
-                    ->where('id', '!=', $appointment->id)
+                    ->where('id','!=',$appointment->id)
                     ->where('date', $newDateTime)
                     ->exists();
+
         if ($overlap) {
+            $this->addError('newTime','You already have another appointment scheduled at this date and time.');
             Log::warning("Reschedule conflict for host_id: {$appointment->host_id} at {$newDateTime}");
-            $this->addError('newTime', 'You already have another appointment scheduled at this date and time.');
             return;
         }
 
@@ -296,7 +331,8 @@ class HostAppointments extends Component
         ]);
 
         if ($appointment->visitor_email) {
-            Mail::to($appointment->visitor_email)->send(new AppointmentAcceptMail($appointment));
+            try { Mail::to($appointment->visitor_email)->send(new AppointmentAcceptMail($appointment)); } 
+            catch (\Exception $e) { Log::error("Email failed (reschedule): " . $e->getMessage()); }
         }
 
         if ($appointment->visitor_phone) {
@@ -305,26 +341,24 @@ class HostAppointments extends Component
                 $sms->send($appointment->visitor_phone,
                     "Hello {$appointment->visitor_name}, your appointment has been rescheduled to {$appointment->date->format('M d, Y h:i A')} - Waltergates Ghana Ltd");
             } catch (\Exception $e) {
-                Log::error("Failed to send SMS (reschedule): " . $e->getMessage());
+                Log::error("SMS failed (reschedule): " . $e->getMessage());
             }
         }
 
         $adminEmail = config('mail.admin_email', null);
         if ($adminEmail) {
-            Mail::to($adminEmail)->send(new AdminAppointmentRescheduledMail($appointment, $oldDateTime));
+            try { Mail::to($adminEmail)->send(new AdminAppointmentRescheduledMail($appointment,$oldDateTime)); }
+            catch (\Exception $e) { Log::error("Admin email failed: " . $e->getMessage()); }
         }
 
-        // Load appointments and counts before closing modal
         $this->loadAppointments();
         $this->closeRescheduleModal();
-        session()->flash('message', 'Appointment rescheduled and visitor & admin notified.');
+        $this->dispatch('toast', ['type'=>'success','message'=>'Appointment rescheduled and visitor & admin notified.']);
     }
 
     public function render()
     {
-        // Always ensure counts are loaded
-        $this->loadCounts();
-
-        return view('livewire.visitor.host-appointments')->layout('components.layouts.visit');
+        return view('livewire.visitor.host-appointments')
+            ->layout('components.layouts.visit');
     }
 }

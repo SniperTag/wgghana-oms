@@ -36,10 +36,9 @@ class LeavePolicySeeder extends Seeder
                     // Determine default days based on leave type
                     $totalDays = match (strtolower($leaveType->name)) {
                         'annual leave' => $data['annual_days'],
-                        'sick leave' => 10,
+                        'sick leave' => 15,
                         'maternity leave' => 90,
-                        'paternity leave' => 5,
-                        default => 15,
+                        default => 22,
                     };
 
                     LeavePolicy::updateOrCreate(

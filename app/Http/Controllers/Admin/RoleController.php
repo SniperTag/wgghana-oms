@@ -36,21 +36,27 @@ class RoleController extends Controller
     }
 
     // Store a newly created role
-    public function store(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|unique:roles,name',
-            'permissions' => 'array'
-        ]);
+public function store(Request $request)
+{
+    $request->validate([
+        'name' => 'required|unique:roles,name',
+        'permissions' => 'nullable|array',
+        'permissions.*' => 'exists:permissions,id'
+    ]);
 
-        $role = Role::create(['name' => $request->name]);
-        $role->syncPermissions($request->permissions ?? []);
+    $role = Role::create(['name' => $request->name]);
 
-        Log::info("Role '{$role->name}' created with permissions", ['permissions' => $request->permissions]);
+    // Sync permissions safely using Permission objects
+    $role->syncPermissions(
+        Permission::whereIn('id', $request->permissions ?? [])->get()
+    );
 
-        toastr()->success('Role created successfully');
-        return redirect()->route('roles.index');
-    }
+    Log::info("Role '{$role->name}' created with permissions", ['permissions' => $request->permissions]);
+
+    toastr()->success('Role created successfully');
+    return redirect()->route('roles.create');
+}
+
     public function show($id)
 {
     $role = Role::findOrFail($id);
@@ -69,44 +75,44 @@ class RoleController extends Controller
     }
 
     // Update role name and permissions
-    public function update(Request $request, Role $role)
-    {
-        $request->validate([
-            'name' => 'required|unique:roles,name,' . $role->id,
-            'permissions' => 'array'
+   public function update(Request $request, Role $role)
+{
+    $request->validate([
+        'name' => 'required|unique:roles,name,' . $role->id,
+        'permissions' => 'nullable|array',
+        'permissions.*' => 'exists:permissions,id',
+    ]);
+
+    $role->update(['name' => $request->name]);
+
+    $permissionIds = $request->permissions ?? [];
+    $permissions = Permission::whereIn('id', $permissionIds)->get();
+
+    if (count($permissions) !== count($permissionIds)) {
+        Log::warning("Invalid permission IDs during update for role '{$role->name}'", [
+            'submitted' => $permissionIds,
+            'valid' => $permissions->pluck('id')->toArray()
         ]);
-
-        $role->update(['name' => $request->name]);
-
-        // Fetch valid permissions using IDs
-        $permissionIds = $request->permissions ?? [];
-        $permissions = Permission::whereIn('id', $permissionIds)->get();
-
-        // Validate permission count to avoid syncing invalid ones
-        if (count($permissions) !== count($permissionIds)) {
-            Log::warning("Invalid permission IDs during update for role '{$role->name}'", [
-                'submitted' => $permissionIds,
-                'valid' => $permissions->pluck('id')->toArray()
-            ]);
-            toastr()->error('Invalid permissions selected');
-            return redirect()->back()->route('access.management');
-        }
-
-        $role->syncPermissions($permissions);
-
-        Log::info("Role '{$role->name}' updated", [
-            'new_name' => $request->name,
-            'permissions' => $permissionIds
-        ]);
-
-        toastr()->success('Role updated successfully');
-        return redirect()->route('roles.index');
+        toastr()->error('Invalid permissions selected');
+        return redirect()->route('access.management');
     }
+
+    $role->syncPermissions($permissions);
+
+    Log::info("Role '{$role->name}' updated", [
+        'new_name' => $request->name,
+        'permissions' => $permissionIds
+    ]);
+
+    toastr()->success('Role updated successfully');
+    return redirect()->route('roles.create');
+}
+
 
     // Delete a role unless it's protected
     public function destroy(Role $role)
     {
-        if (in_array($role->name, ['Admin', 'Super Admin'])) {
+        if (in_array($role->name, ['admin', 'super_admin'])) {
             Log::warning("Attempt to delete core role '{$role->name}' blocked");
             return redirect()->route('roles.index')->with('error', 'You cannot delete a core role like Admin or Super Admin.');
         }

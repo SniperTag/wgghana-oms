@@ -5,18 +5,20 @@ namespace App\Http\Controllers\Admin;
 use App\Models\User;
 use Illuminate\Support\Str;
 use Jenssegers\Agent\Agent;
+use App\Models\BreakSession;
 use Illuminate\Http\Request;
+use App\Events\StaffClockedIn;
+use App\Events\StaffClockedOut;
+use App\livewire\StepOutManager;
 use App\Models\AttendanceRecord;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Services\NotificationService;
+use App\Notifications\StaffStatusAlert;
 use Illuminate\Support\Facades\Storage;
 use App\Services\FaceVerificationService;
-use App\Notifications\StaffStatusAlert;
-use App\Services\NotificationService;
-use App\Models\BreakSession;
-use App\livewire\StepOutManager;
 
 
 
@@ -165,122 +167,122 @@ class AttendanceController extends Controller
      * Handle check-in/check-out/step-out/return actions
      */
     public function handleAttendance(Request $request, FaceVerificationService $faceService, NotificationService $notificationService)
-    {
-        Log::info('Attendance Request Payload:', $request->all());
+{
+    Log::info('Attendance Request Payload:', $request->all());
 
-        $validated = $request->validate([
-            'staff_id' => 'required|string',
-            'clockin_pin' => 'nullable|string',
-            'action' => 'required|in:check_in,check_out,step_out_time,returned_time,start_break,end_break',
-            'face_snapshot' => 'required_if:action,check_in|string|nullable',
-            'notes' => 'nullable|string',
-        ]);
+    $validated = $request->validate([
+        'staff_id' => 'required|string',
+        'clockin_pin' => 'nullable|string',
+        'action' => 'required|in:check_in,check_out',
+        'face_snapshot' => 'required_if:action,check_in|string|nullable',
+        'notes' => 'nullable|string',
+    ]);
 
-        $validated['staff_id'] = trim($validated['staff_id']);
-        $user = User::where('staff_id', $validated['staff_id'])->first();
+    $validated['staff_id'] = trim($validated['staff_id']);
+    $user = User::where('staff_id', $validated['staff_id'])->first();
 
-        if (!$user) {
-            Log::warning("❌ Invalid Staff ID: {$validated['staff_id']}");
-            return $this->response($request, false, '❌ Invalid Staff ID');
-        }
+    if (!$user) {
+        Log::warning("❌ Invalid Staff ID: {$validated['staff_id']}");
+        return $this->response($request, false, '❌ Invalid Staff ID');
+    }
 
-        // Require PIN for check_out
-        if ($validated['action'] === 'check_out') {
-            if (empty($validated['clockin_pin']) || !Hash::check($validated['clockin_pin'], $user->clockin_pin)) {
-                Log::warning("❌ Invalid PIN for Staff ID: {$validated['staff_id']}");
-                return $this->response($request, false, '❌ Invalid PIN');
-            }
-        }
-
-        $today = now()->toDateString();
-        $attendance = AttendanceRecord::firstOrCreate(
-            ['user_id' => $user->id, 'attendance_date' => $today],
-            ['status' => 'Not Checked In']
-        );
-
-        switch ($validated['action']) {
-            case 'check_in':
-                if ($attendance->check_in_time) {
-                    return $this->response($request, false, '❌ Already checked in today.');
-                }
-
-                if (!$user->face_image) {
-                    return $this->response($request, false, '🧠 No face enrolled. Contact Admin.');
-                }
-
-                $match = $faceService->verifyFace($validated['face_snapshot'], $user->face_image);
-                if (!$match) {
-                    Log::warning("❌ Face mismatch for {$user->staff_id}");
-                    return $this->response($request, false, '❌ Face did not match. Try again.');
-                }
-
-                $ip = $request->ip();
-                $agent = new Agent();
-                $deviceInfo = $agent->device() . ' - ' . $agent->platform() . ' - ' . $agent->browser();
-
-                $checkInTime = now()->format('H:i:s');
-                $status = match (true) {
-                    $checkInTime <= '09:00:00' => 'On Time',
-                    $checkInTime <= '09:30:00' => 'Late',
-                    default => 'Very Late',
-                };
-
-                $attendance->update([
-                    'check_in_time' => $checkInTime,
-                    'status' => $status,
-                    'ip_address' => $ip,
-                    'device_info' => $deviceInfo,
-                    'notes' => $validated['notes'] ?? null,
-                ]);
-
-                $notificationService->sendClockInAlert($user, $checkInTime);
-                Log::info("🟢 Checked in: {$user->name} at {$checkInTime}, IP: $ip, Device: $deviceInfo");
-
-                return $this->response($request, true, '🟢 Welcome To Work, ' . auth::user()->name . '. Enjoy your day!.');
-
-            case 'check_out':
-                try {
-                    if (!$attendance->check_in_time) {
-                        return $this->response($request, false, '❌ You must check in before checking out.');
-                    }
-
-                    if ($attendance->check_out_time) {
-                        return $this->response($request, false, '❌ Already checked out today.');
-                    }
-
-                    $checkOutTime = now();
-                    $cutoffTime = now()->setTime(17, 30);
-
-                    if ($checkOutTime->lt($cutoffTime)) {
-                        if (empty($validated['notes'])) {
-                            return $this->response($request, false, '❌ Please provide a note explaining early clock-out.');
-                        }
-                        Log::info("⏰ Early clock-out by {$user->name}. Notes: {$validated['notes']}");
-                        $notificationService->sendEarlyCheckoutAlert($user, $checkOutTime->format('H:i:s'));
-                    }
-
-                    $attendance->update([
-                        'check_out_time' => $checkOutTime->format('H:i:s'),
-                        'notes' => $validated['notes'] ?? $attendance->notes,
-                    ]);
-
-                    $notificationService->sendClockOutAlert($user, $checkOutTime->format('H:i:s'));
-                    Log::info("🔚 Checked out: {$user->name} at {$checkOutTime->format('H:i:s')}");
-
-                    return $this->response($request, true, '🔚 Done for the Day,' . auth::user()->name . '.Have a Good night.');
-
-                } catch (\Exception $e) {
-                    Log::error("Checkout error for {$user->staff_id}: " . $e->getMessage());
-                    return $this->response($request, false, '❌ Unexpected error occurred. ' . $e->getMessage());
-                }
-
-
-            // Add other cases here...
-
-            default:
-                return $this->response($request, false, '❌ Invalid action.');
+    // Require PIN for check_out
+    if ($validated['action'] === 'check_out') {
+        if (empty($validated['clockin_pin']) || !Hash::check($validated['clockin_pin'], $user->clockin_pin)) {
+            Log::warning("❌ Invalid PIN for Staff ID: {$validated['staff_id']}");
+            return $this->response($request, false, '❌ Invalid PIN');
         }
     }
+
+    $today = now()->toDateString();
+    $attendance = AttendanceRecord::firstOrCreate(
+        ['user_id' => $user->id, 'attendance_date' => $today],
+        ['status' => 'Not Checked In']
+    );
+
+    switch ($validated['action']) {
+        case 'check_in':
+            if ($attendance->check_in_time) {
+                return $this->response($request, false, '❌ Already checked in today.');
+            }
+
+            if (!$user->face_image) {
+                return $this->response($request, false, '🧠 No face enrolled. Contact Admin.');
+            }
+
+            $match = $faceService->verifyFace($validated['face_snapshot'], $user->face_image);
+            if (!$match) {
+                Log::warning("❌ Face mismatch for {$user->staff_id}");
+                return $this->response($request, false, '❌ Face did not match. Try again.');
+            }
+
+            $ip = $request->ip();
+            $agent = new Agent();
+            $deviceInfo = $agent->device() . ' - ' . $agent->platform() . ' - ' . $agent->browser();
+
+            $checkInTime = now()->format('H:i:s');
+            $status = match (true) {
+                $checkInTime <= '09:00:00' => 'On Time',
+                $checkInTime <= '09:30:00' => 'Late',
+                default => 'Very Late',
+            };
+
+            $attendance->update([
+                'check_in_time' => $checkInTime,
+                'status' => $status,
+                'ip_address' => $ip,
+                'device_info' => $deviceInfo,
+                'notes' => $validated['notes'] ?? null,
+            ]);
+
+            $notificationService->sendClockInAlert($user, $checkInTime);
+            Log::info("🟢 Checked in: {$user->name} at {$checkInTime}, IP: $ip, Device: $deviceInfo");
+            event(new StaffClockedIn($user));
+
+            return $this->response($request, true, '🟢 Welcome To Work, ' . auth::user()->name . '. Enjoy your day!');
+
+        case 'check_out':
+            try {
+                if (!$attendance->check_in_time) {
+                    return $this->response($request, false, '❌ You must check in before checking out.');
+                }
+
+                if ($attendance->check_out_time) {
+                    return $this->response($request, false, '❌ Already checked out today.');
+                }
+
+                $checkOutTime = now();
+                $cutoffTime = now()->setTime(17, 30);
+
+                if ($checkOutTime->lt($cutoffTime)) {
+                    if (empty($validated['notes'])) {
+                        return $this->response($request, false, '❌ Please provide a note explaining early clock-out.');
+                    }
+                    Log::info("⏰ Early clock-out by {$user->name}. Notes: {$validated['notes']}");
+                    $notificationService->sendEarlyCheckoutAlert($user, $checkOutTime->format('H:i:s'));
+                }
+
+                $attendance->update([
+                    'check_out_time' => $checkOutTime->format('H:i:s'),
+                    'notes' => $validated['notes'] ?? $attendance->notes,
+                ]);
+
+                $notificationService->sendClockOutAlert($user, $checkOutTime->format('H:i:s'));
+                Log::info("🔚 Checked out: {$user->name} at {$checkOutTime->format('H:i:s')}");
+                event(new StaffClockedOut($user));
+
+                return $this->response($request, true, '🔚 Done for the Day, ' . auth::user()->name . '. Have a Good night.');
+
+            } catch (\Exception $e) {
+                Log::error("Checkout error for {$user->staff_id}: " . $e->getMessage());
+                return $this->response($request, false, '❌ Unexpected error occurred. ' . $e->getMessage());
+            }
+
+        default:
+            return $this->response($request, false, '❌ Invalid action.');
+    }
+}
+
 
     // Helper method to unify JSON or redirect response with flash
     protected function response(Request $request, bool $success, string $message)

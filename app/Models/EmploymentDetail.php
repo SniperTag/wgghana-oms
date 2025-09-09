@@ -10,9 +10,9 @@ class EmploymentDetail extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'department_id', 'job_title', 'employment_type',
+        'user_id', 'department_id', 'employment_type',
         'date_of_joining', 'user_type', 'supervisor_id', 'work_location','employment_status',
-        'start_date', 'end_date','pay_grade', 'salary', 'benefits', 'contract_duration'
+        'start_date', 'end_date', 'salary', 'benefits', 'contract_duration'
     ];
 
     // Belongs to user

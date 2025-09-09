@@ -3,6 +3,24 @@
 
 <head>
     @include('layouts.head')
+    <style>
+        /* Transparent backdrop */
+        .modal-backdrop.show {
+            background-color: transparent !important;
+        }
+
+        /* Add subtle shadow and rounded corners to modal */
+        .modal-content.custom-modal {
+            background-color: rgba(255, 255, 255, 0.95);
+            /* semi-transparent white */
+            color: #000;
+            /* black text */
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            /* soft shadow */
+            border-radius: 0.75rem;
+            /* rounded corners */
+        }
+    </style>
 </head>
 
 <body>
@@ -57,47 +75,121 @@
                                         <td>{{ $leave->start_date->format('d M Y') }} -
                                             {{ $leave->end_date->format('d M Y') }}</td>
                                         <td>
-                                            <span class="badge badge-secondary">{{ ucfirst($leave->status) }}</span>
+                                            <span
+                                                class="badge bg-secondary text-dark">{{ ucfirst($leave->status) }}</span>
                                         </td>
                                         <td>
                                             @if ($leave->supervisor_status === 'pending')
-                                                <span class="badge badge-warning fs-sm fw-semibold">Pending</span>
+                                                <span
+                                                    class="badge bg-warning text-dark fs-sm fw-semibold">Pending</span>
                                             @elseif ($leave->supervisor_status === 'approved')
-                                                <span class="badge badge-success">Approved</span>
+                                                <span class="badge bg-success text-dark">Approved</span>
                                             @elseif ($leave->supervisor_status === 'rejected')
-                                                <span class="badge badge-danger">Rejected</span>
+                                                <span class="badge bg-danger text-dark">Rejected</span>
                                             @else
                                                 <span
-                                                    class="badge badge-info">{{ ucfirst($leave->supervisor_status) }}</span>
+                                                    class="badge bg-info text-dark">{{ ucfirst($leave->supervisor_status) }}</span>
                                             @endif
                                         </td>
                                         <td>{{ $leave->created_at->format('d M Y') }}</td>
+
                                         <td>
-                                            <a href="{{ route('supervisor.subordinates.show', $leave->id) }}"
-                                                class="btn btn-sm btn-primary">
-                                                View
-                                            </a>
+                                            <!-- View button triggers modal -->
                                             @if ($leave->supervisor_status === 'pending')
-                                                <form
-                                                    action="{{ route('supervisor.subordinates.approve', $leave->id) }}"
-                                                    method="POST" class="d-inline">
-                                                    @csrf
-                                                    <button type="submit" class="btn btn-sm btn-success"
-                                                        onclick="return confirm('Approve this request?')">
-                                                        Approve
-                                                    </button>
-                                                </form>
-                                                <form
-                                                    action="{{ route('supervisor.subordinates.reject', $leave->id) }}"
-                                                    method="POST" class="d-inline">
-                                                    @csrf
-                                                    <button type="submit" class="btn btn-sm btn-danger"
-                                                        onclick="return confirm('Reject this request?')">
-                                                        Reject
-                                                    </button>
-                                                </form>
+                                                <!-- Eye button triggers modal -->
+                                                <button type="button" class="btn btn-sm btn-primary"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#leaveModal{{ $leave->id }}">
+                                                    <i class="bi bi-eye"></i> View
+                                                </button>
+                                            @else
+                                                <!-- Disabled eye when supervisor has acted -->
+                                                <button type="button" class="btn btn-sm btn-secondary" disabled>
+                                                    <i class="bi bi-eye-slash"></i> Viewed
+                                                </button>
                                             @endif
+
+
+                                            <!-- Leave Details Modal -->
+                                            <!-- Leave Details Modal -->
+                                            <div class="modal fade" id="leaveModal{{ $leave->id }}" tabindex="-1"
+                                                aria-labelledby="leaveModalLabel{{ $leave->id }}"
+                                                aria-hidden="true">
+                                                <div class="modal-dialog modal-lg">
+                                                    <div class="modal-content custom-modal">
+                                                        <div class="modal-header border-0">
+                                                            <h5 class="modal-title"
+                                                                id="leaveModalLabel{{ $leave->id }}">
+                                                                Leave Request from {{ $leave->user->name }}
+                                                                @if ($leave->supervisor_status === 'approved')
+                                                                    <small class="text-success ms-2">(Approved at
+                                                                        {{ $leave->supervisor_approved_at->format('d M Y, h:i A') }})</small>
+                                                                @elseif ($leave->supervisor_status === 'rejected')
+                                                                    <small class="text-danger ms-2">(Rejected at
+                                                                        {{ $leave->supervisor_rejected_at->format('d M Y, h:i A') }})</small>
+                                                                @endif
+                                                            </h5>
+                                                            <button type="button" class="btn-close"
+                                                                data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+
+                                                        <div class="modal-body">
+                                                            <p><strong>Leave Type:</strong>
+                                                                {{ $leave->leaveType->name ?? 'N/A' }}</p>
+                                                            <p><strong>Date Range:</strong>
+                                                                {{ $leave->start_date->format('d M Y') }} -
+                                                                {{ $leave->end_date->format('d M Y') }}</p>
+                                                            <p><strong>Days Requested:</strong>
+                                                                {{ $leave->days_requested }}</p>
+                                                            <p><strong>Reason:</strong> {{ $leave->reason }}</p>
+                                                            <hr>
+                                                            <p><strong>Status:</strong> <span
+                                                                    class="badge bg-secondary text-dark">{{ ucfirst($leave->status) }}</span>
+                                                            </p>
+                                                            <p><strong>Supervisor Status:</strong>
+                                                                @if ($leave->supervisor_status === 'approved')
+                                                                    <span
+                                                                        class="badge bg-success text-dark">Approved</span>
+                                                                @elseif ($leave->supervisor_status === 'rejected')
+                                                                    <span
+                                                                        class="badge bg-danger text-dark">Rejected</span>
+                                                                @else
+                                                                    <span
+                                                                        class="badge bg-warning text-dark">Pending</span>
+                                                                @endif
+                                                            </p>
+                                                            <p><strong>Submitted At:</strong>
+                                                                {{ $leave->created_at->format('d M Y, h:i A') }}</p>
+                                                        </div>
+
+                                                        <div class="modal-footer border-0">
+                                                            @if ($leave->supervisor_status === 'pending')
+                                                                <form
+                                                                    action="{{ route('supervisor.approve', $leave->id) }}"
+                                                                    method="POST" class="d-inline">
+                                                                    @csrf
+                                                                    <button class="btn btn-success"
+                                                                        onclick="return confirm('Approve this request?')">✅
+                                                                        Approve</button>
+                                                                </form>
+                                                                <form
+                                                                    action="{{ route('supervisor.reject', $leave->id) }}"
+                                                                    method="POST" class="d-inline">
+                                                                    @csrf
+                                                                    <button class="btn btn-danger"
+                                                                        onclick="return confirm('Reject this request?')">❌
+                                                                        Reject</button>
+                                                                </form>
+                                                            @endif
+                                                            <button type="button" class="btn btn-secondary"
+                                                                data-bs-dismiss="modal">Close</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
                                         </td>
+
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -117,7 +209,7 @@
         {{-- Main section --}}
 
         <!-- END Main Container -->
-        @include('layouts.footer')
+        @include('layouts.js')
     </div>
     <!-- END Page Container -->
 

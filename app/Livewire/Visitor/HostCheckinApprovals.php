@@ -10,15 +10,20 @@ class HostCheckinApprovals extends Component
 {
     public $approvalNote = '';
     public $rejectReason = '';
+    public $visitLogs;
 
-    public function render()
+    public function mount()
     {
-        $logs = VisitLog::where('host_id', Auth::id())
+        $this->loadVisitLogs();
+    }
+
+    public function loadVisitLogs()
+    {
+        $this->visitLogs = VisitLog::where('host_id', Auth::id())
             ->where('approval_status', 'pending')
             ->with('visitor')
+            ->latest()
             ->get();
-
-        return view('livewire.host-approvals', compact('logs'));
     }
 
     public function approve($logId)
@@ -30,7 +35,13 @@ class HostCheckinApprovals extends Component
             'status' => 'checked_in',
         ]);
 
-        session()->flash('success', 'Visitor approved successfully.');
+        $this->visitLogs = $this->visitLogs->filter(fn($v) => $v->id !== $logId);
+
+        // Use Livewire dispatch
+        $this->dispatch('toast', [
+            'type' => 'success',
+            'message' => 'Visitor approved successfully.'
+        ]);
     }
 
     public function reject($logId)
@@ -45,6 +56,16 @@ class HostCheckinApprovals extends Component
 
         $this->rejectReason = '';
 
-        session()->flash('error', 'Visitor rejected.');
+        $this->visitLogs = $this->visitLogs->filter(fn($v) => $v->id !== $logId);
+
+        $this->dispatch('toast', [
+            'type' => 'error',
+            'message' => 'Visitor rejected.'
+        ]);
+    }
+
+    public function render()
+    {
+        return view('livewire.visitor.host-checkin-approvals');
     }
 }

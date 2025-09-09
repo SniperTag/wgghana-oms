@@ -153,31 +153,8 @@
         {{-- Main section --}}
 
         <!-- END Main Container -->
-        @include('layouts.footer')
+        @include('layouts.js')
     </div>
-    <!-- END Page Container -->
-
-    <script>
-        $(document).ready(function() {
-            $('#roles').select2({
-                placeholder: "Select role(s)",
-                width: '100%'
-            });
-        });
-
-        $(document).ready(function() {
-            $('#department').select2({
-                placeholder: "Select department(s)",
-                width: '100%'
-            });
-        });
-    </script>
-
-    <!-- Select2 Plugin -->
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
-    <!-- Bootstrap Bundle (Popper.js included) -->
-    {{--  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>  --}}
 
 </body>
 

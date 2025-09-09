@@ -217,7 +217,7 @@
                                                     {{-- Submit Button --}}
                                                     <button type="submit" class="btn btn-primary">Submit Leave
                                                         Request</button>
-                                                    <a href="{{ route('leaves.index') }}"
+                                                    <a href="{{ route('staff.leaves') }}"
                                                         class="btn btn-secondary ms-2">Cancel</a>
                                                 </form>
 

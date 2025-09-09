@@ -1,6 +1,3 @@
-{{--  <!-- Trigger Button (example) -->
-<!-- <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#clockInModal">Clock In</button> -->  --}}
-
 <!-- Clock In Modal -->
 <div class="modal fade" id="clockInModal" tabindex="-1" aria-labelledby="clockInModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -8,8 +5,8 @@
             <form id="clock-in-form" method="POST" action="{{ route('attendance.handle') }}">
                 @csrf
                 <div class="modal-header">
-                    <h5 class="modal-title" id="clockInModalLabel">🕒 Clock In</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title" id="clockInModalLabel">🕒 Clock In / Out</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
 
                 <div class="modal-body row">
@@ -24,11 +21,12 @@
                             📡 Scan ID Barcode
                         </button>
 
-                        <div id="barcodeScannerContainer" style="display:none; width: 100%; height: 240px; border: 1px solid #ccc; border-radius: 5px;"></div>
+                        <div id="barcodeScannerContainer"
+                            style="display:none; width: 100%; height: 240px; border: 1px solid #ccc; border-radius: 5px;">
+                        </div>
 
-                        <!-- Hidden face snapshot -->
                         <input type="hidden" id="face_snapshot" name="face_snapshot">
-                        <input type="hidden" name="action" value="check_in">
+                        <input type="hidden" name="action" id="attendance_action" value="check_in">
 
                         <button type="button" class="btn btn-secondary w-100 mt-3" onclick="takeSnapshot()">
                             📸 Capture Face
@@ -47,56 +45,57 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-success w-100">✅ Clock In</button>
+                    <button type="submit" class="btn btn-success w-100" id="submitBtn">✅ Clock In</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<!-- Include Webcam.js -->
+<!-- Include Dependencies -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/webcamjs/1.0.26/webcam.min.js"></script>
-<!-- Include html5-qrcode for barcode scanning -->
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
 <script>
-    // Webcam setup
-    Webcam.set({
-        width: 320,
-        height: 240,
-        image_format: 'jpeg',
-        jpeg_quality: 90
-    });
+    // ================== Setup ==================
+    Webcam.set({ width: 320, height: 240, image_format: 'jpeg', jpeg_quality: 90 });
 
     const clockInModal = document.getElementById('clockInModal');
-    const barcodeScannerContainer = document.getElementById('barcodeScannerContainer');
     const staffIdInput = document.getElementById('staff_id');
+    const barcodeScannerContainer = document.getElementById('barcodeScannerContainer');
+    const faceInput = document.getElementById('face_snapshot');
+    const actionInput = document.getElementById('attendance_action');
+    const submitBtn = document.getElementById('submitBtn');
     let html5QrcodeScanner;
 
-    // Show modal: attach webcam and focus staff ID input
+    // Show modal: attach webcam
     clockInModal.addEventListener('shown.bs.modal', () => {
         Webcam.attach('#camera');
         staffIdInput.focus();
     });
 
-    // Hide modal: reset webcam and barcode scanner
+    // Hide modal: reset webcam & scanner
     clockInModal.addEventListener('hidden.bs.modal', () => {
         Webcam.reset();
         document.getElementById('snapshot-preview').classList.add('d-none');
         stopBarcodeScanner();
         barcodeScannerContainer.style.display = 'none';
+        document.getElementById('clock-in-form').reset();
+        submitBtn.innerHTML = '✅ Clock In';
+        submitBtn.disabled = false;
+        actionInput.value = 'check_in';
     });
 
-    // Take face snapshot
+    // ================== Face Snapshot ==================
     function takeSnapshot() {
-        Webcam.snap(function(data_uri) {
-            document.getElementById('face_snapshot').value = data_uri;
+        Webcam.snap(data_uri => {
+            faceInput.value = data_uri;
             document.getElementById('snapshot-img').src = data_uri;
             document.getElementById('snapshot-preview').classList.remove('d-none');
         });
     }
 
-    // Barcode Scan Button
+    // ================== Barcode Scanner ==================
     document.getElementById('scanBarcodeBtn').addEventListener('click', () => {
         if (barcodeScannerContainer.style.display === 'none') {
             barcodeScannerContainer.style.display = 'block';
@@ -107,109 +106,65 @@
         }
     });
 
-    // Start Barcode Scanner
     function startBarcodeScanner() {
-        if (!html5QrcodeScanner) {
-            html5QrcodeScanner = new Html5Qrcode("barcodeScannerContainer");
-        }
+        if (!html5QrcodeScanner) html5QrcodeScanner = new Html5Qrcode("barcodeScannerContainer");
 
         html5QrcodeScanner.start(
             { facingMode: "environment" },
             { fps: 10, qrbox: 250 },
-            onScanSuccess,
-            onScanFailure
-        ).catch(err => {
-            console.error("Error starting barcode scanner:", err);
-        });
+            decodedText => {
+                staffIdInput.value = decodedText.trim();
+                stopBarcodeScanner();
+                barcodeScannerContainer.style.display = 'none';
+            },
+            error => { console.warn(`Scan failed: ${error}`); }
+        ).catch(err => console.error(err));
     }
 
-    // Stop Barcode Scanner
     function stopBarcodeScanner() {
-        if (html5QrcodeScanner) {
-            html5QrcodeScanner.stop().then(() => {
-                // Scanner stopped successfully
-            }).catch(err => {
-                console.error("Error stopping scanner:", err);
-            });
-        }
+        if (html5QrcodeScanner) html5QrcodeScanner.stop().catch(err => console.error(err));
     }
 
-    // Barcode scan success
-    function onScanSuccess(decodedText, decodedResult) {
-        staffIdInput.value = decodedText;
-        stopBarcodeScanner();
-        barcodeScannerContainer.style.display = 'none';
-    }
+    // ================== Form Submission ==================
+    document.getElementById('clock-in-form').addEventListener('submit', function(e) {
+        e.preventDefault();
 
-    // Barcode scan failure (optional)
-    function onScanFailure(error) {
+        const formData = new FormData(this);
+        const jsonData = {};
+        formData.forEach((v, k) => jsonData[k] = v);
 
-        console.warn(`Scan failed: ${error}`);
-    }
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Processing...`;
 
-    {{--  document.getElementById('clock-in-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-
-    const form = e.target;
-    const formData = new FormData(form);
-    const jsonData = {};
-    formData.forEach((value, key) => jsonData[key] = value);
-
-    const submitBtn = form.querySelector('button[type="submit"]');
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Processing...`;
-
-    fetch(form.action, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': jsonData._token,
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json'
-        },
-        body: JSON.stringify(jsonData)
-    })
-    .then(async res => {
-        let data;
-        try {
-            data = await res.json();
-        } catch {
-            toastr.error("❌ Invalid server response.");
-            throw new Error("Invalid JSON");
-        }
-        if (!res.ok) {
-            toastr.error(data.message || `❌ Server error: ${res.status}`);
-            throw new Error("Server error");
-        }
-        return data;
-    })
-    .then(data => {
-        if (data.success) {
-            toastr.success(data.message || '✅ Clocked in successfully');
-            bootstrap.Modal.getInstance(clockInModal).hide();
-
-            // Update clock button dynamically
-            const clockButton = document.getElementById('clockButton');
-            if(clockButton){
-                clockButton.innerText = '⏹️ Clock Out';
-                clockButton.dataset.action = 'check_out';
-            }
-
-            form.reset();
-            document.getElementById('snapshot-preview').classList.add('d-none');
-        } else {
-            toastr.error(data.message || '❌ Clock in failed');
-        }
-    })
-    .catch(err => {
-        console.error(err);
-        toastr.error('❌ Unexpected error occurred');
-    })
-    .finally(() => {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '✅ Clock In';
+        fetch(this.action, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': jsonData._token,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(jsonData)
+        })
+        .then(async res => {
+            let data;
+            try { data = await res.json(); }
+            catch { toastr.error("❌ Invalid server response."); throw new Error("Invalid JSON"); }
+            if (!res.ok) { toastr.error(data.message || `❌ Server error: ${res.status}`); throw new Error("Server error"); }
+            return data;
+        })
+        .then(data => {
+            if (data.success) {
+                toastr.success(data.message);
+                bootstrap.Modal.getInstance(clockInModal).hide();
+                // Toggle action for next use
+                actionInput.value = actionInput.value === 'check_in' ? 'check_out' : 'check_in';
+            } else toastr.error(data.message);
+        })
+        .catch(err => { console.error(err); toastr.error('❌ Unexpected error'); })
+        .finally(() => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = actionInput.value === 'check_in' ? '✅ Clock In' : '⏹️ Clock Out';
+        });
     });
-});  --}}
-
-
 </script>

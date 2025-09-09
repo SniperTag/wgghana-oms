@@ -14,7 +14,8 @@ class BreakSession extends Model
         'started_at',
         'ended_at',
         'break_duration',
-        'break_type',      
+        'status_code',
+        'break_type',
     ];
 
     // Cast timestamps to Carbon instances

@@ -34,8 +34,8 @@
                     <tr>
                         <th class="p-2">Staff</th>
                         <th class="p-2">Leave Type</th>
-                        <th class="p-2">From</th>
-                        <th class="p-2">To</th>
+                        <th class="p-2">Start Date</th>
+                        <th class="p-2">End Date</th>
                         <th class="p-2">Supervisor Status</th>
                         <th class="p-2">Action</th>
                     </tr>

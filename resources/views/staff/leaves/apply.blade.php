@@ -217,7 +217,7 @@
                                                     {{-- Submit Button --}}
                                                     <button type="submit" class="btn btn-primary">Submit Leave
                                                         Request</button>
-                                                    <a href="{{ route('leaves.index') }}"
+                                                    <a href="#"
                                                         class="btn btn-secondary ms-2">Cancel</a>
                                                 </form>
 
@@ -244,7 +244,7 @@
                                                             </li>
                                                         @endforeach
                                                     </ul>
-                                                    <a href="{{ route('staff.leaves.index') }}"
+                                                    <a href="#"
                                                         class="btn btn-link mt-2">View All</a>
                                                 @endif
                                             </div>

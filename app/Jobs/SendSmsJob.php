@@ -17,14 +17,7 @@ class SendSmsJob implements ShouldQueue
     public string $phoneNumber;
     public string $message;
 
-    /**
-     * The number of times the job may be attempted.
-     */
     public int $tries = 3;
-
-    /**
-     * The maximum number of seconds the job can run before timing out.
-     */
     public int $timeout = 120;
 
     public function __construct(string $phoneNumber, string $message)
@@ -35,6 +28,14 @@ class SendSmsJob implements ShouldQueue
 
     public function handle(SmsService $smsService): void
     {
+        if (empty($this->phoneNumber) || empty($this->message)) {
+            Log::warning('SMS job skipped due to empty phone or message', [
+                'phone' => $this->phoneNumber,
+                'message_length' => strlen($this->message)
+            ]);
+            return;
+        }
+
         try {
             Log::info('Sending SMS', [
                 'phone' => $this->phoneNumber,
@@ -43,18 +44,14 @@ class SendSmsJob implements ShouldQueue
 
             $result = $smsService->sendSms($this->phoneNumber, $this->message);
 
-            if ($result['success']) {
+            if (is_array($result) && ($result['success'] ?? false)) {
                 Log::info('SMS sent successfully', [
                     'phone' => $this->phoneNumber,
                     'message_id' => $result['message_id'] ?? null
                 ]);
             } else {
-                Log::error('SMS sending failed', [
-                    'phone' => $this->phoneNumber,
-                    'error' => $result['error'] ?? 'Unknown error'
-                ]);
-                
-                throw new \Exception('SMS sending failed: ' . ($result['error'] ?? 'Unknown error'));
+                $error = is_array($result) ? ($result['error'] ?? 'Unknown error') : 'Invalid response from SMS service';
+                throw new \Exception($error);
             }
         } catch (\Exception $e) {
             Log::error('SMS job failed', [
@@ -63,7 +60,6 @@ class SendSmsJob implements ShouldQueue
                 'attempt' => $this->attempts()
             ]);
 
-            // If this was our last attempt, log it as a final failure
             if ($this->attempts() >= $this->tries) {
                 Log::error('SMS job failed permanently', [
                     'phone' => $this->phoneNumber,
@@ -71,25 +67,16 @@ class SendSmsJob implements ShouldQueue
                 ]);
             }
 
-            throw $e; // Re-throw to trigger retry mechanism
+            throw $e;
         }
     }
 
-    /**
-     * Handle a job failure.
-     */
     public function failed(\Throwable $exception): void
     {
-        Log::error('SMS job failed permanently', [
+        Log::error('SMS job permanently failed', [
             'phone' => $this->phoneNumber,
             'error' => $exception->getMessage(),
             'attempts' => $this->attempts()
         ]);
-
-        // You could send a notification to administrators here
-
-
-
-        // or store the failed SMS in a database table for manual retry
     }
 }

@@ -3,166 +3,193 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Models\SubRole;
+use App\Models\LeaveType;
+use App\Models\Department;
+use App\Models\LeaveBalance;
+use Illuminate\Database\Seeder;
 use App\Models\EmergencyContact;
 use App\Models\EmploymentDetail;
-use App\Models\LeaveBalance;
-use App\Models\Department;
-use App\Models\LeaveType;
-use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
 use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
+use App\Providers\DepartmentStructure;
+use Spatie\Permission\Models\Permission;
 
 class RolePermissionSeeder extends Seeder
 {
     public function run(): void
     {
+        // Increase memory limit for this seeder
+        ini_set('memory_limit', '1024M');
+
+        // Clear Spatie cache
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // ✅ Reset all permission tables
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        // Wrap everything in a transaction for better performance
 
-        DB::table('roles')->truncate();
-        DB::table('permissions')->truncate();
-        DB::table('model_has_roles')->truncate();
-        DB::table('model_has_permissions')->truncate();
-        DB::table('role_has_permissions')->truncate();
+            // Reset relevant tables
+            $this->resetTables();
 
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+            // Create permissions
+            $this->createPermissions();
 
+            // Create main roles
+            $this->createMainRoles();
 
-        // ✅ Define permissions
-        $permissions = [
-            'view dashboard',
-            'manage employee',
-            'approve leave',
-            'generate payslip',
-            'assign tasks',
-            'review reports',
-            'recommend leaves',
-            'submit reports',
-            'apply for leave',
-            'view payslips',
-            'view reports',
-            'view leave',
-            'manage payroll',
-            'manage roles',
-            'system security',
-            'backups',
-
-            // Visitor-specific
-            'register visitor',
-            'check in visitor',
-            'check out visitor',
-            'schedule appointment',
-            'view visitor list',
-            'print visitor badge',
-            'verify visitor check-in',
-            'flag visitor',
-            'view emergency log',
-            'monitor overstays'
-        ];
-
-        foreach ($permissions as $permission) {
-            Permission::create(['name' => $permission, 'guard_name' => 'web']);
-        }
-
-        // ✅ Define roles and assign permissions
-        $roles = [
-            'admin' => $permissions,
-            'hr' => ['view dashboard', 'manage employee', 'approve leave', 'generate payslip'],
-            'supervisor' => ['assign tasks', 'review reports', 'recommend leaves', 'view dashboard', 'approve leave'],
-            'manager' => ['assign tasks', 'review reports', 'recommend leaves', 'view dashboard', 'approve leave'],
-            'staff' => ['submit reports', 'apply for leave', 'view payslips', 'view dashboard', 'view reports', 'view leave'],
-            'finance' => ['manage payroll', 'generate payslip', 'view dashboard'],
-            'it-admin' => ['manage roles', 'view dashboard', 'system security', 'backups'],
-            'receptionist' => ['view dashboard', 'register visitor', 'check in visitor', 'check out visitor', 'schedule appointment', 'view visitor list', 'print visitor badge'],
-            'security' => ['view dashboard', 'view visitor list', 'verify visitor check-in', 'flag visitor', 'view emergency log', 'monitor overstays'],
-        ];
-
-        foreach ($roles as $roleName => $rolePermissions) {
-            $role = Role::create(['name' => $roleName, 'guard_name' => 'web']);
-            $role->syncPermissions($rolePermissions);
-        }
-
-        // ✅ Create default admin user
-        $adminEmail = env('ADMIN_EMAIL', 'admin@example.com');
-        $department = Department::firstOrCreate(['name' => 'Administration']); // Ensure department exists
-
-        $adminUser = User::updateOrCreate(
-            ['email' => $adminEmail],
-            [
-                'name' => 'Daniel Nelson',
-                'phone' => '0244585632',
-                'staff_id' => 'WG-0001-2025',
-                'password' => Hash::make('password'),
-                'password_changed' => true,
-                'clockin_pin' => Hash::make('1234'),
-                'is_active' => true,
-                'nationality' => 'Ghanaian',
-                'date_of_birth' => '1990-01-01',
-                'corporate_email' => 'daniel.nelson@wgghana.com',
-                'gender' => 'male',
-                'avatar' => asset('images/danny.jpg'), // Path to default avatar
-                'pin_changed' => true,
-                'face_image' => null,
-
-            ]
-        );
-
-        // ✅ Assign admin role
-        $adminUser->syncRoles(['admin']);
-
-        // ✅ Add Emergency Contact
-        EmergencyContact::updateOrCreate(
-            ['user_id' => $adminUser->id],
-            [
-                'name' => 'John Doe',
-                'relationship' => 'Brother',
-                'phone' => '0241234567',
-                'email' => 'john@example.com',
-            ]
-        );
-
-        // ✅ Add Employment Details
-        EmploymentDetail::updateOrCreate(
-            ['user_id' => $adminUser->id],
-            [
-                'department_id' => $department->id,
-                'work_location' => 'Head Office',
-                'user_type' => 'employee',
-                'date_of_joining' => now(),
-                'supervisor_id' => null,
-                'employment_status' => 'Active',
-                'employment_type' => 'fulltime',
-                'start_date' => now(),
-                'end_date' => null,
-                'job_title' => 'Administrator',
-                'salary' => 5000.00,
-                'pay_grade' => 'A1',
-                'benefits' => 'Health Insurance, Pension',
-                'contract_duration' => 'Permanent',
-            ]
-        );
-
-        // ✅ Add Leave Balance
-        $leaveType = LeaveType::firstOrCreate(['name' => 'Annual Leave']);
-
-        LeaveBalance::updateOrCreate(
-            [
-                'user_id' => $adminUser->id,
-                'leave_type_id' => $leaveType->id
-            ],
-            [
-                'total_days' => 30,
-                'used_days' => 0,
-                'remaining_days' => 30,
-                'year' => now()->year,
-            ]
-        );
+            // Create departments and sub-roles
+            $this->createDepartmentsAndSubRoles();
 
 
-        $this->command->info('✅ Roles, permissions, admin user, employment details, and emergency contact seeded successfully.');
+
+        $this->command->info('✅ Roles, permissions, sub-roles, main roles, and admin user seeded successfully.');
     }
+
+    private function resetTables(): void
+    {
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        $tables = [
+            'roles', 'permissions', 'model_has_roles', 'model_has_permissions', 'role_has_permissions',
+            'sub_roles', 'users', 'emergency_contacts', 'employment_details', 'leave_balances'
+        ];
+        foreach ($tables as $table) {
+            DB::table($table)->truncate();
+        }
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+    }
+
+    private function createPermissions(): void
+    {
+        $permissions = [
+            'view dashboard', 'view employees','create employee','edit employee','delete employee','manage employee','view employee details',
+            'apply for leave','approve leave','reject leave','view leave','manage leave types','view leave history','recommend leaves',
+            'manage payroll','generate payslip','view payslips','approve payroll',
+            'view reports','generate reports','submit reports','review reports','generate client reports',
+            'assign tasks','view tasks','complete tasks','review tasks',
+            'register visitor','check in visitor','check out visitor','schedule appointment','view visitor list','print visitor badge','verify visitor check-in','flag visitor','view emergency log','monitor overstays',
+            'manage roles','system security','backups','manage permissions','view system logs',
+            'deploy code','develop software','design interface','review usability','manage website','manage database',
+            'approve loans','manage client loans','view financial reports',
+            'plan strategy','review strategy','manage clients',
+            'assign training','assist training','manage training programs',
+            'manage calendar','schedule meetings','view calendar',
+            'approve budgets','approve operations','fix bugs','create mockups','monitor servers',
+            'manage IT team','provide technical support','manage tickets','manage network','configure routers and switches',
+            'backup database','optimize database performance','manage cloud infrastructure','monitor security','conduct audits','respond to incidents',
+            'view executive reports','approve major policies','oversee CEO performance','long-term governance',
+            'assist reporting','view HR reports','approve IT projects','support finance operations','analyze financial data',
+            'process loan applications','update client loan records','support campaigns','conduct research','convert leads',
+            'supervise team','report to manager','manage reception staff schedule','generate visitor reports','assist VIP guests','coordinate logistics','manage hospitality requests',
+            'screen visitors','verify ID','deny access','escort visitor','approve incident logs','plan security strategy','access all security data',
+            'report incidents','monitor CCTV','alert supervisor','generate monitoring reports','manage access cards','approve entry','deny entry','log emergency drills',
+            'manage legal team','approve contracts','review compliance reports','advise management','access all legal documents','draft contracts','advise departments','manage junior lawyers','oversee litigation','handle compliance','maintain legal records','assist paralegal','draft basic documents',
+            'manage client accounts','assign client officers','handle escalations','review service quality','manage assigned clients','track client satisfaction','resolve client issues','coordinate with departments','manage onboarding','track product usage','provide training','recommend solutions','log client feedback','respond to client inquiries','schedule client meetings','update client records','respond to support tickets','assist with troubleshooting',
+        ];
+
+        // Batch insert permissions for better performance
+        $permissionData = [];
+        foreach ($permissions as $permission) {
+            $permissionData[] = [
+                'name' => $permission,
+                'guard_name' => 'web',
+                'created_at' => now(),
+                'updated_at' => now()
+            ];
+        }
+
+        // Use insert ignore to avoid duplicates
+        DB::table('permissions')->insertOrIgnore($permissionData);
+
+        // Clear array to free memory
+        unset($permissionData);
+    }
+
+    private function createMainRoles(): void
+    {
+        $roles = ['super_admin','admin','manager','supervisor','team_lead','receptionist','staff','intern'];
+
+        // Batch insert roles
+        $roleData = [];
+        foreach ($roles as $role) {
+            $roleData[] = [
+                'name' => $role,
+                'guard_name' => 'web',
+                'created_at' => now(),
+                'updated_at' => now()
+            ];
+        }
+
+        DB::table('roles')->insertOrIgnore($roleData);
+        unset($roleData);
+    }
+
+    private function createDepartmentsAndSubRoles(): void
+    {
+        // Cache all permissions once at the start
+        $allPermissions = Permission::pluck('id', 'name')->toArray();
+
+        $departments = DepartmentStructure::get();
+
+        foreach ($departments as $deptName => $deptData) {
+           $department = Department::firstOrCreate(
+    ['name' => $deptName],
+    [
+        'code' => strtoupper(substr($deptName, 0, 3)), // generate a code from the name
+        'description' => $deptData['description'] ?? $deptName,
+        'head_id' => $deptData['head_id'] ?? null,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]
+);
+            // Process sub-roles in smaller chunks
+            $subRoleChunks = array_chunk($deptData['sub_roles'], 10, true);
+
+            foreach ($subRoleChunks as $chunk) {
+                $this->processSubRoleChunk($chunk, $department, $allPermissions);
+
+                // Force garbage collection after each chunk
+                if (function_exists('gc_collect_cycles')) {
+                    gc_collect_cycles();
+                }
+            }
+        }
+
+        // Clear cached data
+        unset($allPermissions, $departments);
+    }
+
+    private function processSubRoleChunk(array $subRoles, $department, array $allPermissions): void
+    {
+        foreach ($subRoles as $subKey => $subData) {
+            $subRoleModel = SubRole::updateOrCreate(
+                ['name' => $subKey],
+                [
+                    'title' => $subData['title'],
+                    'department_id' => $department->id,
+                    'guard_name' => 'web',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
+
+            // Attach permissions efficiently
+            if (!empty($subData['permissions'])) {
+                $permissionIds = [];
+                foreach ($subData['permissions'] as $permissionName) {
+                    if (isset($allPermissions[$permissionName])) {
+                        $permissionIds[] = $allPermissions[$permissionName];
+                    }
+                }
+
+                if (!empty($permissionIds)) {
+                    $subRoleModel->permissions()->sync($permissionIds);
+                }
+
+                unset($permissionIds);
+            }
+        }
+    }
+
+
+
 }

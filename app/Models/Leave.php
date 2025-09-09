@@ -16,9 +16,24 @@ class Leave extends Model
         'leave_policy_id',
         'start_date',
         'end_date',
-        'status', // final status: pending/approved/rejected
         'reason',
-        'comments', // HR/Admin comments
+        'status',
+
+        // Supervisor
+        'supervisor_required',
+        'supervisor_id',
+        'supervisor_status',
+        'supervisor_approved_at',
+        'supervisor_comment',
+        'supervisor_rejection_reasons',
+
+        // HR
+        'hr_id',
+        'hr_status',
+        'hr_approved_at',
+        'hr_rejection_reasons',
+
+        // System tracking
         'attachment',
         'ip_address',
         'user_agent',
@@ -27,19 +42,6 @@ class Leave extends Model
         'rejected_at',
         'approved_by',
         'rejected_by',
-        'notes',
-
-        // Supervisor review
-        'supervisor_id',
-        'supervisor_status', // pending/approved/rejected
-        'supervisor_approved_at',
-        'supervisor_comment',
-
-        // HR review
-        'hr_id',
-        'hr_status', // pending/approved/rejected
-        'hr_approved_at',
-
     ];
 
     protected $casts = [
@@ -49,36 +51,26 @@ class Leave extends Model
         'approved_at' => 'datetime',
         'rejected_at' => 'datetime',
         'supervisor_approved_at' => 'datetime',
+        'hr_approved_at' => 'datetime',
     ];
 
-    // Relationships
+    /******************
+     * RELATIONSHIPS
+     ******************/
+
     public function user()
     {
         return $this->belongsTo(User::class);
     }
-    public function leavePolicy()
-{
-    return $this->belongsTo(LeavePolicy::class);
-}
 
-public function approvedByUser()
-{
-    return $this->belongsTo(User::class, 'approved_by');
-}
-
-public function rejectedByUser()
-{
-    return $this->belongsTo(User::class, 'rejected_by');
-}
-
-
-public function hr()
-{
-    return $this->belongsTo(User::class, 'hr_id');
-}
     public function supervisor()
     {
         return $this->belongsTo(User::class, 'supervisor_id');
+    }
+
+    public function hr()
+    {
+        return $this->belongsTo(User::class, 'hr_id');
     }
 
     public function leaveType()
@@ -86,8 +78,30 @@ public function hr()
         return $this->belongsTo(LeaveType::class, 'leave_type_id');
     }
 
+    public function leavePolicy()
+    {
+        return $this->belongsTo(LeavePolicy::class);
+    }
 
-    // Scopes
+    public function approvedByUser()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function rejectedByUser()
+    {
+        return $this->belongsTo(User::class, 'rejected_by');
+    }
+
+    public function logs()
+    {
+        return $this->hasMany(LeaveLog::class);
+    }
+
+    /******************
+     * SCOPES
+     ******************/
+
     public function scopePending($query)
     {
         return $query->where('status', 'pending');
@@ -97,19 +111,22 @@ public function hr()
     {
         return $query->where('status', 'approved');
     }
-    public function approver()
-{
-    return $this->belongsTo(User::class, 'approved_by');
-}
 
     public function scopeRejected($query)
     {
         return $query->where('status', 'rejected');
     }
 
+    public function scopeCurrentlyOnLeave($query)
+    {
+        return $query->where('status', 'approved')
+            ->whereDate('start_date', '<=', now())
+            ->whereDate('end_date', '>=', now());
+    }
+
     public function scopeToday($query)
     {
-        return $query->whereDate('start_date', now()->format('Y-m-d'));
+        return $query->whereDate('start_date', now()->toDateString());
     }
 
     public function scopeThisWeek($query)
@@ -126,10 +143,10 @@ public function hr()
     {
         return $query->whereYear('start_date', now()->year);
     }
-    public function logs()
-    {
-        return $this->hasMany(LeaveLog::class);
-    }
+
+    /******************
+     * HELPERS
+     ******************/
 
     public function addLog(string $action, int $userId, ?string $comments = null)
     {
@@ -138,13 +155,5 @@ public function hr()
             'user_id' => $userId,
             'comments' => $comments,
         ]);
-    }
-
-    public function scopeCurrentlyOnLeave($query)
-    {
-        return $query->where('status', 'approved')
-            ->whereDate('start_date', '<=', now())
-            ->whereDate('end_date', '>=', now());
-
     }
 }

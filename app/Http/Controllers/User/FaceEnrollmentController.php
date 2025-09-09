@@ -28,6 +28,9 @@ class FaceEnrollmentController extends Controller
      protected $rules = [
         'face_image' => 'required|string',
     ];
+
+
+
      public function saveFaceImage()
     {
         $validatedData = request()->validate($this->rules);

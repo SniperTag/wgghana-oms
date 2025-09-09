@@ -1,41 +1,29 @@
 <?php
-
-// app/Events/BreakStatusUpdated.php
-
 namespace App\Events;
 
-use App\Models\User;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Foundation\Events\Dispatchable;
 
 class BreakStatusUpdated implements ShouldBroadcast
 {
-    use InteractsWithSockets, SerializesModels;
+    use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public $user;
-    public $onBreak;
+    public $staff_id;
+    public $name;
+    public $on_break;
 
-    public function __construct(User $user, bool $onBreak)
+    public function __construct($user, $onBreak)
     {
-        $this->user = $user;
-        $this->onBreak = $onBreak;
+        $this->staff_id = $user->id;
+        $this->name = $user->name;
+        $this->on_break = $onBreak;
     }
 
     public function broadcastOn()
     {
         return new Channel('break-status');
-    }
-
-    public function broadcastWith()
-    {
-        return [
-            'user_id' => $this->user->id,
-            'name' => $this->user->name,
-            'staff_id' => $this->user->staff_id,
-            'on_break' => $this->onBreak,
-        ];
     }
 }

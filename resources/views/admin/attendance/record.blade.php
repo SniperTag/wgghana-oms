@@ -39,55 +39,12 @@
 
                         </div>
 
-                        {{-- Filters Section --}}
-                        <form method="GET" action="{{ route('admin.attendance') }}"
-                            class="row gy-2 gx-3 align-items-center mb-4">
-
-                            {{-- Dropdown Filter (Today, This Week, This Month) --}}
-                            <div class="col-auto">
-                                <select class="form-select" name="filter" onchange="this.form.submit()">
-                                    <option value="">-- Filter By --</option>
-                                    <option value="today" {{ request('filter') == 'today' ? 'selected' : '' }}>Today
-                                    </option>
-                                    <option value="this_week" {{ request('filter') == 'this_week' ? 'selected' : '' }}>
-                                        This Week</option>
-                                    <option value="this_month"
-                                        {{ request('filter') == 'this_month' ? 'selected' : '' }}>This Month</option>
-                                </select>
-                            </div>
-
-                            {{-- Custom Date Range --}}
-                            <div class="col-auto">
-                                <input type="date" name="from" class="form-control" value="{{ request('from') }}"
-                                    {{ request('filter') ? 'disabled' : '' }} placeholder="From">
 
 
-                            </div>
-
-                            <div class="col-auto">
-                                <input type="date" name="to" class="form-control" value="{{ request('to') }}"
-                                    {{ request('filter') ? 'disabled' : '' }} placeholder="To">
-                            </div>
-
-                            <div class="col-auto">
-                                <button type="submit" class="btn btn-primary"
-                                    {{ request('filter') ? 'disabled' : '' }}>
-                                    Apply Filter
-                                </button>
-                            </div>
-
-                            {{-- Reset Filters --}}
-                            <div class="col-auto">
-                                <a href="{{ route('admin.attendance') }}" class="btn btn-outline-danger">Reset
-                                    Filters</a>
-                            </div>
-
-                        </form>
 
                         <div class="mb-4 flex flex-wrap items-center justify-start gap-3 text-sm">
 
-                            {{-- Step Out Livewire Component --}}
-                            {{-- @livewire('step-out-manager') --}}
+
                             <livewire:step-out-manager/>
 
                             {{-- Clock In/Out Dropdown --}}
@@ -112,7 +69,6 @@
                                 @endif
                             </div>
 
-                            {{-- @livewire('break-manager')  --}}
 
                         </div>
 

@@ -33,76 +33,120 @@
         <main id="main-container content-full">
             <!-- Page Content -->
             <div class="content mt-7">
-                <div class="row">
+                <div class="mb-3 d-flex justify-content-between align-items-center">
+                    <h5>All Permissions</h5>
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createPermissionModal">
+                        Create Permission
+                    </button>
+                </div>
 
+                <table class="table table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>Permission Name</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($permissions as $permission)
+                            <tr>
+                                <td>{{ $permission->name }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal"
+                                        data-bs-target="#editPermissionModal-{{ $permission->id }}">
+                                        Edit
+                                    </button>
+                                    <form action="{{ route('permissions.destroy', $permission->id) }}" method="POST"
+                                        class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button class="btn btn-sm btn-danger"
+                                            onclick="return confirm('Delete permission?')">
+                                            Delete
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
 
-                    <div class="container-fluid">
-                        <div class="container">
-                            <h4>Create New Permission</h4>
+                            {{-- Edit Permission Modal --}}
+                            <div class="modal fade" id="editPermissionModal-{{ $permission->id }}" tabindex="-1"
+                                aria-labelledby="editPermissionModalLabel-{{ $permission->id }}" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered modal-lg">
+                                    <div class="modal-content bg-light">
+                                        <form action="{{ route('permissions.update', $permission->id) }}"
+                                            method="POST">
+                                            @csrf
+                                            @method('PUT')
+                                            <div class="modal-header bg-primary text-white">
+                                                <h5 class="modal-title"
+                                                    id="editPermissionModalLabel-{{ $permission->id }}">
+                                                    Edit Permission: {{ $permission->name }}
+                                                </h5>
+                                                <button type="button" class="btn-close btn-close-white"
+                                                    data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="mb-3">
+                                                    <label for="permissionName-{{ $permission->id }}"
+                                                        class="form-label">
+                                                        Permission Name
+                                                    </label>
+                                                    <input type="text" class="form-control" name="name"
+                                                        id="permissionName-{{ $permission->id }}"
+                                                        value="{{ old('name', $permission->name) }}" required>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary"
+                                                    data-bs-dismiss="modal">Close</button>
+                                                <button type="submit" class="btn btn-success">Update
+                                                    Permission</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </tbody>
+                </table>
 
+                {{-- Create Permission Modal --}}
+                <div class="modal fade" id="createPermissionModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                        <div class="modal-content bg-light">
                             <form action="{{ route('permissions.store') }}" method="POST">
                                 @csrf
-                                <div class="mb-3">
-                                    <label for="name" class="form-label">Permission Name</label>
-                                    <input type="text" name="name" class="form-control"
-                                        value="{{ old('name') }}" required>
+                                <div class="modal-header bg-primary text-white">
+                                    <h5 class="modal-title">Create New Permission</h5>
+                                    <button type="button" class="btn-close btn-close-white"
+                                        data-bs-dismiss="modal"></button>
                                 </div>
-
-                                <button type="submit" class="btn btn-primary">Create Permission</button>
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">Permission Name</label>
+                                        <input type="text" class="form-control" name="name"
+                                            value="{{ old('name') }}" required>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary"
+                                        data-bs-dismiss="modal">Close</button>
+                                    <button type="submit" class="btn btn-success">Create</button>
+                                </div>
                             </form>
                         </div>
-
                     </div>
-
-
-                    
-
                 </div>
+
 
             </div>
             <!-- END Page Content -->
         </main>
-        {{-- Main section --}}
-
         <!-- END Main Container -->
-        
+        @include('layouts.js')
     </div>
     <!-- END Page Container -->
 
-    <script>
-        $(document).ready(function() {
-            $('#roles').select2({
-                placeholder: "Select role(s)",
-                width: '100%'
-            });
-        });
-
-        $(document).ready(function() {
-            $('#department').select2({
-                placeholder: "Select department(s)",
-                width: '100%'
-            });
-        });
-
-        document.addEventListener("DOMContentLoaded", function() {
-            const triggerTabList = [].slice.call(document.querySelectorAll('#accessTabs a'))
-            triggerTabList.forEach(function(triggerEl) {
-                const tabTrigger = new bootstrap.Tab(triggerEl)
-
-                triggerEl.addEventListener('click', function(event) {
-                    event.preventDefault()
-                    tabTrigger.show()
-                })
-            })
-        });
-    </script>
-
-    <!-- Select2 Plugin -->
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
-    <!-- Bootstrap Bundle (Popper.js included) -->
-    {{--  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>  --}}
-<div>@include('layouts.footer')</div>
 </body>
 
 </html>

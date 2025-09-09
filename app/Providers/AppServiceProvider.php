@@ -7,6 +7,10 @@ use App\Services\AppointmentService;
 use App\Services\VisitorService;
 use Spatie\Activitylog\Models\Activity;
 use App\Models\Activity as CustomActivity;
+use App\Observers\UserObserver;
+use App\Models\User;
+
+
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,6 +30,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+         User::observe(UserObserver::class);
     }
 }

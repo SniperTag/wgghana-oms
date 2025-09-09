@@ -137,7 +137,7 @@
                             </svg>
                         </div>
                         <div>
-                            <p class="text-4xl font-extrabold text-indigo-700">{{ $totalAnnualLeaveCount }}</p>
+                            <p class="text-4xl font-extrabold text-indigo-700">{{ $totalAnnualLeaveCount}}</p>
                             <p class="uppercase text-lg font-semibold text-indigo-600 tracking-wide">Total Annual Leave
                                 Days</p>
                         </div>
@@ -149,7 +149,7 @@
             <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 space-y-4 md:space-y-0">
 
                 <!-- Filter Form -->
-                <form method="GET" action="{{ route('staff.leaves.index') }}"
+                <form method="GET" action="{{ route('staff.leaves') }}"
                     class="flex flex-col sm:flex-row sm:space-x-4 items-center">
 
                     <!-- From Date -->
@@ -183,7 +183,7 @@
                 <div class="flex items-center space-x-2">
 
                     <!-- Search -->
-                    <form method="GET" action="{{ route('staff.leaves.index') }}" class="relative">
+                    <form method="GET" action="{{ route('staff.leaves') }}" class="relative">
                         <input type="text" name="search" value="{{ request('search') }}"
                             placeholder="Search Leave Type..."
                             class="border border-gray-300 rounded-md pl-8 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
@@ -195,7 +195,7 @@
                     </form>
 
                     <!-- Apply Leave Button -->
-                    <a href="{{ route('staff.leave.apply') }}"
+                    <a href="{{ route('leaves.store') }}"
                         class="bg-green-600 text-white px-4 py-2 rounded-md text-sm hover:bg-green-700 transition">
                         + Apply for Leave
                     </a>
@@ -254,8 +254,7 @@
                     </tbody>
                 </table>
             </div>
-
-        </main>
+ </main>
 
         {{-- Main section --}}
 

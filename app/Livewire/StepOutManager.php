@@ -3,47 +3,34 @@
 namespace App\Livewire;
 
 use Livewire\Component;
-use App\Models\StepOut;
-use App\Models\BreakSession;
-use App\Models\AttendanceRecord;
-use App\Models\User;
-use App\Notifications\StepOutNotification;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
+use App\Models\StepOut;
+use App\Models\BreakSession;
+use App\Models\User;
+use App\Models\AttendanceRecord;
+use App\Events\StaffSteppedOut;
+use App\Events\StaffReturned;
+use App\Notifications\StepOutNotification;
 
 class StepOutManager extends Component
 {
-    public $actionType = 'step_out'; // step_out or break
-    public $reason;
-    public $breakType;
+    public $actionType = 'step_out'; // 'step_out' or 'break'
+    public $reason = '';
+    public $breakType = '';
     public bool $currentlySteppedOut = false;
     public bool $currentlyOnBreak = false;
     public $breakTypes = ['Lunch', 'Coffee', 'Prayer', 'Personal'];
 
     public function mount()
     {
-        $this->checkStatuses();
+        Log::info('StepOutManager mounted for user: ' . Auth::id());
+        $this->updateStatuses();
     }
 
-    protected function closeModal()
-    {
-        $this->dispatch('close-modal', ['id' => 'stepOutModal']);
-    }
-
-    protected function resetInputs()
-    {
-        $this->actionType = null;
-        $this->reason = '';
-        $this->breakType = '';
-    }
-
-    public function stepOut()
-    {
-        $this->startAction();
-    }
-
-    public function checkStatuses()
+    // Update step out / break status
+    public function updateStatuses()
     {
         $this->currentlySteppedOut = StepOut::where('user_id', Auth::id())
             ->whereNull('returned_at')
@@ -52,127 +39,132 @@ class StepOutManager extends Component
         $this->currentlyOnBreak = BreakSession::where('user_id', Auth::id())
             ->whereNull('ended_at')
             ->exists();
+
+        Log::info('Statuses updated', [
+            'currentlySteppedOut' => $this->currentlySteppedOut,
+            'currentlyOnBreak' => $this->currentlyOnBreak,
+        ]);
     }
 
+    // Start Step Out or Break
     public function startAction()
-{
-    if ($this->actionType === 'step_out') {
-        if (empty($this->reason)) {
-            return $this->notify('error', 'Please provide a reason.');
-        }
-
-        StepOut::create([
-            'user_id' => Auth::id(),
+    {
+        Log::info('startAction called', [
+            'actionType' => $this->actionType,
             'reason' => $this->reason,
-            'stepped_out_at' => now(),
+            'breakType' => $this->breakType,
         ]);
 
-        $this->notifyUsers('stepped out');
-    }
-    elseif ($this->actionType === 'break') {
-        if (empty($this->breakType)) {
-            return $this->notify('error', 'Please select a break type.');
+        try {
+            if ($this->actionType === 'step_out') {
+                if (!$this->reason) return $this->notify('error', 'Please provide a reason.');
+
+                StepOut::create([
+                    'user_id' => Auth::id(),
+                    'reason' => $this->reason,
+                    'stepped_out_at' => now(),
+                    'status_code' => 'NAV',
+                ]);
+
+                event(new StaffSteppedOut(Auth::user()));
+                $this->notifyUsers('stepped out');
+
+            } elseif ($this->actionType === 'break') {
+                if (!$this->breakType) return $this->notify('error', 'Please select a break type.');
+
+                $attendanceId = AttendanceRecord::where('user_id', Auth::id())
+                    ->whereDate('created_at', today())
+                    ->value('id');
+
+                if (!$attendanceId) return $this->notify('error', 'No attendance record found today.');
+
+                BreakSession::create([
+                    'user_id' => Auth::id(),
+                    'attendance_id' => $attendanceId,
+                    'started_at' => now(),
+                    'break_type' => $this->breakType,
+                    'status_code' => 'NAV',
+                ]);
+
+                event(new StaffSteppedOut(Auth::user()));
+                $this->notifyUsers("started a {$this->breakType} break");
+            } else {
+                return $this->notify('error', 'Invalid action type.');
+            }
+
+            $this->updateStatuses();
+            $this->notify('success', 'Action started successfully!');
+            $this->closeModal();
+            $this->resetInputs();
+
+        } catch (\Exception $e) {
+            Log::error('Error in startAction: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            $this->notify('error', 'Something went wrong.');
         }
-
-        $attendanceId = AttendanceRecord::where('user_id', Auth::id())
-            ->whereDate('created_at', now()->toDateString())
-            ->value('id');
-
-        if (!$attendanceId) {
-            return $this->notify('error', 'No attendance record found for today.');
-        }
-
-        BreakSession::create([
-            'user_id' => Auth::id(),
-            'attendance_id' => $attendanceId,
-            'started_at' => now(),
-            'break_type' => $this->breakType,
-        ]);
-
-        $this->notifyUsers("started a {$this->breakType} break");
     }
 
-    $this->checkStatuses();
-    $this->notify('success', 'Action started successfully!');
-    $this->closeModal();
-    $this->resetInputs();
-
-    // Redirect to mail page route
-    $this->redirect(route('admin.attendance'));
-}
-
-
+    // Return from Step Out
     public function returnBack()
     {
-        try {
-            $stepOut = StepOut::where('user_id', Auth::id())
-                ->whereNull('returned_at')
-                ->latest()
-                ->first();
+        $stepOut = StepOut::where('user_id', Auth::id())->whereNull('returned_at')->latest()->first();
 
-            if ($stepOut) {
-                $stepOut->update([
-                    'returned_at' => now(),
-                    'status' => 'Available'
-                ]);
+        if (!$stepOut) return $this->notify('error', 'No active step out found.');
 
-                $this->notifyUsers('returned');
-                $this->currentlySteppedOut = false;
-                $this->checkStatuses();
+        $stepOut->update([
+            'returned_at' => now(),
+            'status_code' => 'AVL',
+        ]);
 
-                $this->notify('success', 'Welcome back!');
-                $this->dispatch('refreshStepOutHistory');
-                $this->closeModal();
-            } else {
-                $this->notify('error', 'No active step-out found.');
-            }
-        } catch (\Exception $e) {
-            Log::error('Error during return: ' . $e->getMessage());
-            $this->notify('error', 'Something went wrong.');
-        }
+        event(new StaffReturned(Auth::user()));
+        $this->notifyUsers('returned');
+        $this->updateStatuses();
+        $this->notify('success', 'Welcome back!');
     }
 
+    // End Break
     public function endBreak()
     {
-        try {
-            $breakSession = BreakSession::where('user_id', Auth::id())
-                ->whereNull('ended_at')
-                ->latest()
-                ->first();
+        $breakSession = BreakSession::where('user_id', Auth::id())->whereNull('ended_at')->latest()->first();
 
-            if ($breakSession) {
-                $breakSession->update([
-                    'ended_at' => now(),
-                    'break_duration' => now()->diffInMinutes($breakSession->started_at),
-                ]);
+        if (!$breakSession) return $this->notify('error', 'No active break found.');
 
-                $this->notifyUsers("ended {$breakSession->break_type} break");
-                $this->currentlyOnBreak = false;
-                $this->checkStatuses();
-                $this->notify('success', 'Break ended!');
-            } else {
-                $this->notify('error', 'No active break found.');
-            }
-        } catch (\Exception $e) {
-            Log::error('Error ending break: ' . $e->getMessage());
-            $this->notify('error', 'Something went wrong.');
-        }
+        $breakSession->update([
+            'ended_at' => now(),
+            'break_duration' => now()->diffInMinutes($breakSession->started_at),
+            'status_code' => 'AVL',
+        ]);
+
+        event(new StaffReturned(Auth::user()));
+        $this->notifyUsers("ended {$breakSession->break_type} break");
+        $this->updateStatuses();
+        $this->notify('success', 'Break ended!');
+    }
+
+    // Reset only inputs (keep $actionType)
+    protected function resetInputs()
+    {
+        $this->reason = '';
+        $this->breakType = '';
+    }
+
+    protected function closeModal()
+    {
+        $this->dispatch('close-modal', ['id' => 'stepOutModal']);
     }
 
     protected function notifyUsers($action)
     {
         Notification::send(
-            User::role(['admin', 'hr', 'supervisor'])->get(),
+            User::role(['super_admin', 'admin', 'manager', 'supervisor'])->get(),
             new StepOutNotification(Auth::user(), $action)
         );
     }
 
     protected function notify($type, $message)
     {
-        $this->dispatch('notify', [
-            'type' => $type,
-            'message' => $message
-        ]);
+        $this->dispatch('notify', ['type' => $type, 'message' => $message]);
     }
 
     public function render()

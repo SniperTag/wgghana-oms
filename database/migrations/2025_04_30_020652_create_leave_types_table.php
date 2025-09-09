@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('leave_types', function (Blueprint $table) {
              $table->engine = 'InnoDB';
             $table->id();
+
             $table->string('name')->unique();
             $table->integer('default_days')->default(0);
             $table->boolean('is_excluded')->default(false);

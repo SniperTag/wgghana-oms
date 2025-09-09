@@ -37,6 +37,7 @@ class LeaveStatusNotification extends Notification
      */
     public function toMail(object $notifiable): MailMessage
     {
+
         return (new MailMessage)
             ->line($this->message)
             ->action('View Details', url($this->url))

@@ -34,7 +34,8 @@
             <!-- Side User -->
             <div class="content-side content-side-user px-0 py-0">
                 <div class="smini-visible-block animated fadeIn px-3">
-                    <img class="img-avatar img-avatar32" src="{{ asset('media/avatars/avatar15.jpg') }}" alt="">
+                    <img class="img-avatar img-avatar32" src="{{ asset('build/assets/media/avatars/danny.jpg') }}"
+                        alt="">
                 </div>
                 <div class="smini-hidden text-center mx-auto">
                     {{-- <a class="img-link" href="{{ route('profile.update') }}">
@@ -48,7 +49,7 @@
                         <li class="list-inline-item">
                             <a class="link-fx text-dual fs-sm fw-semibold text-uppercase"
                                 href="{{ route('profile.update') }}">
-                                {{ auth()->user()->name }}
+                                {{-- {{ auth()->user()->name }} --}}
                             </a>
                         </li>
                         <li class="list-inline-item">
@@ -57,7 +58,7 @@
                                 <i class="fa fa-moon"></i>
                             </a>
                         </li>
-                        <li class="list-inline-item">
+                        {{-- <li class="list-inline-item">
                             <a class="link-fx text-dual" href="#"
                                 onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                                 <i class="fa fa-sign-out-alt"></i>
@@ -65,7 +66,7 @@
                             <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
                                 @csrf
                             </form>
-                        </li>
+                        </li> --}}
                     </ul>
                 </div>
             </div>
@@ -74,11 +75,65 @@
             <!-- Side Navigation -->
             <div class="content-side content-side-full">
                 <ul class="nav-main">
-
                     <!--####################################################################Managers Start Section####################################################################################-->
+                    <div class="content-side content-side-full">
+                        <ul class="nav-main">
+
+                            @php
+                                $parentRoles = $roles ?? [];
+                            @endphp
+
+                            @foreach ($parentRoles as $parentKey => $parentData)
+                                @if (!empty($parentData['sub_roles']) && is_array($parentData['sub_roles']))
+                                    @php
+                                        $hasRole = false;
+                                        foreach ($parentData['sub_roles'] as $subKey => $subData) {
+                                            if ($user->hasRole($subKey)) {
+                                                $hasRole = true;
+                                                break;
+                                            }
+                                        }
+                                    @endphp
+
+                                    @if ($hasRole)
+                                        <li class="nav-main-heading">{{ $parentData['title'] }}</li>
+
+                                        @foreach ($parentData['sub_roles'] as $subKey => $subData)
+                                            @if ($user->hasRole($subKey))
+                                                <li class="nav-main-item">
+                                                    <a class="nav-main-link nav-main-link-submenu" data-toggle="submenu"
+                                                        href="#">
+                                                        <i class="nav-main-link-icon fa fa-circle"></i>
+                                                        <span class="nav-main-link-name">{{ $subData['title'] }}</span>
+                                                    </a>
+
+                                                    @if (!empty($subData['permissions']) && is_array($subData['permissions']))
+                                                        <ul class="nav-main-submenu">
+                                                            @foreach ($subData['permissions'] as $permission)
+                                                                @can($permission)
+                                                                    <li class="nav-main-item">
+                                                                        <a class="nav-main-link"
+                                                                            href="{{ Route::has(str_replace(' ', '.', strtolower($permission))) ? route(str_replace(' ', '.', strtolower($permission))) : '#' }}">
+                                                                            <span
+                                                                                class="nav-main-link-name">{{ ucwords($permission) }}</span>
+                                                                        </a>
+                                                                    </li>
+                                                                @endcan
+                                                            @endforeach
+                                                        </ul>
+                                                    @endif
+                                                </li>
+                                            @endif
+                                        @endforeach
+                                    @endif
+                                @endif
+                            @endforeach
+
+                        </ul>
+                    </div>
 
                     <!-- Dashboard -->
-                    @role('admin')
+                    @role('super_admin|admin')
                         <li class="nav-main-item">
                             <a class="nav-main-link {{ request()->is('admin/dashboard') ? 'active' : '' }}"
                                 href="{{ route('dashboard') }}">
@@ -88,7 +143,7 @@
                         </li>
                     @endrole
                     <!-- User Management -->
-                    @hasanyrole('admin|hr|manager')
+                    @hasanyrole('super_admin|admin|manager')
                         <li class="nav-main-item {{ request()->routeIs('roles.*') ? 'open' : '' }}">
                             <a class="nav-main-link nav-main-link-submenu" data-toggle="submenu" href="#">
                                 <i class="nav-main-link-icon fa fa-award"></i>
@@ -102,15 +157,10 @@
                                 </li>
 
 
+
                                 <li class="nav-main-item">
-                                    <a class="nav-main-link {{ request()->routeIs('admin.invite_user') ? 'active' : '' }}"
-                                        href="{{ route('admin.invite_user') }}">
-                                        <span class="nav-main-link-name">Invite Staff</span>
-                                    </a>
-                                </li>
-                                <li class="nav-main-item">
-                                    <a class="nav-main-link {{ request()->routeIs('admin.users_index') ? 'active' : '' }}"
-                                        href="{{ route('admin.users_index') }}">
+                                    <a class="nav-main-link {{ request()->routeIs('all.staffs') ? 'active' : '' }}"
+                                        href="{{ route('all.staffs') }}">
                                         <span class="nav-main-link-name">All Staffs</span>
                                     </a>
                                 </li>
@@ -189,11 +239,17 @@
                                     </a>
                                 </li>
 
-                                {{--  <li class="nav-main-item">
+                                <li class="nav-main-item">
                                     <a class="nav-main-link" href="{{ route('leaves.create') }}">
                                         <span class="nav-main-link-name">Create Leave</span>
                                     </a>
-                                </li>  --}}
+                                </li>
+
+                                <li class="nav-main-item">
+                                    <a class="nav-main-link" href="#">
+                                        <span class="nav-main-link-name">My Leaves</span>
+                                    </a>
+                                </li>
 
                                 <li class="nav-main-item">
                                     <a class="nav-main-link" href="{{ route('leave_balances.create') }}">
@@ -220,12 +276,12 @@
                                     </a>
                                 </li>
 
-                                 <li class="nav-main-item">
+                                <li class="nav-main-item">
                                     <a class="nav-main-link" href="{{ route('visitor.registration') }}">
                                         <span class="nav-main-link-name">Register Visitor</span>
                                     </a>
                                 </li>
-                               <li class="nav-main-item">
+                                <li class="nav-main-item">
                                     <a class="nav-main-link" href="{{ route('book.appointment') }}">
                                         <span class="nav-main-link-name">Book Appointment</span>
                                     </a>
@@ -233,9 +289,77 @@
 
                                 <li class="nav-main-item">
                                     <a class="nav-main-link" href="{{ route('my.appointments') }}">
-                                        <span class="nav-main-link-name">My Appointments</span>
+                                        <span class="nav-main-link-name">View Appointments</span>
                                     </a>
                                 </li>
+                                <li class="nav-main-item">
+                                    <a class="nav-main-link" href="{{ route('manage.visitors') }}">
+                                        <span class="nav-main-link-name">Manage Visitors</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+
+
+
+                    @endhasanyrole
+
+                    @hasanyrole('super_admin|admin|manager|supervisor')
+
+                         <!-- Project Management -->
+                        <li class="nav-main-heading">Projects Management</li>
+                        <li class="nav-main-item">
+                            <a class="nav-main-link nav-main-link-submenu" data-toggle="submenu" href="#">
+                                <i class="nav-main-link-icon fa fa-users"></i>
+                                <span class="nav-main-link-name">Project</span>
+                            </a>
+                            <ul class="nav-main-submenu">
+
+                                <li class="nav-main-item">
+                                    <a class="nav-main-link" href="{{ route('project.dashboard') }}">
+                                        <span class="nav-main-link-name">Dashboard</span>
+                                    </a>
+                                </li>
+
+                                <li class="nav-main-item">
+                                    <a class="nav-main-link" href="{{ route('create.project') }}">
+                                        <span class="nav-main-link-name">View Projects</span>
+                                    </a>
+                                </li>
+                                <li class="nav-main-item">
+                                    <a class="nav-main-link" href="{{ route('projects.index') }}">
+                                        <span class="nav-main-link-name">View Projects</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                          <!-- Assessment Management -->
+                        <li class="nav-main-heading">Assessment Management</li>
+                        <li class="nav-main-item">
+                            <a class="nav-main-link nav-main-link-submenu" data-toggle="submenu" href="#">
+                                <i class="nav-main-link-icon fa fa-users"></i>
+                                <span class="nav-main-link-name">Assessment</span>
+                            </a>
+                            <ul class="nav-main-submenu">
+
+                                <li class="nav-main-item">
+                                    <a class="nav-main-link" href="{{ route('assessment.dashboard') }}">
+                                        <span class="nav-main-link-name">Dashboard</span>
+                                    </a>
+                                </li>
+
+                                <li class="nav-main-item">
+                                    <a class="nav-main-link" href="{{ route('self.assess') }}">
+                                        <span class="nav-main-link-name">Self Assessment</span>
+                                    </a>
+                                </li>
+                                {{-- <li class="nav-main-item">
+                                    <a class="nav-main-link" href="{{ route('projects.index') }}">
+                                        <span class="nav-main-link-name">View Projects</span>
+                                    </a>
+                                </li> --}}
                             </ul>
                         </li>
                     @endhasanyrole
@@ -271,7 +395,7 @@
                             </a>
                         </li>
                         <li class="nav-main-item">
-                            <a class="nav-main-link" href="{{ route('leaves.index') }}">
+                            <a class="nav-main-link" href="{{ route('staff.leaves') }}">
                                 <i class="nav-main-link-icon fa fa-address-book-o"></i>
                                 <span class="nav-main-link-name">My Leaves</span>
                             </a>
@@ -312,13 +436,13 @@
                             </a>
                             <ul class="nav-main-submenu">
                                 <li class="nav-main-item">
-                                    <a class="nav-main-link" href="{{ route('leaves.index') }}">
+                                    <a class="nav-main-link" href="">
                                         <span class="nav-main-link-name">My Leaves History</span>
                                     </a>
                                 </li>
 
                                 <li class="nav-main-item">
-                                    <a class="nav-main-link" href="{{ route('leaves.supervisor.pending') }}">
+                                    <a class="nav-main-link" href="{{ route('subordinates.index') }}">
                                         Pending Leaves
                                     </a>
                                 </li>
@@ -330,60 +454,15 @@
                                 </li>
                             </ul>
                         </li>
-
-                        <!-- Staff Management -->
-                        <li class="nav-main-heading">Staff Management</li>
+                        <!-- Visitors Management Section-->
+                        <li class="nav-main-heading">Visitors Management</li>
                         <li class="nav-main-item">
-                            <a class="nav-main-link nav-main-link-submenu" data-toggle="submenu" href="#">
-                                <i class="nav-main-link-icon fa fa-vector-square"></i>
-                                <span class="nav-main-link-name">Assessment</span>
+
+                        <li class="nav-main-item">
+                            <a class="nav-main-link" href="{{ route('my.appointments') }}">
+                                <i class="nav-main-link-icon fa fa-book"></i>
+                                <span class="nav-main-link-name">view checkin & appointments</span>
                             </a>
-                            <ul class="nav-main-submenu">
-                                <li class="nav-main-item">
-                                    <a class="nav-main-link nav-main-link-submenu" data-toggle="submenu" href="#">
-                                        <span class="nav-main-link-name">Projects</span>
-                                    </a>
-                                    <ul class="nav-main-submenu">
-                                        <li class="nav-main-item">
-                                            <a class="nav-main-link" href="#">
-                                                <span class="nav-main-link-name">Create Project</span>
-                                            </a>
-                                        </li>
-                                        <li class="nav-main-item">
-                                            <a class="nav-main-link" href="#">
-                                                <span class="nav-main-link-name">Assign Staffs</span>
-                                            </a>
-                                        </li>
-                                        <li class="nav-main-item">
-                                            <a class="nav-main-link" href="#">
-                                                <span class="nav-main-link-name">View Projects</span>
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </li>
-                                <li class="nav-main-item">
-                                    <a class="nav-main-link nav-main-link-submenu" data-toggle="submenu" href="#">
-                                        <span class="nav-main-link-name">Tasks Section</span>
-                                    </a>
-                                    <ul class="nav-main-submenu">
-                                        <li class="nav-main-item">
-                                            <a class="nav-main-link" href="#">
-                                                <span class="nav-main-link-name">Create Task</span>
-                                            </a>
-                                        </li>
-                                        <li class="nav-main-item">
-                                            <a class="nav-main-link" href="#">
-                                                <span class="nav-main-link-name">Assign Task</span>
-                                            </a>
-                                        </li>
-                                        <li class="nav-main-item">
-                                            <a class="nav-main-link" href="#">
-                                                <span class="nav-main-link-name">View Tasks</span>
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </li>
-                            </ul>
                         </li>
                     @endrole
 
@@ -405,10 +484,10 @@
 
 
 
-                    @hasanyrole('admin|hr|manager|supervisor')
+                    @hasanyrole('admin|manager|supervisor')
                     @endhasanyrole
                     <!-- Leave Management -->
-                    @hasanyrole('admin|hr|manager')
+                    @hasanyrole('admin|manager')
                     @endhasanyrole
 
 
@@ -416,6 +495,8 @@
                 </ul>
 
             </div>
+
+
             <!-- END Side Navigation -->
         </div>
         <!-- END Sidebar Scrolling -->

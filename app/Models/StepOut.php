@@ -9,11 +9,11 @@ class StepOut extends Model
 {
     protected $fillable = [
         'user_id',
-        'step_out_at',
+        'stepped_out_at',
         'returned_at',
         'reason',
-        'status', // e.g., 'stepped out', 'available'
-        
+        'status_code',
+
     ];
 
     protected $casts = [

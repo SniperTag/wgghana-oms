@@ -39,6 +39,12 @@ class SmsService
         ];
     }
 
+
+    public function sendSms($phoneNumber, $message)
+    {
+        return $this->send($phoneNumber, $message);
+    }
+
     protected function interpretResponseCode(string $code): string
     {
         return match ($code) {

@@ -152,9 +152,9 @@
 
             <!-- Toggle Side Overlay -->
             <!-- Layout API, functionality initialized in Template._uiApiLayout() -->
-            <button type="button" class="btn btn-sm btn-alt-secondary" data-toggle="layout" data-action="side_overlay_toggle">
+            {{-- <button type="button" class="btn btn-sm btn-alt-secondary" data-toggle="layout" data-action="side_overlay_toggle">
               <i class="fa fa-fw fa-stream"></i>
-            </button>
+            </button> --}}
             <!-- END Toggle Side Overlay -->
           </div>
           <!-- END Right Section -->

@@ -7,7 +7,7 @@ use Illuminate\Notifications\Notifiable;
 
 class Visitor extends Model
 {
-    use Notifiable; 
+    use Notifiable;
   protected $fillable = [
     'full_name',
     'email',
@@ -29,7 +29,7 @@ class Visitor extends Model
     'photo',
     'signature',
     'is_leader',
-    
+
 ];
 public function host()
 {
@@ -85,5 +85,15 @@ public function getProfilePhotoUrlAttribute()
         return $this->signature
             ? asset('storage/' . $this->signature)
             : null;
-    }   
+    }
+
+public function emergencyContact()
+{
+    return $this->hasOne(EmergencyContact::class);
+}
+
+public function employmentDetails()
+{
+    return $this->hasOne(EmploymentDetail::class);
+}
 }

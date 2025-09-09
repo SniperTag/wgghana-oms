@@ -1,10 +1,3 @@
-{{--  <x-layouts.app :title="__('Dashboard')">
-
-
-</x-layouts.app>  --}}
-
-
-
 
 <!doctype html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
@@ -15,13 +8,13 @@
 
 <body>
     <!-- Page Container -->
-  {{--  <script>
+   <script>
     window.Echo.channel('staff-stepping')
         .listen('.staff.step.update', (e) => {
             const message = `${e.data.name} has ${e.data.type === 'step_out' ? 'stepped out' : 'returned'} at ${e.data.time}`;
             toastr.info(message, 'Staff Alert');
         });
-</script>  --}}
+</script>
 
 @php
     $user = Auth::user();
@@ -35,7 +28,7 @@
 
 
     <div id="page-container"
-        class="sidebar-o sidebar-light enable-page-overlay side-scroll page-header-fixed page-header-modern main-content-boxed">
+        class="sidebar-o sidebar-dark enable-page-overlay side-scroll page-header-fixed page-header-modern main-content-boxed">
 
 
 

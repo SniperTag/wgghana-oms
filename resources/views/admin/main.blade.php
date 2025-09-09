@@ -1,363 +1,189 @@
-<!-- Main Container -->
+<!-- Modernized Dashboard -->
 <style>
-    @media (min-width: 1200px) {
-        .col-xl-1-5 {
-            flex: 0 0 auto;
-            width: 20%;
-        }
-    }
-
     .dashboard-card {
-        min-height: 90px;
+        min-height: 120px;
+        border: none;
+        border-radius: 1rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+    }
+    .dashboard-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
     }
 </style>
-<main id="main-container content-full">
-    <!-- Page Content -->
+
+<main id="main-container" class="content-full">
     <div class="content mt-7">
-        <div class="row">
-            <div class="row g-3 mb-5">
-                <!-- Total Visitors -->
-                <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-1-5">
-                    <a class="block block-rounded block-bordered block-link-shadow dashboard-card h-100"
-                        href="{{ route('visitor.dashboard') }}">
-                        <div
-                            class="block-content block-content-full d-flex justify-content-between align-items-center h-100">
-                            <div>
-                                <i class="si si-bag fa-xl text-primary-light"></i>
-                            </div>
-                            <div class="text-end">
-                                <div class="fs-4 fw-semibold text-primary">{{ $visitorCount }}</div>
-                                <div class="fs-6 fw-semibold text-uppercase text-muted">Total Visitors</div>
-                            </div>
-                        </div>
-                    </a>
-                </div>
 
-                <!-- Attendance Record -->
-                <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-1-5">
-                    <a class="block block-rounded block-bordered block-link-shadow dashboard-card h-100"
-                        href="{{ route('attendance.index') }}">
-                        <div
-                            class="block-content block-content-full d-flex justify-content-between align-items-center h-100">
-                            <div>
-                                <i class="si si-wallet fa-xl text-earth-light"></i>
-                            </div>
-                            <div class="text-end">
-                                <div class="fs-4 fw-semibold text-earth">{{ $attendanceCount }}</div>
-                                <div class="fs-6 fw-semibold text-uppercase text-muted">Attendance Record</div>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-
-                <!-- Staff On Leave -->
-                <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-1-5">
-                    <a class="block block-rounded block-bordered block-link-shadow dashboard-card h-100"
-                        href="{{ route('leaves.status', ['view' => 'current']) }}">
-                        <div
-                            class="block-content block-content-full d-flex justify-content-between align-items-center h-100">
-                            <div>
-                                <i class="fas fa-user-clock fa-xl text-primary"></i>
-                            </div>
-                            <div class="text-end">
-                                <div class="fs-4 fw-semibold text-primary">{{ $onLeaveCount }}</div>
-                                <div class="fs-6 fw-semibold text-uppercase text-muted">On Leave Now</div>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-
-                <!-- Upcoming Leaves -->
-                <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-1-5">
-                    <a class="block block-rounded block-bordered block-link-shadow dashboard-card h-100"
-                        href="{{ route('leaves.status', ['view' => 'upcoming']) }}">
-                        <div
-                            class="block-content block-content-full d-flex justify-content-between align-items-center h-100">
-                            <div>
-                                <i class="fas fa-calendar-alt fa-xl text-info"></i>
-                            </div>
-                            <div class="text-end">
-                                <div class="fs-4 fw-semibold text-info">{{ $upcomingLeaveCount }}</div>
-                                <div class="fs-6 fw-semibold text-uppercase text-muted">Upcoming Leaves</div>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-
-                <!-- Total Users -->
-                <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-1-5">
-                    <a class="block block-rounded block-bordered block-link-shadow dashboard-card h-100"
-                        href="{{ route('admin.users_index') }}">
-                        <div
-                            class="block-content block-content-full d-flex justify-content-between align-items-center h-100">
-                            <div>
-                                <i class="si si-users fa-xl text-pulse"></i>
-                            </div>
-                            <div class="text-end">
-                                <div class="fs-4 fw-semibold text-pulse">{{ $userCount }}</div>
-                                <div class="fs-6 fw-semibold text-uppercase text-muted">Users</div>
-                            </div>
-                        </div>
-                    </a>
-                </div>
+        <!-- Top Statistics -->
+        <div class="row g-3 mb-5 text-center">
+            <div class="col-6 col-md-4 col-lg-2">
+                <a class="dashboard-card d-block p-3 bg-white" href="{{ route('visitor.dashboard') }}">
+                    <i class="si si-bag fa-2x text-primary mb-2"></i>
+                    <h4 class="fw-bold">{{ $visitorCount }}</h4>
+                    <small class="text-muted text-uppercase">Visitors</small>
+                </a>
             </div>
-
-
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-
-                <!-- Left: Step-Out Monitor (1/3 on large screens) -->
-                <div class="col-span-1">
-                    @role('admin|hr|supervisor')
-                        <livewire:step-out-monitor />
-                    @endrole
-                </div>
-
-                <!-- Right: Toggleable History/Report View (2/3 on large screens) -->
-                <div class="col-span-1 lg:col-span-2" x-data="{ view: 'history' }">
-                    @role('admin|hr|supervisor')
-                        <!-- Toggle Button -->
-                        <div class="flex justify-end mb-3">
-                            <button @click="view = view === 'history' ? 'report' : 'history'"
-                                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
-                                <span
-                                    x-text="view === 'history' ? 'Switch to Report View' : 'Switch to History View'"></span>
-                            </button>
-                        </div>
-
-                        <!-- Livewire Components Toggle -->
-                        <div x-show="view === 'history'" x-cloak>
-                            <livewire:step-out-history />
-                        </div>
-
-                        <div x-show="view === 'report'" x-cloak>
-                            <livewire:step-out-report />
-                        </div>
-                    @endrole
-
-                </div>
-
+            <div class="col-6 col-md-4 col-lg-2">
+                <a class="dashboard-card d-block p-3 bg-white" href="{{ route('attendance.index') }}">
+                    <i class="si si-wallet fa-2x text-success mb-2"></i>
+                    <h4 class="fw-bold">{{ $attendanceCount }}</h4>
+                    <small class="text-muted text-uppercase">Attendance</small>
+                </a>
             </div>
-
-
-            <!-- END Row #1 -->
-
-            {{--  <div class="row">
-                <!-- Row #2 -->
-                <div class="col-md-6">
-                    <div class="block block-rounded block-bordered">
-                        <div class="block-header block-header-default border-bottom">
-                            <h3 class="block-title">
-                                Sales <small>This week</small>
-                            </h3>
-                            <div class="block-options">
-                                <button type="button" class="btn-block-option" data-toggle="block-option"
-                                    data-action="state_toggle" data-action-mode="demo">
-                                    <i class="si si-refresh"></i>
-                                </button>
-                                <button type="button" class="btn-block-option">
-                                    <i class="si si-wrench"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="block-content block-content-full">
-                            <div class="pull pt-5">
-                                <!-- Lines Chart Container functionality is initialized in js/pages/be_pages_dashboard.min.js which was auto compiled from _js/pages/be_pages_dashboard.js -->
-                                <!-- For more info and examples you can check out http://www.chartjs.org/docs/ -->
-                                <canvas id="js-chartjs-dashboard-lines" style="height: 290px"></canvas>
-                            </div>
-                        </div>
-                        <div class="block-content">
-                            <div class="row items-push text-center">
-                                <div class="col-6 col-sm-4">
-                                    <div class="fw-semibold text-success">
-                                        <i class="fa fa-caret-up"></i> +16%
-                                    </div>
-                                    <div class="fs-4 fw-semibold">720</div>
-                                    <div class="fs-6 fw-semibold text-uppercase text-muted">This Month</div>
-                                </div>
-                                <div class="col-6 col-sm-4">
-                                    <div class="fw-semibold text-danger">
-                                        <i class="fa fa-caret-down"></i> -3%
-                                    </div>
-                                    <div class="fs-4 fw-semibold">160</div>
-                                    <div class="fs-6 fw-semibold text-uppercase text-muted">This Week</div>
-                                </div>
-                                <div class="col-12 col-sm-4">
-                                    <div class="fw-semibold text-success">
-                                        <i class="fa fa-caret-up"></i> +9%
-                                    </div>
-                                    <div class="fs-4 fw-semibold">24.3</div>
-                                    <div class="fs-6 fw-semibold text-uppercase text-muted">Average</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="block block-rounded block-bordered">
-                        <div class="block-header block-header-default border-bottom">
-                            <h3 class="block-title">
-                                Earnings <small>This week</small>
-                            </h3>
-                            <div class="block-options">
-                                <button type="button" class="btn-block-option" data-toggle="block-option"
-                                    data-action="state_toggle" data-action-mode="demo">
-                                    <i class="si si-refresh"></i>
-                                </button>
-                                <button type="button" class="btn-block-option">
-                                    <i class="si si-wrench"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="block-content block-content-full">
-                            <div class="pull pt-5">
-                                <!-- Lines Chart Container functionality is initialized in js/pages/be_pages_dashboard.min.js which was auto compiled from _js/pages/be_pages_dashboard.js -->
-                                <!-- For more info and examples you can check out http://www.chartjs.org/docs/ -->
-                                <canvas id="js-chartjs-dashboard-lines2" style="height: 290px"></canvas>
-                            </div>
-                        </div>
-                        <div class="block-content bg-body-extra-light">
-                            <div class="row items-push text-center">
-                                <div class="col-6 col-sm-4">
-                                    <div class="fw-semibold text-success">
-                                        <i class="fa fa-caret-up"></i> +4%
-                                    </div>
-                                    <div class="fs-4 fw-semibold">$ 6,540</div>
-                                    <div class="fs-6 fw-semibold text-uppercase text-muted">This Month</div>
-                                </div>
-                                <div class="col-6 col-sm-4">
-                                    <div class="fw-semibold text-danger">
-                                        <i class="fa fa-caret-down"></i> -7%
-                                    </div>
-                                    <div class="fs-4 fw-semibold">$ 1,525</div>
-                                    <div class="fs-6 fw-semibold text-uppercase text-muted">This Week</div>
-                                </div>
-                                <div class="col-12 col-sm-4">
-                                    <div class="fw-semibold text-success">
-                                        <i class="fa fa-caret-up"></i> +35%
-                                    </div>
-                                    <div class="fs-4 fw-semibold">$ 9,352</div>
-                                    <div class="fs-6 fw-semibold text-uppercase text-muted">Balance</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- END Row #2 -->
-            </div>  --}}
-            <div class="row mt-6">
-                <!-- Row #3 -->
-                <div class="col-md-6">
-                    <div class="block block-rounded block-bordered">
-                        <div class="block-header block-header-default border-bottom">
-                            <h2 class="block-title fs-4 font-san-serif font-extrabold">DAILY ATTENDANCE LIST</h2>
-                            <div class="block-options">
-                                <button type="button" class="btn-block-option" data-toggle="block-option"
-                                    data-action="state_toggle" data-action-mode="demo">
-                                    <i class="si si-refresh"></i>
-                                </button>
-                                <button type="button" class="btn-block-option">
-                                    <i class="si si-wrench"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="block-content">
-                            <table class="table table-borderless table-striped">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 100px;">ID</th>
-                                        <th>Status</th>
-                                        <th class="d-none d-sm-table-cell">STAFFS</th>
-                                        <th class="d-none d-sm-table-cell text-end">TIME IN</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($todayAttendance as $record)
-                                        <tr>
-                                            <td>
-                                                {{ $record->id }}
-                                            </td>
-                                            <td>
-                                                @if ($record->status == 'On Time')
-                                                    <span
-                                                        class="text-green-600 font-semibold">{{ $record->status }}</span>
-                                                @elseif ($record->status == 'Late')
-                                                    <span
-                                                        class="text-yellow-600 font-semibold">{{ $record->status }}</span>
-                                                @else
-                                                    <span
-                                                        class="text-red-600 font-semibold">{{ $record->status }}</span>
-                                                @endif
-                                            </td>
-                                            <td>{{ $record->user->name }}</td>
-
-                                            <td class="d-none d-sm-table-cell text-end">
-                                                {{ $record->check_in_time ?? '-' }}</td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-
-
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-
-                <div class="col-md-6">
-                    <div class="block block-rounded block-bordered">
-                        <div class="block-header block-header-default border-bottom">
-                            <h3 class="block-title block-title fs-4 font-san-serif font-extrabold">STAFFS ASSESMENT RATING
-                            </h3>
-                            <div class="block-options">
-                                <button type="button" class="btn-block-option" data-toggle="block-option"
-                                    data-action="state_toggle" data-action-mode="demo">
-                                    <i class="si si-refresh"></i>
-                                </button>
-                                <button type="button" class="btn-block-option">
-                                    <i class="si si-wrench"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="block-content">
-                            <table class="table table-borderless table-striped">
-                                <thead>
-                                    <tr>
-                                        <th class="d-none d-sm-table-cell" style="width: 100px;">ID</th>
-                                        <th>Product</th>
-                                        <th class="text-center">Orders</th>
-                                        <th class="d-none d-sm-table-cell text-center">Rating</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td class="d-none d-sm-table-cell">
-                                            <a class="fw-semibold" href="be_pages_ecom_product_edit.html">PID.258</a>
-                                        </td>
-                                        <td>
-                                            <a href="be_pages_ecom_product_edit.html">Dark Souls III</a>
-                                        </td>
-                                        <td class="text-center">
-                                            <a class="text-gray-dark" href="be_pages_ecom_orders.html">912</a>
-                                        </td>
-                                        <td class="d-none d-sm-table-cell text-center">
-                                            <div class="text-warning">
-                                                <i class="fa fa-star"></i>
-                                                <i class="fa fa-star"></i>
-                                                <i class="fa fa-star"></i>
-                                                <i class="fa fa-star"></i>
-                                                <i class="fa fa-star"></i>
-                                            </div>
-                                        </td>
-                                    </tr>
-
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                <!-- END Row #3 -->
+            <div class="col-6 col-md-4 col-lg-2">
+                <a class="dashboard-card d-block p-3 bg-white" href="{{ route('leaves.status', ['view' => 'current']) }}">
+                    <i class="fas fa-user-clock fa-2x text-warning mb-2"></i>
+                    <h4 class="fw-bold">{{ $onLeaveCount }}</h4>
+                    <small class="text-muted text-uppercase">On Leave</small>
+                </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <a class="dashboard-card d-block p-3 bg-white" href="{{ route('leaves.status', ['view' => 'upcoming']) }}">
+                    <i class="fas fa-calendar-alt fa-2x text-info mb-2"></i>
+                    <h4 class="fw-bold">{{ $upcomingLeaveCount }}</h4>
+                    <small class="text-muted text-uppercase">Upcoming Leaves</small>
+                </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <a class="dashboard-card d-block p-3 bg-white" href="{{ route('all.staffs') }}">
+                    <i class="si si-users fa-2x text-danger mb-2"></i>
+                    <h4 class="fw-bold">{{ $userCount }}</h4>
+                    <small class="text-muted text-uppercase">Users</small>
+                </a>
             </div>
         </div>
-        <!-- END Page Content -->
+        <!-- End Statistics -->
+
+        <!-- Step-Out Monitor & Report Tabs -->
+        @role('super_admin|admin|hr|supervisor')
+        <div class="row mb-5">
+            <div class="col-lg-4 mb-4">
+                <livewire:step-out-monitor />
+            </div>
+            <div class="col-lg-8">
+                <ul class="nav nav-pills mb-3">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#history">History</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#report">Report</a>
+                    </li>
+                </ul>
+                <div class="tab-content bg-white p-3 rounded shadow-sm">
+                    <div class="tab-pane fade show active" id="history">
+                        <livewire:step-out-history />
+                    </div>
+                    <div class="tab-pane fade" id="report">
+                        <livewire:step-out-report />
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endrole
+
+        <!-- Attendance & Assessment -->
+        <div class="row">
+            <!-- Daily Attendance -->
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-light fw-bold">Daily Attendance ({{ now()->format('d M, Y') }})</div>
+                    <div class="card-body p-0">
+                        <table class="table table-striped align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Status</th>
+                                    <th>Staff</th>
+                                    <th class="text-end">Time In</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($todayAttendance as $record)
+                                    <tr>
+                                        <td>{{ $record->id }}</td>
+                                        <td>
+                                            @if ($record->status == 'On Time')
+                                                <span class="badge bg-success">{{ $record->status }}</span>
+                                            @elseif ($record->status == 'Late')
+                                                <span class="badge bg-warning text-dark">{{ $record->status }}</span>
+                                            @else
+                                                <span class="badge bg-danger">{{ $record->status }}</span>
+                                            @endif
+                                        </td>
+                                        <td>{{ $record->user->name }}</td>
+                                        <td class="text-end">{{ $record->check_in_time ?? '-' }}</td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted">No records today</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Staff Assessment Rating -->
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-light fw-bold">Staff Assessment Rating</div>
+                    <div class="card-body p-0">
+                        <table class="table table-striped align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Staff</th>
+                                    <th class="text-center">Score</th>
+                                    <th class="text-center">Rating</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{-- Example row - replace with @forelse --}}
+                                <tr>
+                                    <td>1</td>
+                                    <td>John Doe</td>
+                                    <td class="text-center">85</td>
+                                    <td class="text-center">
+                                        <i class="fa fa-star text-warning"></i>
+                                        <i class="fa fa-star text-warning"></i>
+                                        <i class="fa fa-star text-warning"></i>
+                                        <i class="fa fa-star text-muted"></i>
+                                        <i class="fa fa-star text-muted"></i>
+                                    </td>
+                                </tr>
+                                {{-- @empty ... --}}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance Trend Chart -->
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-light fw-bold">Weekly Attendance Trend</div>
+            <div class="card-body">
+                <div id="attendanceChart" style="height: 250px;"></div>
+            </div>
+        </div>
+    </div>
 </main>
+
+<!-- Chart.js Example -->
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    var options = {
+        chart: { type: 'line', height: 250 },
+        series: [{
+            name: 'Attendance',
+            data: [5, 8, 6, 9, 7, 10, 12] // replace with dynamic data
+        }],
+        xaxis: { categories: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] }
+    };
+    new ApexCharts(document.querySelector("#attendanceChart"), options).render();
+});
+</script>

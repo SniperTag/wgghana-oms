@@ -15,8 +15,7 @@ class LeaveTypeSeeder extends Seeder
         $types = [
             ['name' => 'Annual', 'default_days' => 22],
             ['name' => 'Maternity', 'default_days' => 90],
-            ['name' => 'Bereavement', 'default_days' => 5],
-            ['name' => 'Personal', 'default_days' => 3],
+            ['name' => 'Sick', 'default_days' => 15],
         ];
 
         // Seed core leave types

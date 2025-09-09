@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Http\Controllers\Controller;
-use App\Http\Requests\Auth\LoginRequest;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use session;
 use Illuminate\View\View;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\RedirectResponse;
+use App\Http\Requests\Auth\LoginRequest;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -23,42 +24,56 @@ class AuthenticatedSessionController extends Controller
      * Handle an incoming authentication request.
      */
     public function store(LoginRequest $request): RedirectResponse
-    {
-        $request->authenticate();
+{
+    // Authenticate the user
+    $request->authenticate();
+    $request->session()->regenerate();
 
-        $request->session()->regenerate();
+    $user = Auth::user();
 
-        $user = Auth::user();
+    // Redirect to face enrollment if face image is not set
+    if (is_null($user->face_image)) {
+        return redirect()->route('face.enroll')->with([
+            'message' => 'Please enroll your face for attendance tracking.',
+        ]);
+    }
 
+    // Map roles to their dashboard routes (must match route names in web.php)
+    $roleRedirectMap = [
+        'super_admin' => 'super_admin.page',
+        'admin'       => 'admin.dashboard',
+        'hr'          => 'hr.dashboard',
+        'manager'     => 'manager.dashboard',
+        'finance'     => 'finance.dashboard',
+        'supervisor'  => 'supervisor.dashboard',
+        'staff'       => 'staff.dashboard',
+    ];
 
-        // Redirect to face enrollment if face image not set
-        if (is_null($user->face_image)) {
-            return redirect()->route('face.enroll')->with([
-                'message' => 'Please enroll your face for attendance tracking.',
-            ]);
+    // Role priority order (highest to lowest)
+    $rolePriority = ['super_admin', 'admin', 'hr', 'manager', 'finance', 'supervisor', 'staff'];
+
+    $redirectRoute = null;
+
+    // Check user roles in priority order
+    foreach ($rolePriority as $role) {
+        if ($user->hasRole($role)) {
+            $redirectRoute = $roleRedirectMap[$role];
+            \Log::info("User {$user->name} matched role: {$role} → redirecting to: {$redirectRoute}");
+            break; // first matching role wins
         }
+    }
 
-        // Role-based redirection using Spatie
-        if ($user->hasRole('admin')) {
-            return redirect()->route('dashboard');
-        } elseif ($user->hasRole('hr')) {
-            return redirect()->route('hr.dashboard');
-        } elseif ($user->hasRole('manager')) {
-            return redirect()->route('manager.dashboard');
-        } elseif ($user->hasRole('finance')) {
-            return redirect()->route('finance.dashboard');
-        } elseif ($user->hasRole('supervisor')) {
-            return redirect()->route('supervisor.dashboard');
-        } elseif ($user->hasRole('staff')) {
-            return redirect()->route('staff.dashboard');
-        }
-
-        // Default fallback if no role matched
+    // Logout if no valid role found
+    if (!$redirectRoute) {
         Auth::logout();
         return redirect()->route('login')->withErrors([
             'email' => 'Your account has no assigned role or unauthorized role.',
         ]);
     }
+
+    // Redirect to the correct dashboard
+    return redirect()->route($redirectRoute)->with('success', 'Successfully logged in, ' . $user->name . '!');
+}
 
 
     /**
@@ -69,7 +84,6 @@ class AuthenticatedSessionController extends Controller
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
         return redirect('/');

@@ -105,7 +105,7 @@
         </div>
 
         <button type="submit" class="btn btn-primary mt-3">Create Leave Balance</button>
-        <a href="{{ route('admin.users_index') }}" class="btn btn-secondary mt-3">Back to Users</a>
+        <a href="{{ route('all.staffs') }}" class="btn btn-secondary mt-3">Back to Users</a>
     </form>
 </div>
 
@@ -114,42 +114,11 @@
         {{-- Main section --}}
 
         <!-- END Main Container -->
-        @include('layouts.footer')
+        @include('layouts.js')
     </div>
     <!-- END Page Container -->
 
-    <script>
-        $(document).ready(function() {
-            $('#roles').select2({
-                placeholder: "Select role(s)",
-                width: '100%'
-            });
-        });
 
-        $(document).ready(function() {
-            $('#department').select2({
-                placeholder: "Select department(s)",
-                width: '100%'
-            });
-        });
-    </script>
-    <script>
-        function updateRemainingDays() {
-            const total = parseInt(document.getElementById('total_days').value) || 0;
-            const used = parseInt(document.getElementById('used_days').value) || 0;
-            document.getElementById('remaining_days').value = Math.max(total - used, 0);
-        }
-
-        document.getElementById('total_days').addEventListener('input', updateRemainingDays);
-        document.getElementById('used_days').addEventListener('input', updateRemainingDays);
-    </script>
-
-
-    <!-- Select2 Plugin -->
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
-    <!-- Bootstrap Bundle (Popper.js included) -->
-    {{--  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>  --}}
 
 </body>
 

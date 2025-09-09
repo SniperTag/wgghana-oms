@@ -1,4 +1,6 @@
-import { defineConfig } from 'vite';
+import {
+    defineConfig
+} from 'vite';
 import laravel from 'laravel-vite-plugin';
 
 export default defineConfig({
@@ -8,4 +10,12 @@ export default defineConfig({
             refresh: true,
         }),
     ],
+    server: {
+        host: "127.0.0.1", // 👈 your LAN IP
+        port: 5173,
+        cors: true,
+        hmr: {
+            host: "127.0.0.1", // 👈 same IP for hot reload
+        },
+    },
 });

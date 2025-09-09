@@ -89,7 +89,7 @@ public function store(Request $request)
         ]);
 
         toastr()->success('Leave balance created successfully.');
-        return redirect()->route('admin.users_index');
+        return redirect()->route('all.staffs');
 
     } catch (\Exception $e) {
         Log::error('Error creating leave balance: ' . $e->getMessage());

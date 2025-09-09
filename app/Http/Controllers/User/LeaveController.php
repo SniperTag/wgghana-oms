@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\User;
 
 use Carbon\Carbon;
+use App\Models\User;
 use App\Models\Leave;
 use App\Models\LeaveType;
 use App\Models\Department;
+use App\Events\StaffOnLeave;
 use App\Models\LeaveBalance;
 use Illuminate\Http\Request;
 use App\Events\LeaveApproved;
@@ -14,18 +16,16 @@ use App\Services\LeaveService;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\LeaveSubmittedNotification;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 
 class LeaveController extends Controller
 {
-    use AuthorizesRequests;
+   use AuthorizesRequests;
 
     protected $leaveService;
 
-    /**
-     * Inject LeaveService dependency.
-     */
     public function __construct(LeaveService $leaveService)
     {
         $this->leaveService = $leaveService;
@@ -43,21 +43,24 @@ class LeaveController extends Controller
             ->latest()
             ->paginate(10);
 
-        $pendingCount = Leave::where('user_id', $user->id)->where('status', 'pending')->count();
-        $approvedCount = Leave::where('user_id', $user->id)->where('status', 'approved')->count();
-        $rejectedCount = Leave::where('user_id', $user->id)->where('status', 'rejected')->count();
-        $onLeaveCount = Leave::currentlyOnLeave()->where('user_id', $user->id)->count();
-        $today = now()->toDateString();
+        $pendingCount   = Leave::where('user_id', $user->id)->where('status', 'pending')->count();
+        $approvedCount  = Leave::where('user_id', $user->id)->where('status', 'approved')->count();
+        $rejectedCount  = Leave::where('user_id', $user->id)->where('status', 'rejected')->count();
+        $onLeaveCount   = Leave::currentlyOnLeave()->where('user_id', $user->id)->count();
+        $today          = now()->toDateString();
         $upcomingLeaveCount = Leave::whereDate('start_date', '>', $today)->count();
-        $remainingAnnualLeave = $leaveBalance->remaining_days ?? 0;
 
+        // ✅ Supervisor + Annual Leave Balance
         $annualLeaveType = LeaveType::where('name', 'Annual Leave')->first();
         $leaveBalance = null;
+        $remainingAnnualLeave = 0;
 
         if ($annualLeaveType) {
             $leaveBalance = LeaveBalance::where('user_id', $user->id)
                 ->where('leave_type_id', $annualLeaveType->id)
                 ->first();
+
+            $remainingAnnualLeave = $leaveBalance?->remaining_days ?? 0;
         }
 
         return view('leaves.index', compact(
@@ -97,6 +100,7 @@ class LeaveController extends Controller
                 $remainingAnnualLeave = $leaveBalance->remaining_days;
             }
         }
+
         $pendingCount = Leave::where('user_id', $user->id)->where('status', 'pending')->count();
         $approvedCount = Leave::where('user_id', $user->id)->where('status', 'approved')->count();
         $rejectedCount = Leave::where('user_id', $user->id)->where('status', 'rejected')->count();
@@ -135,11 +139,11 @@ class LeaveController extends Controller
             Log::info("LeaveController@store called by user: " . Auth::id());
 
             $request->validate([
-                'start_date' => 'required|date',
-                'end_date' => 'required|date|after_or_equal:start_date',
+                'start_date'    => 'required|date',
+                'end_date'      => 'required|date|after_or_equal:start_date',
                 'leave_type_id' => 'required|exists:leave_types,id',
-                'reason' => 'required|string|max:1000',
-                'status' => 'in:pending,approved,rejected',
+                'reason'        => 'required|string|max:1000',
+                'status'        => 'in:pending,approved,rejected',
             ]);
 
             $user = Auth::user();
@@ -149,7 +153,7 @@ class LeaveController extends Controller
             // ✅ Enforce 3 working-day notice (excluding weekends) unless it's sick leave
             if (!$isSickLeave) {
                 $today = now()->startOfDay();
-                $startDate = \Carbon\Carbon::parse($request->start_date)->startOfDay();
+                $startDate = Carbon::parse($request->start_date)->startOfDay();
                 $period = \Carbon\CarbonPeriod::create($today->copy()->addDay(), $startDate);
                 $workingDays = collect($period)->filter(fn($d) => !$d->isWeekend())->count();
 
@@ -182,7 +186,7 @@ class LeaveController extends Controller
                 $request->end_date
             );
 
-            // ✅ Handle file attachment
+            // ✅ File attachment
             $attachmentPath = null;
             if ($request->hasFile('attachment')) {
                 $request->validate([
@@ -191,7 +195,7 @@ class LeaveController extends Controller
                 $attachmentPath = $request->file('attachment')->store('attachments', 'public');
             }
 
-            // ✅ If sick leave but no medical report, fallback to annual leave
+            // ✅ Sick leave fallback
             if ($isSickLeave && !$attachmentPath) {
                 $annualLeaveType = LeaveType::where('name', 'like', '%annual%')->first();
                 if ($annualLeaveType) {
@@ -223,17 +227,17 @@ class LeaveController extends Controller
 
             // ✅ Create leave
             $leave = Leave::create([
-                'user_id' => $user->id,
-                'start_date' => $request->start_date,
-                'end_date' => $request->end_date,
-                'leave_type_id' => $leaveType->id,
-                'reason' => $request->reason,
-                'days_requested' => $daysRequested,
-                'status' => 'pending',
-                'supervisor_status' => $supervisorStatus,
-                'supervisor_id' => $supervisorId,
-                'supervisor_required' => $supervisorRequired,
-                'attachment' => $attachmentPath,
+                'user_id'            => $user->id,
+                'start_date'         => $request->start_date,
+                'end_date'           => $request->end_date,
+                'leave_type_id'      => $leaveType->id,
+                'reason'             => $request->reason,
+                'days_requested'     => $daysRequested,
+                'status'             => 'pending',
+                'supervisor_status'  => $supervisorStatus,
+                'supervisor_id'      => $supervisorId,
+                'supervisor_required'=> $supervisorRequired,
+                'attachment'         => $attachmentPath,
             ]);
 
             // ✅ Update balance
@@ -242,19 +246,22 @@ class LeaveController extends Controller
 
             $this->leaveService->logCreation($leave, $user);
 
+            $admin = User::role('admin | supervisor')->first();
+            $admin?->notify(new LeaveSubmittedNotification($leave));
+
             toastr()->success('Leave request submitted successfully.');
             return redirect()->route('leaves.index');
         } catch (\Exception $e) {
             Log::error("Error in LeaveController@store", [
                 'message' => $e->getMessage(),
                 'user_id' => Auth::id(),
-                'line' => $e->getLine(),
+                'line'    => $e->getLine(),
             ]);
+
             toastr()->error('Failed to submit leave request.');
             return redirect()->back();
         }
     }
-
 
 
     /**
@@ -345,77 +352,84 @@ class LeaveController extends Controller
      * Approve a leave request based on role (Supervisor or HR/Admin).
      */
     public function approve(Request $request, $id)
-    {
-        try {
-            $user = Auth::user();
-            Log::info("Leave approval attempt by user {$user->id} ({$user->name})");
+{
+    try {
+        $user = Auth::user();
+        Log::info("Leave approval attempt by user {$user->id} ({$user->name})");
 
-            $leave = Leave::findOrFail($id);
-            Log::info("Leave ID {$leave->id} found for approval by user {$user->id}");
+        $leave = Leave::findOrFail($id);
+        Log::info("Leave ID {$leave->id} found for approval by user {$user->id}");
 
-            // Prevent self-approval
-            if ($leave->user_id == $user->id) {
-                Log::warning("User {$user->id} attempted to approve their own leave.");
-                abort(403, 'You cannot approve your own leave request.');
+        // Prevent self-approval
+        if ($leave->user_id == $user->id) {
+            Log::warning("User {$user->id} attempted to approve their own leave.");
+            abort(403, 'You cannot approve your own leave request.');
+        }
+
+        // ===== Supervisor Stage =====
+        if ($leave->supervisor_required && $leave->supervisor_status === 'pending') {
+            if ($user->id !== $leave->supervisor_id) {
+                Log::warning("User {$user->id} is not the assigned supervisor for leave ID {$leave->id}.");
+                abort(403, 'You are not authorized to approve this leave.');
             }
 
-            // Supervisor stage
-            if ($leave->supervisor_required && $leave->supervisor_status === 'pending') {
-                if ($user->id !== $leave->supervisor_id) {
-                    Log::warning("User {$user->id} is not the assigned supervisor for leave ID {$leave->id}.");
-                    abort(403, 'You are not authorized to approve this leave.');
-                }
-
-                $leave->update([
-                    'status' => 'approved',
-                    'approved_by' => $user->id,
-                    'hr_approved' => true,
-                    'hr_approved_at' => now(),
-                    'ip_address' => $request->ip(),
-                    'user_agent' => $request->userAgent(),
-                    'approved_at' => now(),
-                ]);
-
-                Log::info("Leave ID {$leave->id} approved by Supervisor ID {$user->id}");
-                toastr()->success('Leave approved as Supervisor.');
-                return redirect()->back();
-            }
-
-            // HR/Admin stage
-            if ($user->hasRole(['admin', 'hr'])) {
-                if ($leave->supervisor_required && $leave->supervisor_status !== 'approved') {
-                    Log::notice("HR/Admin ID {$user->id} attempted to approve leave ID {$leave->id} before supervisor approval.");
-                    toastr()->warning('Supervisor must approve first.');
-                    return redirect()->back();
-                }
-
-                $leave->update([
-                    'status' => 'approved',
-                    'approved_by' => $user->id,
-                    'approved_at' => now(),
-                ]);
-
-                Log::info("Leave ID {$leave->id} fully approved by HR/Admin ID {$user->id}");
-
-                event(new LeaveApproved($leave));
-                toastr()->success('Leave approved successfully.');
-                return redirect()->back();
-            }
-
-            Log::warning("User {$user->id} without proper role attempted to approve leave ID {$leave->id}");
-            abort(403, 'You are not authorized to approve this leave.');
-        } catch (\Exception $e) {
-            Log::error('Leave approval failed', [
-                'error' => $e->getMessage(),
-                'line' => $e->getLine(),
-                'user_id' => Auth::id(),
-                'leave_id' => $id ?? null,
+            $leave->update([
+                'supervisor_status'   => 'approved',
+                'supervisor_approved_at' => now(),
+                'status'              => 'pending', // Still pending HR/Admin
+                'approved_by'         => $user->id,
+                'ip_address'          => $request->ip(),
+                'user_agent'          => $request->userAgent(),
             ]);
 
-            toastr()->error('Leave approval failed.');
+            Log::info("Leave ID {$leave->id} approved at supervisor stage by Supervisor ID {$user->id}");
+            toastr()->success('Leave approved as Supervisor, pending HR/Admin.');
             return redirect()->back();
         }
+
+        // ===== HR/Admin Stage =====
+        if ($user->hasRole(['admin','super_admin', 'hr'])) {
+            // Ensure supervisor approval first if required
+            if ($leave->supervisor_required && $leave->supervisor_status !== 'approved') {
+                Log::notice("HR/Admin ID {$user->id} attempted to approve leave ID {$leave->id} before supervisor approval.");
+                toastr()->warning('Supervisor must approve first.');
+                return redirect()->back();
+            }
+
+            $leave->update([
+                'status'       => 'approved',
+                'hr_status'    => 'approved',
+                'approved_by'  => $user->id,
+                'approved_at'  => now(),
+                'ip_address'   => $request->ip(),
+                'user_agent'   => $request->userAgent(),
+            ]);
+
+            Log::info("Leave ID {$leave->id} fully approved by HR/Admin ID {$user->id}");
+
+            // Fire event for notifications
+            event(new LeaveApproved($leave));
+
+            toastr()->success('Leave approved successfully.');
+            return redirect()->back();
+        }
+
+        // If not supervisor/HR/Admin
+        Log::warning("User {$user->id} without proper role attempted to approve leave ID {$leave->id}");
+        abort(403, 'You are not authorized to approve this leave.');
+    } catch (\Exception $e) {
+        Log::error('Leave approval failed', [
+            'error'    => $e->getMessage(),
+            'line'     => $e->getLine(),
+            'user_id'  => Auth::id(),
+            'leave_id' => $id ?? null,
+        ]);
+
+        toastr()->error('Leave approval failed.');
+        return redirect()->back();
     }
+}
+
 
 
 
@@ -429,7 +443,7 @@ class LeaveController extends Controller
 
             // Validate rejection reason
             $request->validate([
-                'rejection_reason' => 'required|string|max:1000',
+                'supervisor_rejection_reasons' => 'required|string|max:1000',
             ]);
 
             if ($leave->supervisor_required && $leave->supervisor_status === 'pending') {
@@ -438,47 +452,51 @@ class LeaveController extends Controller
                     abort(403, 'Only the supervisor can reject at this stage.');
                 }
 
+                            // Supervisor rejects → keep overall status pending (await HR/Admin final decision)
                 $leave->update([
                     'supervisor_status' => 'rejected',
                     'status' => 'rejected',
-                    'rejection_reason' => $request->rejection_reason,
+                    'supervisor_rejection_reasons' => $request->rejection_reason,
                     'supervisor_rejected_at' => now(),
                     'rejected_by' => $user->id,
                     'rejected_at' => now(),
                 ]);
-            } elseif ($user->hasRole(['admin', 'hr'])) {
+            } elseif ($user->hasRole(['admin','super_admin', 'hr'])) {
                 // HR/Admin can only reject if supervisor approved or not required
                 if ($leave->supervisor_required && $leave->supervisor_status !== 'approved') {
                     toastr()->warning('Supervisor approval is required before HR/Admin can reject.');
                     return redirect()->back();
                 }
 
+
+                  // HR/Admin rejection = final status rejected
                 $leave->update([
                     'status' => 'rejected',
-                    'rejection_reason' => $request->rejection_reason,
+                    'hr_status' =>'rejected',
+                    'hr_rejection_reasons' => $request->rejection_reason,
                     'rejected_by' => $user->id,
                     'rejected_at' => now(),
                 ]);
-            } else {
-                abort(403, 'Unauthorized to reject leave.');
-            }
-
-            // Restore leave balance (make sure this method properly re-adds leave days)
+           // Restore leave balance since HR/Admin rejection is final
             $this->leaveService->restoreLeaveBalance($leave);
-
-            // Log rejection action
-            $this->leaveService->logAction($leave, ['user' => $user], 'Leave rejected.');
-
-            // Fire LeaveRejected event (to notify, etc)
-            event(new LeaveRejected($leave));
-
-            toastr()->success('Leave rejected.');
-            return redirect()->back();
-        } catch (\Exception $e) {
-            Log::error('Leave rejection failed: ' . $e->getMessage());
-            toastr()->error('Leave rejection failed.');
-            return redirect()->back();
+        } else {
+            abort(403, 'Unauthorized to reject leave.');
         }
+
+        // Log rejection action
+        $this->leaveService->logAction($leave, ['user' => $user], 'Leave rejected.');
+
+        // Fire LeaveRejected event (to notify, etc)
+        event(new LeaveRejected($leave));
+
+        toastr()->success('Leave rejected.');
+        return redirect()->back();
+
+    } catch (\Exception $e) {
+        Log::error('Leave rejection failed: ' . $e->getMessage());
+        toastr()->error('Leave rejection failed.');
+        return redirect()->back();
+    }
     }
 
 
@@ -514,7 +532,13 @@ class LeaveController extends Controller
             ->where('status', 'pending') // still pending final approval
             ->orderByDesc('created_at')
             ->paginate(10);
-        return view('admin.leaves.hr_pending', compact('leaves'));
+
+$pendingLeaves = Leave::where('hr_status', 'pending')
+                      ->orderBy('created_at', 'desc')
+                      ->paginate(10);
+
+                      $approvedLeaves = Leave::where('status', 'approved')->orderByDesc('created_at')->paginate('5');
+       return view('admin.leaves.hr_pending', compact('leaves','pendingLeaves','approvedLeaves'));
     }
 
 
@@ -579,7 +603,7 @@ $leaveTypes = LeaveType::all();
         $leaves = Leave::with(['user', 'leaveType'])
             ->where('status', 'approved')
             ->orderByDesc('approved_at')
-            ->paginate(15); 
+            ->paginate(15);
 
         return view('admin.leaves.hr_pending', compact('leaves'));
     }

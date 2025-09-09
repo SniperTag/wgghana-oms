@@ -235,11 +235,11 @@
     {{-- Main section --}}
 
     <!-- END Main Container -->
-    @include('layouts.footer')
+    @include('layouts.js')
     </div>
     <!-- END Page Container -->
 
-    <script>
+    {{-- <script>
         $(document).ready(function() {
             $('#roles').select2({
                 placeholder: "Select role(s)",
@@ -253,10 +253,10 @@
                 width: '100%'
             });
         });
-    </script>
+    </script> --}}
 
     <!-- Select2 Plugin -->
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    {{-- <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script> --}}
 
 
 </body>

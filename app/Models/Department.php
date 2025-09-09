@@ -9,7 +9,7 @@ class Department extends Model
     protected $fillable = [
         'name',
         'role_id',
-        
+
     ];
 
     public function users()
@@ -30,11 +30,16 @@ class Department extends Model
     {
         return $this->hasMany(Leave::class);
     }
-    public function breakTimes()
+
+public function subRoles()
     {
-        return $this->hasMany(BreakTime::class);
+        return $this->hasMany(SubRole::class);
     }
- 
+    public function breaksessions()
+    {
+        return $this->hasMany(BreakSession::class);
+    }
+
     public function scopeSearch($query, $search)
     {
         return $query->where('name', 'like', "%{$search}%");

@@ -8,237 +8,287 @@
     @include('layouts.header')
 
     <!-- Main Container -->
-    <div>
-        <main id="main-container" class="content-full">
-            <div class="page-container d-flex flex-column min-vh-100">
-                <div>
+    <div class="mt-3">
+        <main id="main-container" class="content-full container-fluid">
 
-                    {{-- Search area --}}
-                    <div class="d-flex justify-content-center align-items-center min-vh-100"
-                        style="background: linear-gradient(135deg, #f8f9fa, #e9ecef);">
-
-                        <div class="card shadow-lg border-0 p-4"
-                            style="max-width: 500px; width: 100%; border-radius: 1rem;">
-
-                            {{-- Title --}}
-                            <h4 class="text-center mb-4 fw-bold text-primary">Search Visitor</h4>
-
-                            {{-- Search Field --}}
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">Phone or ID Number</label>
-                                <input type="text" class="form-control form-control-lg"
-                                    placeholder="Enter phone or ID number" wire:model.defer="searchTerm"
-                                    wire:keydown.enter.prevent="searchVisitor">
-                            </div>
-
-                            {{-- Search Button --}}
-                            <div class="text-center">
-                                <button wire:click="searchVisitor"
-                                    class="btn btn-primary btn-lg w-100 position-relative" style="border-radius: .5rem;"
-                                    wire:loading.attr="disabled">
-
-                                    <span wire:loading.remove wire:target="searchVisitor">
-                                        🔍 Search
-                                    </span>
-
-                                    <span wire:loading wire:target="searchVisitor">
-                                        <div class="spinner-border spinner-border-sm text-light me-2" role="status">
-                                        </div>
-                                        Checking...
-                                    </span>
-                                </button>
-
-                                {{-- Clear Button --}}
-                                <button wire:click="clearSearch">Clear</button>
-
-                            </div>
-
-                            {{-- Search Message --}}
-                            @if ($searchMessage)
-                                <div class="alert alert-info text-center mt-3 mb-0" style="border-radius: .5rem;">
-                                    {{ $searchMessage }}
-                                </div>
-                            @endif
-
+            {{-- Statistics Row --}}
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card text-center shadow-sm" wire:poll.15s>
+                        <div class="card-body">
+                            <h6 class="text-muted">Transferred Visitors</h6>
+                            <h3 class="fw-bold">{{ $transferCount }}</h3>
                         </div>
                     </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center shadow-sm">
+                        <div class="card-body">
+                            <h6 class="text-muted">Currently Checked In</h6>
+                            <h3 class="fw-bold text-success">{{ $checkedInCount }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center shadow-sm">
+                        <div class="card-body">
+                            <h6 class="text-muted">Checked Out Today</h6>
+                            <h3 class="fw-bold text-danger">{{ $checkedOutCount }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center shadow-sm">
+                        <div class="card-body">
+                            <h6 class="text-muted">Pending Approvals</h6>
+                            <h3 class="fw-bold text-danger">{{ $waitingApprovalCount }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                    {{-- Visitor quick preview --}}
-                   @if($selectedVisitor)
-    <div class="p-4 bg-green-100 rounded">
-        <p><strong>Name:</strong> {{ $selectedVisitor->name }}</p>
-        <p><strong>Phone:</strong> {{ $selectedVisitor->phone }}</p>
-        <p><strong>ID Number:</strong> {{ $selectedVisitor->id_number }}</p>
-        <button 
-            wire:click="openCheckInModal" 
-            class="px-4 py-2 mt-2 text-white bg-blue-600 rounded">
-            Check In
-        </button>
-    </div>
-@endif
+            {{-- Search Card --}}
+            {{-- Search Card - Simple Version --}}
+            <div class="card mb-4">
+                <div class="card-body">
+                    {{-- Search Input --}}
+                    <input type="text" class="form-control" placeholder="Phone or ID"
+                        wire:model.live.debounce.300ms="searchTerm">
 
+                    {{-- Loading Indicator --}}
+                    <div wire:loading wire:target="searchTerm" class="mt-2">
+                        <p class="text-muted">Searching<span class="loading-dots">...</span></p>
+                    </div>
 
-                    {{-- Check-in Modal --}}
-                    <div wire:ignore.self class="modal fade" id="checkInModal" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog modal-lg modal-dialog-centered">
-                            <div class="modal-content">
+                    {{-- Search Results (hidden while loading) --}}
+                    <div wire:loading.remove wire:target="searchTerm">
+                        <ul class="list-group mt-2" @if (empty($searchResults)) style="display:none;" @endif>
+                            @foreach ($searchResults as $visitor)
+                                <li class="list-group-item list-group-item-action"
+                                    wire:click="selectVisitor({{ $visitor->id }})">
+                                    {{ $visitor->full_name }} - {{ $visitor->phone }} - {{ $visitor->visitor_uid }}
+                                </li>
+                            @endforeach
+                        </ul>
 
+                        {{-- No Results --}}
+                        @if ($searchTerm && $searchResults->isEmpty())
+                            <p class="text-muted mt-2">No visitors found.</p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            <style>
+                .loading-dots {
+                    animation: loading 1.5s infinite;
+                }
+
+                @keyframes loading {
+
+                    0%,
+                    20% {
+                        content: '.';
+                    }
+
+                    40% {
+                        content: '..';
+                    }
+
+                    60%,
+                    100% {
+                        content: '...';
+                    }
+                }
+            </style>
+
+            {{-- Check-In Modal --}}
+            <div wire:ignore.self class="modal fade" id="checkInModal" tabindex="-1" aria-hidden="true">
+
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        @if ($selectedVisitor)
+                            <div class="modal-header">
+                                <h5 class="modal-title">Check In: {{ $selectedVisitor->full_name }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body bg-slate-400">
+                                <form wire:submit.prevent="checkIn">
+                                    {{-- Visitor Info --}}
+                                    <div class="mb-3">
+                                        <label>Visitor</label>
+                                        <input type="text" class="form-control" readonly
+                                            value="{{ $selectedVisitor->full_name }} — {{ $selectedVisitor->phone }}">
+                                    </div>
+
+                                    {{-- Host --}}
+                                    <div class="mb-3">
+                                        <label>Host</label>
+                                        <select wire:model="host_id" class="form-control" required>
+                                            <option value="">-- select host --</option>
+                                            @foreach ($hostsList as $host)
+                                                <option value="{{ $host->id }}">{{ $host->name }}
+                                                    ({{ $host->email }})
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('host_id')
+                                            <small class="text-danger">{{ $message }}</small>
+                                        @enderror
+                                    </div>
+
+                                    {{-- Visitor Type --}}
+                                    <div class="mb-3">
+                                        <label>Visitor Type</label>
+                                        <select wire:model="visitor_type_id" class="form-control" required>
+                                            <option value="">-- select type --</option>
+                                            @foreach ($visitorTypes as $vt)
+                                                <option value="{{ $vt->id }}">{{ $vt->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        @error('visitor_type_id')
+                                            <small class="text-danger">{{ $message }}</small>
+                                        @enderror
+                                    </div>
+
+                                    {{-- Purpose --}}
+                                    <div class="mb-3">
+                                        <label>Purpose / Reason</label>
+                                        <input type="text" class="form-control" wire:model.defer="purpose" required>
+                                        @error('purpose')
+                                            <small class="text-danger">{{ $message }}</small>
+                                        @enderror
+                                    </div>
+
+                                    {{-- Footer --}}
+                                    <div class="modal-footer border-top-0">
+                                        <button type="button" class="btn btn-secondary"
+                                            data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-primary">Check In Visitor</button>
+                                    </div>
+                                </form>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            {{-- Transfer Modal --}}
+            @if ($showTransferModal)
+                <div class="modal fade show" id="transferModal" style="display: block;" tabindex="-1"
+                    aria-hidden="false">
+                    <div class="modal-backdrop fade show"></div>
+                    <div class="modal-dialog modal-md">
+                        <div class="modal-content">
+                            @if ($selectedVisitLog)
                                 <div class="modal-header">
-                                    <h5 class="modal-title">Visitor Check-in</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                        aria-label="Close"></button>
+                                    <h5 class="modal-title">Transfer Visitor:
+                                        {{ $selectedVisitLog->visitor->full_name ?? 'Unknown' }}</h5>
+                                    <button type="button" class="btn-close" wire:click="closeTransferModal"></button>
                                 </div>
-
                                 <div class="modal-body">
-                                    <form wire:submit.prevent="checkIn">
-
-                                        {{-- Visitor details (read-only) --}}
+                                    <form wire:submit.prevent="transferVisitor">
                                         <div class="mb-3">
-                                            <label class="form-label">Visitor</label>
-                                            <input type="text" class="form-control" readonly
-                                                value="{{ $selectedVisitor ? $selectedVisitor->name . ' — ' . $selectedVisitor->phone : '' }}">
-                                        </div>
-
-                                        <div class="row">
-                                            <div class="col-md-6 mb-3">
-                                                <label>Host</label>
-                                                <select wire:model="host_id" class="form-control" required>
-                                                    <option value="">-- select host --</option>
-                                                    @foreach ($hostsList as $host)
-                                                        <option value="{{ $host->id }}">{{ $host->name }}
-                                                            ({{ $host->email }})
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                                @error('host_id')
-                                                    <small class="text-danger">{{ $message }}</small>
-                                                @enderror
-                                            </div>
-
-                                            <div class="col-md-6 mb-3">
-                                                <label>Visitor Type</label>
-                                                <select wire:model="visitor_type_id" class="form-control" required>
-                                                    <option value="">-- select type --</option>
-                                                    @foreach ($visitorTypes as $vt)
-                                                        <option value="{{ $vt->id }}">{{ $vt->name }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                                @error('visitor_type_id')
-                                                    <small class="text-danger">{{ $message }}</small>
-                                                @enderror
-                                            </div>
-                                        </div>
-
-                                        <div class="mb-3">
-                                            <label>Purpose / Reason</label>
-                                            <input type="text" class="form-control" wire:model.defer="purpose"
-                                                placeholder="e.g. Meeting, Delivery, Interview" required>
-                                            @error('purpose')
+                                            <label>Transfer To Host</label>
+                                            <select wire:model="transferToHostId" class="form-control" required>
+                                                <option value="">-- Select host --</option>
+                                                @foreach ($hostsList as $host)
+                                                    <option value="{{ $host->id }}">{{ $host->name }}
+                                                        ({{ $host->email }})
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            @error('transferToHostId')
                                                 <small class="text-danger">{{ $message }}</small>
                                             @enderror
                                         </div>
 
                                         <div class="mb-3">
-                                            <label>Details</label>
-                                            <textarea class="form-control" wire:model.defer="visit_reason_detail" rows="3"></textarea>
-                                        </div>
-
-                                        <div class="row">
-                                            <div class="col-md-4 mb-3">
-                                                <label>Badge Number</label>
-                                                <input type="text" class="form-control"
-                                                    wire:model.defer="badge_number" required>
-                                                @error('badge_number')
-                                                    <small class="text-danger">{{ $message }}</small>
-                                                @enderror
-                                            </div>
-
-                                            <div class="col-md-4 mb-3">
-                                                <label>Location</label>
-                                                <input type="text" class="form-control" wire:model.defer="location"
-                                                    required>
-                                                @error('location')
-                                                    <small class="text-danger">{{ $message }}</small>
-                                                @enderror
-                                            </div>
-
-                                            <div class="col-md-4 mb-3">
-                                                <label>Appointment (optional)</label>
-                                                <input type="text" class="form-control"
-                                                    wire:model.defer="appointment_id"
-                                                    placeholder="Appointment id or code">
-                                            </div>
-                                        </div>
-
-                                        <div class="mb-3">
-                                            <label>Remarks (optional)</label>
-                                            <input type="text" class="form-control" wire:model.defer="remarks">
+                                            <label>Reason (optional)</label>
+                                            <textarea wire:model.defer="transferReason" class="form-control" rows="3"></textarea>
                                         </div>
 
                                         <div class="modal-footer">
                                             <button type="button" class="btn btn-secondary"
-                                                data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" class="btn btn-primary">Check In Visitor</button>
+                                                wire:click="closeTransferModal">Cancel</button>
+                                            <button type="submit" class="btn btn-primary">Transfer Visitor</button>
                                         </div>
-
                                     </form>
                                 </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            @endif
 
-                            </div>
+
+                {{-- Recent Visitors Table --}}
+                <div class="card shadow-sm">
+                    <div class="card-header fw-bold">Recent Visit Logs</div>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Purpose</th>
+                                    <th>Host</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($visitLogs as $vl)
+                                    <tr>
+                                        <td>{{ $vl->visitor->full_name ?? 'Unknown' }}</td>
+                                        <td>{{ $vl->purpose }}</td>
+                                        <td>{{ $vl->host->name ?? '—' }}</td>
+                                        <td>
+                                            @switch($vl->status)
+                                                @case('checked_in')
+                                                    <span class="badge bg-success">Checked In</span>
+                                                @break
+
+                                                @case('checked_out')
+                                                    <span class="badge bg-secondary">Checked Out</span>
+                                                @break
+
+                                                @case('pending')
+                                                    <span class="badge bg-warning text-dark">Pending</span>
+                                                @break
+
+                                                @case('cancelled')
+                                                    <span class="badge bg-danger">Cancelled</span>
+                                                @break
+
+                                                @default
+                                                    <span class="badge bg-info">Unknown</span>
+                                            @endswitch
+                                        </td>
+
+                                        <td>
+                                            @if ($vl->status !== 'checked_out')
+                                                <button wire:click="checkOut({{ $vl->id }})"
+                                                    class="btn btn-sm btn-outline-danger">Check Out</button>
+                                            @endif
+                                            @if (in_array($vl->status, ['pending', 'checked_in']))
+                                                <button wire:click="openTransferModal({{ $vl->id }})"
+                                                    class="btn btn-sm btn-warning">
+                                                    Transfer
+                                                </button>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="5" class="text-center text-muted">No records found</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 
-                    {{-- Recent visit logs --}}
-                    <div class="mt-4 container" style="max-width: 500px;">
-                        <h6>Recent visit logs</h6>
-                        <ul class="list-group">
-                            @foreach ($visitLogs as $vl)
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong>{{ $vl->visitor->name ?? 'Unknown' }}</strong>
-                                        <div><small>{{ $vl->purpose }} • Host: {{ $vl->host->name ?? '—' }}</small>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        @if ($vl->status !== 'checked_out')
-                                            <button wire:click="checkOut({{ $vl->id }})"
-                                                class="btn btn-sm btn-outline-danger">
-                                                Check Out
-                                            </button>
-                                        @else
-                                            <span class="badge bg-secondary">Checked out</span>
-                                        @endif
-                                    </div>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </div>
-
-                </div>
-
-            </div>
-        </main>
+            </main>
+        </div>
     </div>
-</div>
-
-{{-- Bootstrap 5 Modal open/close listeners --}}
-@push('scripts')
-    <script>
-        document.addEventListener('livewire:load', function() {
-            window.addEventListener('open-checkin-modal', function() {
-                let modalEl = document.getElementById('checkInModal');
-                let modal = new bootstrap.Modal(modalEl);
-                modal.show();
-            });
-
-            window.addEventListener('close-checkin-modal', function() {
-                let modalEl = document.getElementById('checkInModal');
-                let modalInstance = bootstrap.Modal.getInstance(modalEl);
-                if (modalInstance) {
-                    modalInstance.hide();
-                }
-            });
-        });
-    </script>
-@endpush

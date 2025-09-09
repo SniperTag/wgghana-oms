@@ -29,6 +29,7 @@ return new class extends Migration
 
             // Break type (Lunch, Prayer, Rest, Other)
             $table->string('break_type')->nullable();
+    $table->string('status_code')->default('NAV'); // Tracks break status
 
             $table->timestamps();
 

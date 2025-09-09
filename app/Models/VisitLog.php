@@ -19,7 +19,7 @@ class VisitLog extends Model
         'badge_number',
         'approval_status',
         'rejection_reason',
-        'registered_ip',
+        'device_ip',
         'device_name',
         'remarks',
         'checked_in_by',
@@ -63,4 +63,8 @@ class VisitLog extends Model
     {
         return strtoupper($value);
     }
+
+public function host(){
+return $this->belongsTo(User::class, 'host_id');
+}
 }

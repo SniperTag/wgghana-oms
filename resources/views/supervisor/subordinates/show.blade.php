@@ -64,7 +64,7 @@
 
                             <div class="mt-4">
                                 @if ($leave->supervisor_status === 'pending')
-                                    <form action="{{ route('supervisor.subordinates.approve', $leave->id) }}"
+                                    <form action="{{ route('supervisor.approve', $leave->id) }}"
                                         method="POST" class="d-inline">
                                         @csrf
                                         <button class="btn btn-success"
@@ -72,7 +72,7 @@
                                             ✅ Approve
                                         </button>
                                     </form>
-                                    <form action="{{ route('supervisor.subordinates.reject', $leave->id) }}"
+                                    <form action="{{ route('supervisor.reject', $leave->id) }}"
                                         method="POST" class="d-inline">
                                         @csrf
                                         <button class="btn btn-danger" onclick="return confirm('Reject this request?')">
@@ -80,7 +80,7 @@
                                         </button>
                                     </form>
                                 @else
-                                    <a href="{{ route('supervisor.subordinates.index') }}" class="btn btn-secondary">
+                                    <a href="{{ route('subordinates.index') }}" class="btn btn-secondary">
                                         ⬅ Back to List
                                     </a>
                                 @endif

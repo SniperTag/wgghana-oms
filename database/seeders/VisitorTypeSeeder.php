@@ -22,7 +22,7 @@ class VisitorTypeSeeder extends Seeder
             'VIP',
             'Meeting Attendee',
             'Consultant',
-            'Student/Graduate',
+            'Student',
         ];
 
 
